@@ -1,4 +1,3 @@
-#!/bin/bash
 # Licensed to the Apache Software Foundation (ASF) under one
 # or more contributor license agreements.  See the NOTICE file
 # distributed with this work for additional information
@@ -16,21 +15,21 @@
 # specific language governing permissions and limitations
 # under the License.
 
-set -e
-set -u
-set -o pipefail
+# Minimum docker image for demo purposes
+# prebuilt-image: tvmai/demo-cpu
+FROM tvm.ci_cpu0.16:latest
 
-cd /usr
-git clone https://github.com/alvarorramos/tvm tvm --recursive
-cd /usr/tvm
-# checkout a hash-tag
-git checkout da6eb5933994aff0f9ee5e209dc733c302997547
+# COPY utils/apt-install-and-clear.sh /usr/local/bin/apt-install-and-clear
 
-echo set\(USE_LLVM llvm-config-17\) >> config.cmake
-echo set\(USE_GRAPH_EXECUTOR ON\) >> config.cmake
-echo set\(USE_BLAS openblas\) >> config.cmake
-echo 'set(USE_VTA_FSIM ON)' >> config.cmake
-mkdir -p build
-cd build
-cmake ..
-make -j10
+# Jupyter notebook.
+# RUN pip3 install matplotlib Image Pillow jupyter[notebook]
+
+# Deep learning frameworks
+# RUN pip3 install mxnet tensorflow keras gluoncv dgl
+
+# Build TVM
+COPY install/install_tvm_cpu.sh /install/install_tvm_cpu.sh
+RUN bash /install/install_tvm_cpu.sh
+
+# Environment variables
+ENV PYTHONPATH=/usr/tvm/python:/usr/tvm/vta/python:${PYTHONPATH}

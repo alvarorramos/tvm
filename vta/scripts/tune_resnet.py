@@ -233,7 +233,7 @@ if __name__ == '__main__':
 
     # VTA target and execution context
     target = env.target if opt.device == "vta" else env.target_vta_cpu
-    ctx = remote.ext_dev(0) if opt.device == "vta" else remote.cpu(0)
+    device = remote.ext_dev(0) if opt.device == "vta" else remote.cpu(0)
     
     # Compile Relay program
     print("Initial compile...")
@@ -289,9 +289,9 @@ if __name__ == '__main__':
 
         # If detailed runtime info is needed build with debug runtime
         if opt.debug_profile:
-            m = debug_runtime.create(graph, lib, ctx)
+            m = debug_runtime.create(graph, lib, device)
         else:
-            m = graph_runtime.create(graph, lib, ctx)
+            m = graph_runtime.create(graph, lib, device)
 
         # Set the network parameters and synthetic input
         image = tvm.nd.array(
@@ -300,7 +300,7 @@ if __name__ == '__main__':
         m.set_input('data', image)
 
         # Perform inference
-        timer = m.module.time_evaluator("run", ctx, number=4, repeat=opt.measurements)
+        timer = m.module.time_evaluator("run", device, number=4, repeat=opt.measurements)
         tcost = timer()
         prof_res = np.array(tcost.results) * 1000  # convert to millisecond
         print("Mean inference time (std dev): %.2f ms (%.2f ms)" %

@@ -70,8 +70,8 @@ as demostrated in the following Rust snippet
         runtime_create_fn,
         &graph,
         &lib,
-        &ctx.device_type,
-        &ctx.device_id
+        &device.device_type,
+        &device.device_id
     )?;
     // get graph runtime module
     let graph_runtime_module: Module = runtime_create_fn_ret.try_into()?;

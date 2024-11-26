@@ -55,8 +55,8 @@ def verify_deformable_conv2d_nchw(batch, in_channel, in_size, num_filter, kernel
     a_np, offset_np, w_np, c_np = get_ref_data()
 
     def check_device(device):
-        ctx = tvm.context(device, 0)
-        if not ctx.exist:
+        device = tvm.context(device, 0)
+        if not device.exist:
             print("Skip because %s is not enabled" % device)
             return
         print("Running on target: %s" % device)
@@ -65,10 +65,10 @@ def verify_deformable_conv2d_nchw(batch, in_channel, in_size, num_filter, kernel
                     deformable_groups, groups, out_dtype=dtype)
             s = topi.generic.schedule_deformable_conv2d_nchw([C])
 
-            a = tvm.nd.array(a_np, ctx)
-            offset = tvm.nd.array(offset_np, ctx)
-            w = tvm.nd.array(w_np, ctx)
-            c = tvm.nd.empty(c_np.shape, dtype=c_np.dtype, ctx=ctx)
+            a = tvm.nd.array(a_np, device)
+            offset = tvm.nd.array(offset_np, device)
+            w = tvm.nd.array(w_np, device)
+            c = tvm.nd.empty(c_np.shape, dtype=c_np.dtype, device=device)
 
             func = tvm.build(s, [A, Offset, W, C], device)
             func(a, offset, w, c)

@@ -51,7 +51,7 @@ def cpu(dev_id=0):
 
     Returns
     -------
-    ctx : TVMContext
+    device : TVMContext
         The created context
     """
     return TVMContext(1, dev_id)
@@ -67,7 +67,7 @@ def gpu(dev_id=0):
 
     Returns
     -------
-    ctx : TVMContext
+    device : TVMContext
         The created context
     """
     return TVMContext(2, dev_id)
@@ -82,7 +82,7 @@ def rocm(dev_id=0):
 
     Returns
     -------
-    ctx : TVMContext
+    device : TVMContext
         The created context
     """
     return TVMContext(10, dev_id)
@@ -98,7 +98,7 @@ def opencl(dev_id=0):
 
     Returns
     -------
-    ctx : TVMContext
+    device : TVMContext
         The created context
     """
     return TVMContext(4, dev_id)
@@ -114,7 +114,7 @@ def metal(dev_id=0):
 
     Returns
     -------
-    ctx : TVMContext
+    device : TVMContext
         The created context
     """
     return TVMContext(8, dev_id)
@@ -130,7 +130,7 @@ def vpi(dev_id=0):
 
     Returns
     -------
-    ctx : TVMContext
+    device : TVMContext
         The created context
     """
     return TVMContext(9, dev_id)
@@ -146,7 +146,7 @@ def vulkan(dev_id=0):
 
     Returns
     -------
-    ctx : TVMContext
+    device : TVMContext
         The created context
     """
     return TVMContext(7, dev_id)
@@ -162,7 +162,7 @@ def opengl(dev_id=0):
 
     Returns
     -------
-    ctx : TVMContext
+    device : TVMContext
         The created context
     """
     return TVMContext(11, dev_id)
@@ -178,7 +178,7 @@ def ext_dev(dev_id=0):
 
     Returns
     -------
-    ctx : TVMContext
+    device : TVMContext
         The created context
 
     Note
@@ -199,7 +199,7 @@ def micro_dev(dev_id=0):
 
     Returns
     -------
-    ctx : TVMContext
+    device : TVMContext
         The created context
     """
     return TVMContext(13, dev_id)
@@ -209,7 +209,7 @@ cl = opencl
 mtl = metal
 
 
-def array(arr, ctx=cpu(0)):
+def array(arr, device=cpu(0)):
     """Create an array from source arr.
 
     Parameters
@@ -217,7 +217,7 @@ def array(arr, ctx=cpu(0)):
     arr : numpy.ndarray
         The array to be copied from
 
-    ctx : TVMContext, optional
+    device : TVMContext, optional
         The device context to create the array
 
     Returns
@@ -227,6 +227,6 @@ def array(arr, ctx=cpu(0)):
     """
     if not isinstance(arr, (_np.ndarray, NDArray)):
         arr = _np.array(arr)
-    return empty(arr.shape, arr.dtype, ctx).copyfrom(arr)
+    return empty(arr.shape, arr.dtype, device).copyfrom(arr)
 
 _set_class_ndarray(NDArray)

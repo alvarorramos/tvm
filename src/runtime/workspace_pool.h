@@ -53,17 +53,17 @@ class TVM_DLL WorkspacePool {
   ~WorkspacePool();
   /*!
    * \brief Allocate temporal workspace.
-   * \param ctx The context of allocation.
+   * \param device The context of allocation.
    * \param size The size to be allocated.
    */
-  void* AllocWorkspace(TVMContext ctx, size_t size);
+  void* AllocWorkspace(TVMContext device, size_t size);
   /*!
    * \brief Free temporal workspace in backend execution.
    *
-   * \param ctx The context of allocation.
+   * \param device The context of allocation.
    * \param ptr The pointer to be freed.
    */
-  void FreeWorkspace(TVMContext ctx, void* ptr);
+  void FreeWorkspace(TVMContext device, void* ptr);
 
  private:
   class Pool;

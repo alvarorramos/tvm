@@ -158,8 +158,8 @@
 
       tvm.logger("Loading resnet model...");
       graph_json_str = load_file("resnet.json");
-      ctx = tvm.context("opengl", 0);
-      loaded_module = tvm.createGraphRuntime(graph_json_str, syslib, ctx);
+      device = tvm.context("opengl", 0);
+      loaded_module = tvm.createGraphRuntime(graph_json_str, syslib, device);
       tvm.logger("- Model loaded!");
 
       tvm.logger("Loading model parameters...");
@@ -178,7 +178,7 @@
 
       tvm.logger("Setting input data...");
       data_shape = JSON.parse(load_file("data_shape.json"));
-      data = tvm.empty(data_shape, "float32", ctx);
+      data = tvm.empty(data_shape, "float32", device);
       data.copyFrom(data_array);
       loaded_module.set_input("data", data);
       tvm.logger("- Input data set!");
@@ -188,7 +188,7 @@
       tvm.logger("- Model execution completed!");
 
       out_shape = JSON.parse(load_file("out_shape.json"));
-      output = tvm.empty(out_shape, "float32", ctx);
+      output = tvm.empty(out_shape, "float32", device);
       loaded_module.get_output(0, output);
 
       prediction = argmax(output.asArray());

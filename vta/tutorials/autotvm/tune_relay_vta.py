@@ -403,8 +403,8 @@ def tune_and_evaluate(tuning_opt):
         lib = remote.load_module("graphlib.o")
 
         # Generate the graph runtime
-        ctx = remote.ext_dev(0) if device == "vta" else remote.cpu(0)
-        m = graph_runtime.create(graph, lib, ctx)
+        device = remote.ext_dev(0) if device == "vta" else remote.cpu(0)
+        m = graph_runtime.create(graph, lib, device)
 
         # upload parameters to device
         image = tvm.nd.array(
@@ -414,7 +414,7 @@ def tune_and_evaluate(tuning_opt):
 
         # evaluate
         print("Evaluate inference time cost...")
-        timer = m.module.time_evaluator("run", ctx, number=1, repeat=10)
+        timer = m.module.time_evaluator("run", device, number=1, repeat=10)
         tcost = timer()
         prof_res = np.array(tcost.results) * 1000  # convert to millisecond
         print("Mean inference time (std dev): %.2f ms (%.2f ms)" %

@@ -53,9 +53,9 @@
 
       this.n = 16;
       this.a = randomArray(this.n, 1);
-      this.ctx = tvm.context("opengl", 0);
-      this.A = tvm.empty(this.n, "float32", ctx).copyFrom(this.a);
-      this.B = tvm.empty(this.n, "float32", ctx);
+      this.device = tvm.context("opengl", 0);
+      this.A = tvm.empty(this.n, "float32", device).copyFrom(this.a);
+      this.B = tvm.empty(this.n, "float32", device);
       identity(this.A, this.B);
 
       this.a = this.A.asArray();

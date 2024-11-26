@@ -60,7 +60,7 @@ pub fn import_module(input: proc_macro::TokenStream) -> proc_macro::TokenStream 
                     Ok((name, nlist))
                         if nlist.is_global()
                             && nlist.n_sect != 0
-                            && !name.ends_with("tvm_module_ctx") =>
+                            && !name.ends_with("tvm_module_device") =>
                     {
                         Some(syn::Ident::new(
                             if name.starts_with('_') {

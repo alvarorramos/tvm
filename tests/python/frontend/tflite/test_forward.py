@@ -76,9 +76,9 @@ def run_tvm_graph(tflite_model_buf, input_data, input_node, num_output=1, target
     with relay.build_config(opt_level=3):
         graph, lib, params = relay.build(mod, target, params=params)
 
-    ctx = tvm.context(target, 0)
+    device = tvm.context(target, 0)
     from tvm.contrib import graph_runtime
-    m = graph_runtime.create(graph, lib, ctx)
+    m = graph_runtime.create(graph, lib, device)
     # set inputs
     for i, e in enumerate(input_node):
         m.set_input(e, tvm.nd.array(input_data[i].astype(input_data[i].dtype)))
@@ -153,8 +153,8 @@ def compare_tflite_with_tvm(in_data, in_name, input_tensors,
         tflite_output = run_tflite_graph(tflite_model_buffer, in_data)
 
         for device in ["llvm"]:
-            ctx = tvm.context(device, 0)
-            if not ctx.exist:
+            device = tvm.context(device, 0)
+            if not device.exist:
                 print("Skip because %s is not enabled" % device)
                 continue
 

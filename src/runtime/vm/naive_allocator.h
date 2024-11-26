@@ -34,20 +34,20 @@ namespace vm {
 
 class NaiveAllocator final : public Allocator {
  public:
-  explicit NaiveAllocator(TVMContext ctx) : Allocator(), used_memory_(0), ctx_(ctx) {}
+  explicit NaiveAllocator(TVMContext device) : Allocator(), used_memory_(0), device_(device) {}
 
   Buffer Alloc(size_t nbytes, size_t alignment, TVMType type_hint) override {
     Buffer buf;
-    buf.ctx = ctx_;
+    buf.device = device_;
     buf.size = nbytes;
-    buf.data = DeviceAPI::Get(ctx_)->AllocDataSpace(ctx_, nbytes, alignment, type_hint);
+    buf.data = DeviceAPI::Get(device_)->AllocDataSpace(device_, nbytes, alignment, type_hint);
     used_memory_.fetch_add(nbytes, std::memory_order_relaxed);
     DLOG(INFO) << "allocate " << nbytes << " B, used memory " << used_memory_ << " B";
     return buf;
   }
 
   void Free(const Buffer& buffer) override {
-    DeviceAPI::Get(ctx_)->FreeDataSpace(buffer.ctx, buffer.data);
+    DeviceAPI::Get(device_)->FreeDataSpace(buffer.device, buffer.data);
     used_memory_.fetch_sub(buffer.size, std::memory_order_relaxed);
     DLOG(INFO) << "free " << buffer.size << " B, used memory " << used_memory_ << " B";
   }
@@ -58,7 +58,7 @@ class NaiveAllocator final : public Allocator {
 
  private:
   std::atomic<size_t> used_memory_;
-  TVMContext ctx_;
+  TVMContext device_;
 };
 
 }  // namespace vm

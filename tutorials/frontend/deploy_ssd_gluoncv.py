@@ -26,7 +26,7 @@ We will use GluonCV pre-trained SSD model and convert it to Relay IR
 import tvm
 
 from matplotlib import pyplot as plt
-from tvm.relay.testing.config import ctx_list
+from tvm.relay.testing.config import device_list
 from tvm import relay
 from tvm.contrib import graph_runtime
 from tvm.contrib.download import download_testdata
@@ -69,7 +69,7 @@ supported_model = [
 
 model_name = supported_model[0]
 dshape = (1, 3, 512, 512)
-target_list = ctx_list()
+target_list = device_list()
 
 ######################################################################
 # Download and pre-process demo image
@@ -93,10 +93,10 @@ def build(target):
 ######################################################################
 # Create TVM runtime and do inference
 
-def run(graph, lib, params, ctx):
+def run(graph, lib, params, device):
     # Build TVM runtime
-    m = graph_runtime.create(graph, lib, ctx)
-    tvm_input = tvm.nd.array(x.asnumpy(), ctx=ctx)
+    m = graph_runtime.create(graph, lib, device)
+    tvm_input = tvm.nd.array(x.asnumpy(), device=device)
     m.set_input('data', tvm_input)
     m.set_input(**params)
     # execute
@@ -105,9 +105,9 @@ def run(graph, lib, params, ctx):
     class_IDs, scores, bounding_boxs = m.get_output(0), m.get_output(1), m.get_output(2)
     return class_IDs, scores, bounding_boxs
 
-for target, ctx in target_list:
+for target, device in target_list:
     graph, lib, params = build(target)
-    class_IDs, scores, bounding_boxs = run(graph, lib, params, ctx)
+    class_IDs, scores, bounding_boxs = run(graph, lib, params, device)
 
 ######################################################################
 # Display result

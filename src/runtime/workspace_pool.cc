@@ -42,7 +42,7 @@ class WorkspacePool::Pool {
     allocated_.push_back(e);
   }
   // allocate from pool
-  void* Alloc(TVMContext ctx, DeviceAPI* device, size_t nbytes) {
+  void* Alloc(TVMContext device, DeviceAPI* device, size_t nbytes) {
     // Allocate align to page.
     nbytes = (nbytes + (kWorkspacePageSize - 1)) / kWorkspacePageSize * kWorkspacePageSize;
     if (nbytes == 0) nbytes = kWorkspacePageSize;
@@ -56,12 +56,12 @@ class WorkspacePool::Pool {
       free_list_.pop_back();
       if (e.size < nbytes) {
         // resize the page
-        device->FreeDataSpace(ctx, e.data);
-        e.data = device->AllocDataSpace(ctx, nbytes, kTempAllocaAlignment, type);
+        device->FreeDataSpace(device, e.data);
+        e.data = device->AllocDataSpace(device, nbytes, kTempAllocaAlignment, type);
         e.size = nbytes;
       }
     } else if (free_list_.size() == 1) {
-      e.data = device->AllocDataSpace(ctx, nbytes, kTempAllocaAlignment, type);
+      e.data = device->AllocDataSpace(device, nbytes, kTempAllocaAlignment, type);
       e.size = nbytes;
     } else {
       if (free_list_.back().size >= nbytes) {
@@ -74,8 +74,8 @@ class WorkspacePool::Pool {
         // resize the page
         e = free_list_.back();
         free_list_.pop_back();
-        device->FreeDataSpace(ctx, e.data);
-        e.data = device->AllocDataSpace(ctx, nbytes, kTempAllocaAlignment, type);
+        device->FreeDataSpace(device, e.data);
+        e.data = device->AllocDataSpace(device, nbytes, kTempAllocaAlignment, type);
         e.size = nbytes;
       }
     }
@@ -111,10 +111,10 @@ class WorkspacePool::Pool {
     }
   }
   // Release all resources
-  void Release(TVMContext ctx, DeviceAPI* device) {
+  void Release(TVMContext device, DeviceAPI* device) {
     CHECK_EQ(allocated_.size(), 1);
     for (size_t i = 1; i < free_list_.size(); ++i) {
-      device->FreeDataSpace(ctx, free_list_[i].data);
+      device->FreeDataSpace(device, free_list_[i].data);
     }
     free_list_.clear();
   }
@@ -138,29 +138,29 @@ WorkspacePool::WorkspacePool(DLDeviceType device_type, std::shared_ptr<DeviceAPI
 WorkspacePool::~WorkspacePool() {
   for (size_t i = 0; i < array_.size(); ++i) {
     if (array_[i] != nullptr) {
-      TVMContext ctx;
-      ctx.device_type = device_type_;
-      ctx.device_id = static_cast<int>(i);
-      array_[i]->Release(ctx, device_.get());
+      TVMContext device;
+      device.device_type = device_type_;
+      device.device_id = static_cast<int>(i);
+      array_[i]->Release(device, device_.get());
       delete array_[i];
     }
   }
 }
 
-void* WorkspacePool::AllocWorkspace(TVMContext ctx, size_t size) {
-  if (static_cast<size_t>(ctx.device_id) >= array_.size()) {
-    array_.resize(ctx.device_id + 1, nullptr);
+void* WorkspacePool::AllocWorkspace(TVMContext device, size_t size) {
+  if (static_cast<size_t>(device.device_id) >= array_.size()) {
+    array_.resize(device.device_id + 1, nullptr);
   }
-  if (array_[ctx.device_id] == nullptr) {
-    array_[ctx.device_id] = new Pool();
+  if (array_[device.device_id] == nullptr) {
+    array_[device.device_id] = new Pool();
   }
-  return array_[ctx.device_id]->Alloc(ctx, device_.get(), size);
+  return array_[device.device_id]->Alloc(device, device_.get(), size);
 }
 
-void WorkspacePool::FreeWorkspace(TVMContext ctx, void* ptr) {
-  CHECK(static_cast<size_t>(ctx.device_id) < array_.size() &&
-        array_[ctx.device_id] != nullptr);
-  array_[ctx.device_id]->Free(ptr);
+void WorkspacePool::FreeWorkspace(TVMContext device, void* ptr) {
+  CHECK(static_cast<size_t>(device.device_id) < array_.size() &&
+        array_[device.device_id] != nullptr);
+  array_[device.device_id]->Free(ptr);
 }
 
 }  // namespace runtime

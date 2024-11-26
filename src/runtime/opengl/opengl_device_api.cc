@@ -86,17 +86,17 @@ const std::shared_ptr<OpenGLWorkspace>& OpenGLWorkspace::Global() {
   return inst;
 }
 
-void OpenGLWorkspace::SetDevice(TVMContext ctx) {
-  CHECK_EQ(ctx.device_type, static_cast<int>(kOpenGL))
+void OpenGLWorkspace::SetDevice(TVMContext device) {
+  CHECK_EQ(device.device_type, static_cast<int>(kOpenGL))
     << "Device type must be OpenGL.";
-  CHECK_EQ(ctx.device_id, 0) << "Only support 1 OpenGL \"device\".";
+  CHECK_EQ(device.device_id, 0) << "Only support 1 OpenGL \"device\".";
 }
 
 void OpenGLWorkspace::GetAttr(
-    TVMContext ctx, DeviceAttrKind kind, TVMRetValue* rv) {
+    TVMContext device, DeviceAttrKind kind, TVMRetValue* rv) {
   switch (kind) {
     case kExist: {
-      *rv = static_cast<int>(ctx.device_id == 0);
+      *rv = static_cast<int>(device.device_id == 0);
       break;
     }
     case kMaxThreadsPerBlock: {
@@ -121,11 +121,11 @@ void OpenGLWorkspace::GetAttr(
 }
 
 void* OpenGLWorkspace::AllocDataSpace(
-    TVMContext ctx, size_t nbytes, size_t alignment, TVMType type_hint) {
+    TVMContext device, size_t nbytes, size_t alignment, TVMType type_hint) {
   return reinterpret_cast<void*>(new Texture(CreateTexture(type_hint, nbytes)));
 }
 
-void OpenGLWorkspace::FreeDataSpace(TVMContext ctx, void* ptr) {
+void OpenGLWorkspace::FreeDataSpace(TVMContext device, void* ptr) {
   delete reinterpret_cast<Texture*>(ptr);
 }
 
@@ -134,8 +134,8 @@ void OpenGLWorkspace::CopyDataFromTo(const void* from,
                                      void* to,
                                      size_t to_offset,
                                      size_t size,
-                                     TVMContext ctx_from,
-                                     TVMContext ctx_to,
+                                     TVMContext device_from,
+                                     TVMContext device_to,
                                      TVMType type_hint,
                                      TVMStreamHandle stream) {
   CHECK(stream == nullptr);
@@ -143,7 +143,7 @@ void OpenGLWorkspace::CopyDataFromTo(const void* from,
   // TODO(zhixunt): This is a nasty hack to avoid comparison between
   // incompatible enums. We should add kOpenGL to dlpack.
   constexpr int gl_devtype = kOpenGL;
-  std::tuple<int, int> type_from_to(ctx_from.device_type, ctx_to.device_type);
+  std::tuple<int, int> type_from_to(device_from.device_type, device_to.device_type);
 
   if (type_from_to == std::make_tuple(gl_devtype, gl_devtype)) {
     auto from_texture = static_cast<const Texture*>(from);
@@ -178,7 +178,7 @@ void OpenGLWorkspace::CopyDataFromTo(const void* from,
   }
 }
 
-void OpenGLWorkspace::StreamSync(TVMContext ctx, TVMStreamHandle stream) {}
+void OpenGLWorkspace::StreamSync(TVMContext device, TVMStreamHandle stream) {}
 
 OpenGLWorkspace::OpenGLWorkspace() {
   // Set an error handler.

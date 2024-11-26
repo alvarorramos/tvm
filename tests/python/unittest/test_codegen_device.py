@@ -53,8 +53,8 @@ def test_add_pipeline():
     fsplits[0] = tvm.ir_pass.LowerTVMBuiltin(fsplits[0])
 
     def check_target(device, host="stackvm"):
-        ctx = tvm.context(device, 0)
-        if not ctx.exist:
+        device = tvm.context(device, 0)
+        if not device.exist:
             return
         if not tvm.module.enabled(host):
             return
@@ -65,16 +65,16 @@ def test_add_pipeline():
         f = mhost.entry_func
         # launch the kernel.
         n = 1027
-        a = tvm.nd.array(np.random.uniform(size=n).astype(Ab.dtype), ctx)
-        b = tvm.nd.array(np.random.uniform(size=()).astype(Bb.dtype), ctx)
-        d = tvm.nd.array(np.zeros(n, dtype=Db.dtype), ctx)
+        a = tvm.nd.array(np.random.uniform(size=n).astype(Ab.dtype), device)
+        b = tvm.nd.array(np.random.uniform(size=()).astype(Bb.dtype), device)
+        d = tvm.nd.array(np.zeros(n, dtype=Db.dtype), device)
         f(a, b, d)
         tvm.testing.assert_allclose(
             d.asnumpy(), a.asnumpy() + b.asnumpy() + 1)
 
     def check_module_save(device, host="stackvm"):
-        ctx = tvm.context(device, 0)
-        if not ctx.exist:
+        device = tvm.context(device, 0)
+        if not device.exist:
             return
         if not tvm.module.enabled(host):
             return
@@ -94,9 +94,9 @@ def test_add_pipeline():
         f = mhost.entry_func
         # launch the kernel.
         n = 1027
-        a = tvm.nd.array(np.random.uniform(size=n).astype(Ab.dtype), ctx)
-        b = tvm.nd.array(np.random.uniform(size=()).astype(Bb.dtype), ctx)
-        d = tvm.nd.array(np.zeros(n, dtype=Db.dtype), ctx)
+        a = tvm.nd.array(np.random.uniform(size=n).astype(Ab.dtype), device)
+        b = tvm.nd.array(np.random.uniform(size=()).astype(Bb.dtype), device)
+        d = tvm.nd.array(np.zeros(n, dtype=Db.dtype), device)
         f(a, b, d)
         tvm.testing.assert_allclose(
             d.asnumpy(), a.asnumpy() + b.asnumpy() + 1)

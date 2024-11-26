@@ -35,9 +35,9 @@ const std::shared_ptr<MetalWorkspace>& MetalWorkspace::Global() {
 }
 
 void MetalWorkspace::GetAttr(
-    TVMContext ctx, DeviceAttrKind kind, TVMRetValue* rv) {
+    TVMContext device, DeviceAttrKind kind, TVMRetValue* rv) {
   this->Init();
-  size_t index = static_cast<size_t>(ctx.device_id);
+  size_t index = static_cast<size_t>(device.device_id);
   if (kind == kExist) {
     *rv = int(index< devices.size());
     return;
@@ -47,7 +47,7 @@ void MetalWorkspace::GetAttr(
   switch (kind) {
     case kMaxThreadsPerBlock: {
       *rv = static_cast<int>(
-          [devices[ctx.device_id] maxThreadsPerThreadgroup].width);
+          [devices[device.device_id] maxThreadsPerThreadgroup].width);
       break;
     }
     case kWarpSize: {
@@ -140,14 +140,14 @@ void MetalWorkspace::Init() {
 #endif
 }
 
-void MetalWorkspace::SetDevice(TVMContext ctx) {
-  MetalThreadEntry::ThreadLocal()->context.device_id = ctx.device_id;
+void MetalWorkspace::SetDevice(TVMContext device) {
+  MetalThreadEntry::ThreadLocal()->context.device_id = device.device_id;
 }
 
 void* MetalWorkspace::AllocDataSpace(
-    TVMContext ctx, size_t nbytes, size_t alignment, TVMType type_hint) {
+    TVMContext device, size_t nbytes, size_t alignment, TVMType type_hint) {
   this->Init();
-  id<MTLDevice> dev = GetDevice(ctx);
+  id<MTLDevice> dev = GetDevice(device);
   // GPU memory only
   MTLResourceOptions storage_mode = MTLResourceStorageModePrivate;
   /*
@@ -164,7 +164,7 @@ void* MetalWorkspace::AllocDataSpace(
   return (__bridge void*)([buf retain]);
 }
 
-void MetalWorkspace::FreeDataSpace(TVMContext ctx, void* ptr) {
+void MetalWorkspace::FreeDataSpace(TVMContext device, void* ptr) {
   // release the ptr.
   CFRelease(ptr);
 }
@@ -174,21 +174,21 @@ void MetalWorkspace::CopyDataFromTo(const void* from,
                                     void* to,
                                     size_t to_offset,
                                     size_t size,
-                                    TVMContext ctx_from,
-                                    TVMContext ctx_to,
+                                    TVMContext device_from,
+                                    TVMContext device_to,
                                     TVMType type_hint,
                                     TVMStreamHandle stream) {
   this->Init();
   CHECK(stream == nullptr);
-  TVMContext ctx = ctx_from;
-  if (ctx_from.device_type == kDLCPU) ctx = ctx_to;
-  id<MTLCommandQueue> queue = GetCommandQueue(ctx);
+  TVMContext device = device_from;
+  if (device_from.device_type == kDLCPU) device = device_to;
+  id<MTLCommandQueue> queue = GetCommandQueue(device);
   id<MTLCommandBuffer> cb = [queue commandBuffer];
-  int from_dev_type = static_cast<int>(ctx_from.device_type);
-  int to_dev_type = static_cast<int>(ctx_to.device_type);
+  int from_dev_type = static_cast<int>(device_from.device_type);
+  int to_dev_type = static_cast<int>(device_to.device_type);
 
   if (from_dev_type == kDLMetal && to_dev_type == kDLMetal) {
-    CHECK_EQ(ctx_from.device_id, ctx_to.device_id)
+    CHECK_EQ(device_from.device_id, device_to.device_id)
         << "Metal disallow cross device copy.";
     id<MTLBlitCommandEncoder> encoder = [cb blitCommandEncoder];
     [encoder copyFromBuffer:(__bridge id<MTLBuffer>)(from)
@@ -203,7 +203,7 @@ void MetalWorkspace::CopyDataFromTo(const void* from,
     id<MTLBuffer> from_buf = (__bridge id<MTLBuffer>)(from);
     if (from_buf.storageMode != MTLStorageModeShared) {
       id<MTLBuffer> temp = MetalThreadEntry::ThreadLocal()
-          ->GetTempBuffer(ctx_from, size);
+          ->GetTempBuffer(device_from, size);
       id<MTLBlitCommandEncoder> encoder = [cb blitCommandEncoder];
       [encoder copyFromBuffer:from_buf
                sourceOffset:from_offset
@@ -225,7 +225,7 @@ void MetalWorkspace::CopyDataFromTo(const void* from,
     id<MTLBuffer> to_buf = (__bridge id<MTLBuffer>)(to);
     if (to_buf.storageMode != MTLStorageModeShared) {
       id<MTLBuffer> temp = MetalThreadEntry::ThreadLocal()
-          ->GetTempBuffer(ctx_to, size);
+          ->GetTempBuffer(device_to, size);
       memcpy([temp contents],
               static_cast<const char*>(from) + from_offset,
               size);
@@ -250,23 +250,23 @@ void MetalWorkspace::CopyDataFromTo(const void* from,
   }
 }
 
-void MetalWorkspace::StreamSync(TVMContext ctx, TVMStreamHandle stream) {
+void MetalWorkspace::StreamSync(TVMContext device, TVMStreamHandle stream) {
   CHECK(stream == nullptr);
   // commit an empty command buffer and wait until it completes.
-  id<MTLCommandQueue> queue = GetCommandQueue(ctx);
+  id<MTLCommandQueue> queue = GetCommandQueue(device);
   id<MTLCommandBuffer> cb = [queue commandBuffer];
   [cb commit];
   [cb waitUntilCompleted];
 }
 
-void* MetalWorkspace::AllocWorkspace(TVMContext ctx,
+void* MetalWorkspace::AllocWorkspace(TVMContext device,
                                      size_t size,
                                      TVMType type_hint) {
-  return MetalThreadEntry::ThreadLocal()->pool.AllocWorkspace(ctx, size);
+  return MetalThreadEntry::ThreadLocal()->pool.AllocWorkspace(device, size);
 }
 
-void MetalWorkspace::FreeWorkspace(TVMContext ctx, void* data) {
-  MetalThreadEntry::ThreadLocal()->pool.FreeWorkspace(ctx, data);
+void MetalWorkspace::FreeWorkspace(TVMContext device, void* data) {
+  MetalThreadEntry::ThreadLocal()->pool.FreeWorkspace(device, data);
 }
 
 MetalThreadEntry::~MetalThreadEntry() {
@@ -275,21 +275,21 @@ MetalThreadEntry::~MetalThreadEntry() {
   }
 }
 
-id<MTLBuffer> MetalThreadEntry::GetTempBuffer(TVMContext ctx, size_t size) {
-  if (temp_buffer_.size() <= static_cast<size_t>(ctx.device_id)) {
-    temp_buffer_.resize(ctx.device_id + 1, nil);
+id<MTLBuffer> MetalThreadEntry::GetTempBuffer(TVMContext device, size_t size) {
+  if (temp_buffer_.size() <= static_cast<size_t>(device.device_id)) {
+    temp_buffer_.resize(device.device_id + 1, nil);
   }
-  if (temp_buffer_[ctx.device_id] == nil ||
-      temp_buffer_[ctx.device_id].length < size) {
-    id<MTLDevice> dev = MetalWorkspace::Global()->GetDevice(ctx);
-    if (temp_buffer_[ctx.device_id] != nil) {
-      [temp_buffer_[ctx.device_id] release];
+  if (temp_buffer_[device.device_id] == nil ||
+      temp_buffer_[device.device_id].length < size) {
+    id<MTLDevice> dev = MetalWorkspace::Global()->GetDevice(device);
+    if (temp_buffer_[device.device_id] != nil) {
+      [temp_buffer_[device.device_id] release];
     }
-    temp_buffer_[ctx.device_id] = [
+    temp_buffer_[device.device_id] = [
         [dev newBufferWithLength:size
             options:MTLStorageModeShared] retain];
   }
-  return temp_buffer_[ctx.device_id];
+  return temp_buffer_[device.device_id];
 }
 
 typedef dmlc::ThreadLocalStore<MetalThreadEntry> MetalThreadStore;

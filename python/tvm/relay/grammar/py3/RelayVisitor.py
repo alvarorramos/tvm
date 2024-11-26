@@ -10,333 +10,333 @@ else:
 class RelayVisitor(ParseTreeVisitor):
 
     # Visit a parse tree produced by RelayParser#prog.
-    def visitProg(self, ctx:RelayParser.ProgContext):
-        return self.visitChildren(ctx)
+    def visitProg(self, device:RelayParser.ProgContext):
+        return self.visitChildren(device)
 
 
     # Visit a parse tree produced by RelayParser#generalIdent.
-    def visitGeneralIdent(self, ctx:RelayParser.GeneralIdentContext):
-        return self.visitChildren(ctx)
+    def visitGeneralIdent(self, device:RelayParser.GeneralIdentContext):
+        return self.visitChildren(device)
 
 
     # Visit a parse tree produced by RelayParser#globalVar.
-    def visitGlobalVar(self, ctx:RelayParser.GlobalVarContext):
-        return self.visitChildren(ctx)
+    def visitGlobalVar(self, device:RelayParser.GlobalVarContext):
+        return self.visitChildren(device)
 
 
     # Visit a parse tree produced by RelayParser#localVar.
-    def visitLocalVar(self, ctx:RelayParser.LocalVarContext):
-        return self.visitChildren(ctx)
+    def visitLocalVar(self, device:RelayParser.LocalVarContext):
+        return self.visitChildren(device)
 
 
     # Visit a parse tree produced by RelayParser#graphVar.
-    def visitGraphVar(self, ctx:RelayParser.GraphVarContext):
-        return self.visitChildren(ctx)
+    def visitGraphVar(self, device:RelayParser.GraphVarContext):
+        return self.visitChildren(device)
 
 
     # Visit a parse tree produced by RelayParser#exprList.
-    def visitExprList(self, ctx:RelayParser.ExprListContext):
-        return self.visitChildren(ctx)
+    def visitExprList(self, device:RelayParser.ExprListContext):
+        return self.visitChildren(device)
 
 
     # Visit a parse tree produced by RelayParser#callNoAttr.
-    def visitCallNoAttr(self, ctx:RelayParser.CallNoAttrContext):
-        return self.visitChildren(ctx)
+    def visitCallNoAttr(self, device:RelayParser.CallNoAttrContext):
+        return self.visitChildren(device)
 
 
     # Visit a parse tree produced by RelayParser#callWithAttr.
-    def visitCallWithAttr(self, ctx:RelayParser.CallWithAttrContext):
-        return self.visitChildren(ctx)
+    def visitCallWithAttr(self, device:RelayParser.CallWithAttrContext):
+        return self.visitChildren(device)
 
 
     # Visit a parse tree produced by RelayParser#funcExpr.
-    def visitFuncExpr(self, ctx:RelayParser.FuncExprContext):
-        return self.visitChildren(ctx)
+    def visitFuncExpr(self, device:RelayParser.FuncExprContext):
+        return self.visitChildren(device)
 
 
     # Visit a parse tree produced by RelayParser#metaExpr.
-    def visitMetaExpr(self, ctx:RelayParser.MetaExprContext):
-        return self.visitChildren(ctx)
+    def visitMetaExpr(self, device:RelayParser.MetaExprContext):
+        return self.visitChildren(device)
 
 
     # Visit a parse tree produced by RelayParser#match.
-    def visitMatch(self, ctx:RelayParser.MatchContext):
-        return self.visitChildren(ctx)
+    def visitMatch(self, device:RelayParser.MatchContext):
+        return self.visitChildren(device)
 
 
     # Visit a parse tree produced by RelayParser#tensor.
-    def visitTensor(self, ctx:RelayParser.TensorContext):
-        return self.visitChildren(ctx)
+    def visitTensor(self, device:RelayParser.TensorContext):
+        return self.visitChildren(device)
 
 
     # Visit a parse tree produced by RelayParser#graph.
-    def visitGraph(self, ctx:RelayParser.GraphContext):
-        return self.visitChildren(ctx)
+    def visitGraph(self, device:RelayParser.GraphContext):
+        return self.visitChildren(device)
 
 
     # Visit a parse tree produced by RelayParser#identExpr.
-    def visitIdentExpr(self, ctx:RelayParser.IdentExprContext):
-        return self.visitChildren(ctx)
+    def visitIdentExpr(self, device:RelayParser.IdentExprContext):
+        return self.visitChildren(device)
 
 
     # Visit a parse tree produced by RelayParser#stringExpr.
-    def visitStringExpr(self, ctx:RelayParser.StringExprContext):
-        return self.visitChildren(ctx)
+    def visitStringExpr(self, device:RelayParser.StringExprContext):
+        return self.visitChildren(device)
 
 
     # Visit a parse tree produced by RelayParser#call.
-    def visitCall(self, ctx:RelayParser.CallContext):
-        return self.visitChildren(ctx)
+    def visitCall(self, device:RelayParser.CallContext):
+        return self.visitChildren(device)
 
 
     # Visit a parse tree produced by RelayParser#neg.
-    def visitNeg(self, ctx:RelayParser.NegContext):
-        return self.visitChildren(ctx)
+    def visitNeg(self, device:RelayParser.NegContext):
+        return self.visitChildren(device)
 
 
     # Visit a parse tree produced by RelayParser#tuple.
-    def visitTuple(self, ctx:RelayParser.TupleContext):
-        return self.visitChildren(ctx)
+    def visitTuple(self, device:RelayParser.TupleContext):
+        return self.visitChildren(device)
 
 
     # Visit a parse tree produced by RelayParser#paren.
-    def visitParen(self, ctx:RelayParser.ParenContext):
-        return self.visitChildren(ctx)
+    def visitParen(self, device:RelayParser.ParenContext):
+        return self.visitChildren(device)
 
 
     # Visit a parse tree produced by RelayParser#scalarExpr.
-    def visitScalarExpr(self, ctx:RelayParser.ScalarExprContext):
-        return self.visitChildren(ctx)
+    def visitScalarExpr(self, device:RelayParser.ScalarExprContext):
+        return self.visitChildren(device)
 
 
     # Visit a parse tree produced by RelayParser#let.
-    def visitLet(self, ctx:RelayParser.LetContext):
-        return self.visitChildren(ctx)
+    def visitLet(self, device:RelayParser.LetContext):
+        return self.visitChildren(device)
 
 
     # Visit a parse tree produced by RelayParser#projection.
-    def visitProjection(self, ctx:RelayParser.ProjectionContext):
-        return self.visitChildren(ctx)
+    def visitProjection(self, device:RelayParser.ProjectionContext):
+        return self.visitChildren(device)
 
 
     # Visit a parse tree produced by RelayParser#ifElse.
-    def visitIfElse(self, ctx:RelayParser.IfElseContext):
-        return self.visitChildren(ctx)
+    def visitIfElse(self, device:RelayParser.IfElseContext):
+        return self.visitChildren(device)
 
 
     # Visit a parse tree produced by RelayParser#binOp.
-    def visitBinOp(self, ctx:RelayParser.BinOpContext):
-        return self.visitChildren(ctx)
+    def visitBinOp(self, device:RelayParser.BinOpContext):
+        return self.visitChildren(device)
 
 
     # Visit a parse tree produced by RelayParser#func.
-    def visitFunc(self, ctx:RelayParser.FuncContext):
-        return self.visitChildren(ctx)
+    def visitFunc(self, device:RelayParser.FuncContext):
+        return self.visitChildren(device)
 
 
     # Visit a parse tree produced by RelayParser#funcDefn.
-    def visitFuncDefn(self, ctx:RelayParser.FuncDefnContext):
-        return self.visitChildren(ctx)
+    def visitFuncDefn(self, device:RelayParser.FuncDefnContext):
+        return self.visitChildren(device)
 
 
     # Visit a parse tree produced by RelayParser#externAdtDefn.
-    def visitExternAdtDefn(self, ctx:RelayParser.ExternAdtDefnContext):
-        return self.visitChildren(ctx)
+    def visitExternAdtDefn(self, device:RelayParser.ExternAdtDefnContext):
+        return self.visitChildren(device)
 
 
     # Visit a parse tree produced by RelayParser#adtDefn.
-    def visitAdtDefn(self, ctx:RelayParser.AdtDefnContext):
-        return self.visitChildren(ctx)
+    def visitAdtDefn(self, device:RelayParser.AdtDefnContext):
+        return self.visitChildren(device)
 
 
     # Visit a parse tree produced by RelayParser#constructorName.
-    def visitConstructorName(self, ctx:RelayParser.ConstructorNameContext):
-        return self.visitChildren(ctx)
+    def visitConstructorName(self, device:RelayParser.ConstructorNameContext):
+        return self.visitChildren(device)
 
 
     # Visit a parse tree produced by RelayParser#adtConsDefnList.
-    def visitAdtConsDefnList(self, ctx:RelayParser.AdtConsDefnListContext):
-        return self.visitChildren(ctx)
+    def visitAdtConsDefnList(self, device:RelayParser.AdtConsDefnListContext):
+        return self.visitChildren(device)
 
 
     # Visit a parse tree produced by RelayParser#adtConsDefn.
-    def visitAdtConsDefn(self, ctx:RelayParser.AdtConsDefnContext):
-        return self.visitChildren(ctx)
+    def visitAdtConsDefn(self, device:RelayParser.AdtConsDefnContext):
+        return self.visitChildren(device)
 
 
     # Visit a parse tree produced by RelayParser#matchClauseList.
-    def visitMatchClauseList(self, ctx:RelayParser.MatchClauseListContext):
-        return self.visitChildren(ctx)
+    def visitMatchClauseList(self, device:RelayParser.MatchClauseListContext):
+        return self.visitChildren(device)
 
 
     # Visit a parse tree produced by RelayParser#matchClause.
-    def visitMatchClause(self, ctx:RelayParser.MatchClauseContext):
-        return self.visitChildren(ctx)
+    def visitMatchClause(self, device:RelayParser.MatchClauseContext):
+        return self.visitChildren(device)
 
 
     # Visit a parse tree produced by RelayParser#matchType.
-    def visitMatchType(self, ctx:RelayParser.MatchTypeContext):
-        return self.visitChildren(ctx)
+    def visitMatchType(self, device:RelayParser.MatchTypeContext):
+        return self.visitChildren(device)
 
 
     # Visit a parse tree produced by RelayParser#patternList.
-    def visitPatternList(self, ctx:RelayParser.PatternListContext):
-        return self.visitChildren(ctx)
+    def visitPatternList(self, device:RelayParser.PatternListContext):
+        return self.visitChildren(device)
 
 
     # Visit a parse tree produced by RelayParser#wildcardPattern.
-    def visitWildcardPattern(self, ctx:RelayParser.WildcardPatternContext):
-        return self.visitChildren(ctx)
+    def visitWildcardPattern(self, device:RelayParser.WildcardPatternContext):
+        return self.visitChildren(device)
 
 
     # Visit a parse tree produced by RelayParser#varPattern.
-    def visitVarPattern(self, ctx:RelayParser.VarPatternContext):
-        return self.visitChildren(ctx)
+    def visitVarPattern(self, device:RelayParser.VarPatternContext):
+        return self.visitChildren(device)
 
 
     # Visit a parse tree produced by RelayParser#constructorPattern.
-    def visitConstructorPattern(self, ctx:RelayParser.ConstructorPatternContext):
-        return self.visitChildren(ctx)
+    def visitConstructorPattern(self, device:RelayParser.ConstructorPatternContext):
+        return self.visitChildren(device)
 
 
     # Visit a parse tree produced by RelayParser#tuplePattern.
-    def visitTuplePattern(self, ctx:RelayParser.TuplePatternContext):
-        return self.visitChildren(ctx)
+    def visitTuplePattern(self, device:RelayParser.TuplePatternContext):
+        return self.visitChildren(device)
 
 
     # Visit a parse tree produced by RelayParser#adtCons.
-    def visitAdtCons(self, ctx:RelayParser.AdtConsContext):
-        return self.visitChildren(ctx)
+    def visitAdtCons(self, device:RelayParser.AdtConsContext):
+        return self.visitChildren(device)
 
 
     # Visit a parse tree produced by RelayParser#adtConsParamList.
-    def visitAdtConsParamList(self, ctx:RelayParser.AdtConsParamListContext):
-        return self.visitChildren(ctx)
+    def visitAdtConsParamList(self, device:RelayParser.AdtConsParamListContext):
+        return self.visitChildren(device)
 
 
     # Visit a parse tree produced by RelayParser#adtConsParam.
-    def visitAdtConsParam(self, ctx:RelayParser.AdtConsParamContext):
-        return self.visitChildren(ctx)
+    def visitAdtConsParam(self, device:RelayParser.AdtConsParamContext):
+        return self.visitChildren(device)
 
 
     # Visit a parse tree produced by RelayParser#argNoAttr.
-    def visitArgNoAttr(self, ctx:RelayParser.ArgNoAttrContext):
-        return self.visitChildren(ctx)
+    def visitArgNoAttr(self, device:RelayParser.ArgNoAttrContext):
+        return self.visitChildren(device)
 
 
     # Visit a parse tree produced by RelayParser#argWithAttr.
-    def visitArgWithAttr(self, ctx:RelayParser.ArgWithAttrContext):
-        return self.visitChildren(ctx)
+    def visitArgWithAttr(self, device:RelayParser.ArgWithAttrContext):
+        return self.visitChildren(device)
 
 
     # Visit a parse tree produced by RelayParser#varList.
-    def visitVarList(self, ctx:RelayParser.VarListContext):
-        return self.visitChildren(ctx)
+    def visitVarList(self, device:RelayParser.VarListContext):
+        return self.visitChildren(device)
 
 
     # Visit a parse tree produced by RelayParser#var.
-    def visitVar(self, ctx:RelayParser.VarContext):
-        return self.visitChildren(ctx)
+    def visitVar(self, device:RelayParser.VarContext):
+        return self.visitChildren(device)
 
 
     # Visit a parse tree produced by RelayParser#attrSeq.
-    def visitAttrSeq(self, ctx:RelayParser.AttrSeqContext):
-        return self.visitChildren(ctx)
+    def visitAttrSeq(self, device:RelayParser.AttrSeqContext):
+        return self.visitChildren(device)
 
 
     # Visit a parse tree produced by RelayParser#attr.
-    def visitAttr(self, ctx:RelayParser.AttrContext):
-        return self.visitChildren(ctx)
+    def visitAttr(self, device:RelayParser.AttrContext):
+        return self.visitChildren(device)
 
 
     # Visit a parse tree produced by RelayParser#tupleType.
-    def visitTupleType(self, ctx:RelayParser.TupleTypeContext):
-        return self.visitChildren(ctx)
+    def visitTupleType(self, device:RelayParser.TupleTypeContext):
+        return self.visitChildren(device)
 
 
     # Visit a parse tree produced by RelayParser#typeParen.
-    def visitTypeParen(self, ctx:RelayParser.TypeParenContext):
-        return self.visitChildren(ctx)
+    def visitTypeParen(self, device:RelayParser.TypeParenContext):
+        return self.visitChildren(device)
 
 
     # Visit a parse tree produced by RelayParser#typeCallType.
-    def visitTypeCallType(self, ctx:RelayParser.TypeCallTypeContext):
-        return self.visitChildren(ctx)
+    def visitTypeCallType(self, device:RelayParser.TypeCallTypeContext):
+        return self.visitChildren(device)
 
 
     # Visit a parse tree produced by RelayParser#typeIdentType.
-    def visitTypeIdentType(self, ctx:RelayParser.TypeIdentTypeContext):
-        return self.visitChildren(ctx)
+    def visitTypeIdentType(self, device:RelayParser.TypeIdentTypeContext):
+        return self.visitChildren(device)
 
 
     # Visit a parse tree produced by RelayParser#tensorType.
-    def visitTensorType(self, ctx:RelayParser.TensorTypeContext):
-        return self.visitChildren(ctx)
+    def visitTensorType(self, device:RelayParser.TensorTypeContext):
+        return self.visitChildren(device)
 
 
     # Visit a parse tree produced by RelayParser#funcType.
-    def visitFuncType(self, ctx:RelayParser.FuncTypeContext):
-        return self.visitChildren(ctx)
+    def visitFuncType(self, device:RelayParser.FuncTypeContext):
+        return self.visitChildren(device)
 
 
     # Visit a parse tree produced by RelayParser#incompleteType.
-    def visitIncompleteType(self, ctx:RelayParser.IncompleteTypeContext):
-        return self.visitChildren(ctx)
+    def visitIncompleteType(self, device:RelayParser.IncompleteTypeContext):
+        return self.visitChildren(device)
 
 
     # Visit a parse tree produced by RelayParser#typeParamList.
-    def visitTypeParamList(self, ctx:RelayParser.TypeParamListContext):
-        return self.visitChildren(ctx)
+    def visitTypeParamList(self, device:RelayParser.TypeParamListContext):
+        return self.visitChildren(device)
 
 
     # Visit a parse tree produced by RelayParser#shapeList.
-    def visitShapeList(self, ctx:RelayParser.ShapeListContext):
-        return self.visitChildren(ctx)
+    def visitShapeList(self, device:RelayParser.ShapeListContext):
+        return self.visitChildren(device)
 
 
     # Visit a parse tree produced by RelayParser#meta.
-    def visitMeta(self, ctx:RelayParser.MetaContext):
-        return self.visitChildren(ctx)
+    def visitMeta(self, device:RelayParser.MetaContext):
+        return self.visitChildren(device)
 
 
     # Visit a parse tree produced by RelayParser#metaShape.
-    def visitMetaShape(self, ctx:RelayParser.MetaShapeContext):
-        return self.visitChildren(ctx)
+    def visitMetaShape(self, device:RelayParser.MetaShapeContext):
+        return self.visitChildren(device)
 
 
     # Visit a parse tree produced by RelayParser#parensShape.
-    def visitParensShape(self, ctx:RelayParser.ParensShapeContext):
-        return self.visitChildren(ctx)
+    def visitParensShape(self, device:RelayParser.ParensShapeContext):
+        return self.visitChildren(device)
 
 
     # Visit a parse tree produced by RelayParser#intShape.
-    def visitIntShape(self, ctx:RelayParser.IntShapeContext):
-        return self.visitChildren(ctx)
+    def visitIntShape(self, device:RelayParser.IntShapeContext):
+        return self.visitChildren(device)
 
 
     # Visit a parse tree produced by RelayParser#body.
-    def visitBody(self, ctx:RelayParser.BodyContext):
-        return self.visitChildren(ctx)
+    def visitBody(self, device:RelayParser.BodyContext):
+        return self.visitChildren(device)
 
 
     # Visit a parse tree produced by RelayParser#scalarFloat.
-    def visitScalarFloat(self, ctx:RelayParser.ScalarFloatContext):
-        return self.visitChildren(ctx)
+    def visitScalarFloat(self, device:RelayParser.ScalarFloatContext):
+        return self.visitChildren(device)
 
 
     # Visit a parse tree produced by RelayParser#scalarInt.
-    def visitScalarInt(self, ctx:RelayParser.ScalarIntContext):
-        return self.visitChildren(ctx)
+    def visitScalarInt(self, device:RelayParser.ScalarIntContext):
+        return self.visitChildren(device)
 
 
     # Visit a parse tree produced by RelayParser#scalarBool.
-    def visitScalarBool(self, ctx:RelayParser.ScalarBoolContext):
-        return self.visitChildren(ctx)
+    def visitScalarBool(self, device:RelayParser.ScalarBoolContext):
+        return self.visitChildren(device)
 
 
     # Visit a parse tree produced by RelayParser#ident.
-    def visitIdent(self, ctx:RelayParser.IdentContext):
-        return self.visitChildren(ctx)
+    def visitIdent(self, device:RelayParser.IdentContext):
+        return self.visitChildren(device)
 
 
 

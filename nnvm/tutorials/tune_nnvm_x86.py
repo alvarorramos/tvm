@@ -190,15 +190,15 @@ def tune_and_evaluate(tuning_opt):
                 net, target=target, shape={'data': data_shape}, params=params, dtype=dtype)
 
         # upload parameters to device
-        ctx = tvm.cpu()
+        device = tvm.cpu()
         data_tvm = tvm.nd.array((np.random.uniform(size=data_shape)).astype(dtype))
-        module = runtime.create(graph, lib, ctx)
+        module = runtime.create(graph, lib, device)
         module.set_input('data', data_tvm)
         module.set_input(**params)
 
         # evaluate
         print("Evaluate inference time cost...")
-        ftimer = module.module.time_evaluator("run", ctx, number=100, repeat=3)
+        ftimer = module.module.time_evaluator("run", device, number=100, repeat=3)
         prof_res = np.array(ftimer().results) * 1000  # convert to millisecond
         print("Mean inference time (std dev): %.2f ms (%.2f ms)" %
               (np.mean(prof_res), np.std(prof_res)))

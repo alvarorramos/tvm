@@ -340,17 +340,17 @@ class RelayBuildModule : public runtime::ModuleNode {
     transform::Pass seq = transform::Sequential(pass_seqs);
     if (targets.size() == 1) {
       const auto& it = targets.begin();
-      With<Target> tctx((*it).second);
+      With<Target> tdevice((*it).second);
       relay_module = seq(relay_module);
     } else {
       relay_module = seq(relay_module);
     }
 
     // Handle heterogeneous compilation.
-    transform::PassContext pass_ctx = PassContext::Current();
+    transform::PassContext pass_device = PassContext::Current();
     if (targets_.size() > 1) {
       relay_module =
-          RunDeviceAnnotationPass(relay_module, pass_ctx->fallback_device);
+          RunDeviceAnnotationPass(relay_module, pass_device->fallback_device);
     }
 
     // Fuse the operations if it is needed.

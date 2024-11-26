@@ -170,7 +170,7 @@ subclasses at the level of modules, functions, or sequences of passes..
     class PassNode : RelayNode {
       virtual PassInfo Info() const = 0;
       virtual Module operator()(const Module& mod
-                                const PassContext& pass_ctx) const = 0;
+                                const PassContext& pass_device) const = 0;
     };
 
 The functor shows how a pass must be realized, i.e. it always works on a `Relay
@@ -199,7 +199,7 @@ level, users can even add and/or delete functions in a module.
     class ModulePassNode : PassNode {
       PassInfo pass_info;
       runtime::TypedPackedFunc<Module(Module, PassContext)> pass_func;
-      Module operator()(const Module& mod, const PassContext& pass_ctx) const final;
+      Module operator()(const Module& mod, const PassContext& pass_device) const final;
       // Other members/methods are omitted
     };
 
@@ -229,7 +229,7 @@ the global information.
     class FunctionPassNode : PassNode {
       PassInfo pass_info;
       runtime::TypedPackedFunc<Function(Function, Module, PassContext)> pass_func;
-      Module operator()(const Module& mod, const PassContext& pass_ctx) const final;
+      Module operator()(const Module& mod, const PassContext& pass_device) const final;
       bool SkipFunction(const Function& func) const;
       // Other members/methods are omitted...
     };
@@ -252,7 +252,7 @@ of passes for execution.
       // Passes need to be executed.
       Array<Pass> passes;
       bool PassEnabled(const PassInfo& info) const;
-      Module operator()(const Module& mod, const PassContext& pass_ctx) const final;
+      Module operator()(const Module& mod, const PassContext& pass_device) const final;
     };
 
 Only a few passes currently in Relay are put in this group. For example,
@@ -268,7 +268,7 @@ order that they were appended to the pass list.
 .. code:: c++
 
     Module SequentialNode::operator()(const Module& module,
-                                      const PassContext& pass_ctx) const {
+                                      const PassContext& pass_device) const {
       Module mod = module;
       for (const Pass& pass : passes) {
         CHECK(pass.defined()) << "Found undefined pass for optimization.";
@@ -277,9 +277,9 @@ order that they were appended to the pass list.
         for (const auto& it : pass_info->required) {
           const auto* name = it.as<tvm::ir::StringImm>();
           CHECK(name);
-          mod = GetPass(name->value)(mod, pass_ctx);
+          mod = GetPass(name->value)(mod, pass_device);
         }
-        mod = pass(mod, pass_ctx);
+        mod = pass(mod, pass_device);
       }
       return mod;
     }
@@ -365,12 +365,12 @@ registration.
     relay::transform::Pass seq = relay::transform::Sequential(pass_seqs);
     
     // Create a pass context for the optimization.
-    auto ctx = relay::transform::PassContext::Create();
-    ctx->opt_level = 2;
-    ctx->fallback_device = kDLCPU;
+    auto device = relay::transform::PassContext::Create();
+    device->opt_level = 2;
+    device->fallback_device = kDLCPU;
 
     // Use the Python with syntax to execute the sequence of optimizations.
-    tvm::With<relay::transform::PassContext> scope(ctx);
+    tvm::With<relay::transform::PassContext> scope(device);
     mod = seq(mod);
 
     // View the updated module.
@@ -506,7 +506,7 @@ Users can build a pass through decoration like the following:
 .. code:: python
 
     @relay.transform.module_pass(opt_level=2)
-    def transform(mod, ctx):
+    def transform(mod, device):
        tp = relay.TensorType((10,), "float32")
        x = relay.var("x", tp)
        gv = relay.GlobalVar("abs")
@@ -539,7 +539,7 @@ instance, an example function-level pass could be written as the following:
     class TestReplaceFunc:
        def __init__(self, new_func):
           self.new_func = new_func
-          def transform_function(self, func, mod, ctx):
+          def transform_function(self, func, mod, device):
              # Just for demo purposes
              # Transform func to new_func
              return self.new_func

@@ -230,18 +230,18 @@ class RPCRunner(Runner):
         if 'cuda' in self.task.target.keys or 'opencl' in self.task.target.keys or \
            'rocm' in self.task.target.keys:
             remote = request_remote(self.key, self.host, self.port)
-            ctx = remote.context(str(self.task.target), 0)
-            max_dims = ctx.max_thread_dimensions
+            device = remote.context(str(self.task.target), 0)
+            max_dims = device.max_thread_dimensions
             kwargs['check_gpu'] = {
-                'max_shared_memory_per_block': ctx.max_shared_memory_per_block,
-                'max_threads_per_block': ctx.max_threads_per_block,
+                'max_shared_memory_per_block': device.max_shared_memory_per_block,
+                'max_threads_per_block': device.max_threads_per_block,
                 'max_thread_x': max_dims[0],
                 'max_thread_y': max_dims[1],
                 'max_thread_z': max_dims[2],
             }
 
             if 'cuda' in self.task.target.keys:
-                kwargs["cuda_arch"] = "sm_" + "".join(ctx.compute_version.split('.'))
+                kwargs["cuda_arch"] = "sm_" + "".join(device.compute_version.split('.'))
 
         return kwargs
 
@@ -465,19 +465,19 @@ def run_through_rpc(measure_input, build_result,
             reconfig_runtime(remote)
         remote.upload(build_result.filename)
         func = remote.load_module(os.path.split(build_result.filename)[1])
-        ctx = remote.context(str(measure_input.target), 0)
+        device = remote.context(str(measure_input.target), 0)
         time_f = func.time_evaluator(
-            func.entry_name, ctx, number=number, repeat=repeat, min_repeat_ms=min_repeat_ms)
+            func.entry_name, device, number=number, repeat=repeat, min_repeat_ms=min_repeat_ms)
 
         # set input
         if ref_input:
-            args = [nd.array(x, ctx=ctx) for x in ref_input]
+            args = [nd.array(x, device=device) for x in ref_input]
         else:
             # create empty arrays on the remote device and copy them once.
             # This can avoid some memory issues that make the measurement results unreliable.
-            args = [nd.empty(x[0], dtype=x[1], ctx=ctx) for x in build_result.arg_info]
-            args = [nd.array(x, ctx=ctx) for x in args]
-            ctx.sync()
+            args = [nd.empty(x[0], dtype=x[1], device=device) for x in build_result.arg_info]
+            args = [nd.array(x, device=device) for x in args]
+            device.sync()
 
         costs = time_f(*args).results
 
@@ -570,8 +570,8 @@ def check_remote(target, device_key, host=None, port=None, priority=100, timeout
     """
     def _check():
         remote = request_remote(device_key, host, port, priority)
-        ctx = remote.context(str(target))
-        while not ctx.exist:  # wait until we get an available device
+        device = remote.context(str(target))
+        while not device.exist:  # wait until we get an available device
             pass
     t = threading.Thread(target=_check,)
     t.start()

@@ -59,12 +59,12 @@ dtype = "float32"
 # Target settings
 # Use these commented settings to build for cuda.
 #target = 'cuda'
-#ctx = tvm.gpu(0)
+#device = tvm.gpu(0)
 # Use these commented settings to build for opencl.
 #target = 'opencl'
-#ctx = tvm.opencl(0)
+#device = tvm.opencl(0)
 target = "llvm"
-ctx = tvm.cpu()
+device = tvm.cpu()
 
 ######################################################################
 # Download MXNet SSD pre-trained model and demo image
@@ -133,7 +133,7 @@ img_data -= np.array([123, 117, 104])
 img_data = np.transpose(np.array(img_data), (2, 0, 1))
 img_data = np.expand_dims(img_data, axis=0)
 # Build TVM runtime
-m = graph_runtime.create(graph, lib, ctx)
+m = graph_runtime.create(graph, lib, device)
 m.set_input('data', tvm.nd.array(img_data.astype(dtype)))
 m.set_input(**params)
 # execute

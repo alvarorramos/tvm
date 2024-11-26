@@ -134,12 +134,12 @@ public class LoadAddFunc {
     String loadingDir = args[0];
     Module fadd = Module.load(loadingDir + File.separator + "add_cpu.so");
 
-    TVMContext ctx = TVMContext.cpu();
+    TVMContext device = TVMContext.cpu();
 
     long[] shape = new long[]{2};
-    NDArray arr = NDArray.empty(shape, ctx);
+    NDArray arr = NDArray.empty(shape, device);
     arr.copyFrom(new float[]{3f, 4f});
-    NDArray res = NDArray.empty(shape, ctx);
+    NDArray res = NDArray.empty(shape, device);
 
     fadd.entryFunc().pushArg(arr).pushArg(arr).pushArg(res).invoke();
     System.out.println(Arrays.toString(res.asFloatArray()));

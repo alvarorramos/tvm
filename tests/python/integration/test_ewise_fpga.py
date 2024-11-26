@@ -41,17 +41,17 @@ def test_exp():
     def check_device(device, host="llvm"):
         if not tvm.module.enabled(host):
             return
-        ctx = tvm.context(device, 0)
-        if not ctx.exist:
+        device = tvm.context(device, 0)
+        if not device.exist:
             return
         fexp = tvm.build(s, [A, B],
                          device, host,
                          name="myexp")
-        ctx = tvm.context(device, 0)
+        device = tvm.context(device, 0)
         # launch the kernel.
         n = 1024
-        a = tvm.nd.array(np.random.uniform(size=n).astype(A.dtype), ctx)
-        b = tvm.nd.array(np.zeros(n, dtype=B.dtype), ctx)
+        a = tvm.nd.array(np.random.uniform(size=n).astype(A.dtype), device)
+        b = tvm.nd.array(np.zeros(n, dtype=B.dtype), device)
         fexp(a, b)
         tvm.testing.assert_allclose(
             b.asnumpy(), np.exp(a.asnumpy()), rtol=1e-5)
@@ -80,19 +80,19 @@ def test_multi_kernel():
     def check_device(device, host="llvm"):
         if not tvm.module.enabled(host):
             return
-        ctx = tvm.context(device, 0)
-        if not ctx.exist:
+        device = tvm.context(device, 0)
+        if not device.exist:
             return
         fadd = tvm.build(s, [A, B, C, D],
                          device, host,
                          name="myadd")
-        ctx = tvm.context(device, 0)
+        device = tvm.context(device, 0)
         # launch the kernel.
         n = 1024
-        a = tvm.nd.array(np.random.uniform(size=n).astype(A.dtype), ctx)
-        b = tvm.nd.array(np.random.uniform(size=n).astype(B.dtype), ctx)
-        c = tvm.nd.array(np.random.uniform(size=n).astype(C.dtype), ctx)
-        d = tvm.nd.array(np.random.uniform(size=n).astype(D.dtype), ctx)
+        a = tvm.nd.array(np.random.uniform(size=n).astype(A.dtype), device)
+        b = tvm.nd.array(np.random.uniform(size=n).astype(B.dtype), device)
+        c = tvm.nd.array(np.random.uniform(size=n).astype(C.dtype), device)
+        d = tvm.nd.array(np.random.uniform(size=n).astype(D.dtype), device)
         fadd(a, b, c, d)
         tvm.testing.assert_allclose(
             d.asnumpy(), a.asnumpy() * 2 + b.asnumpy(), rtol=1e-5)

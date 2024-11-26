@@ -23,7 +23,7 @@ from tvm.contrib.nvcc import have_fp16
 
 def test_basic_build():
     tgt = "llvm"
-    ctx = tvm.cpu()
+    device = tvm.cpu()
     # func
     a = relay.var("a", dtype="float32", shape=(16, 8))
     b = relay.var("b", dtype="float32", shape=(8, 8))
@@ -32,21 +32,21 @@ def test_basic_build():
     y = relay.nn.relu(x)
     z = y + c
     func = relay.Function([a, b, c], z)
-    A = tvm.nd.array(np.random.uniform(-1, 1, (16, 8)).astype("float32"), ctx=ctx)
-    B = tvm.nd.array(np.random.uniform(-1, 1, (8, 8)).astype("float32"), ctx=ctx)
-    C = tvm.nd.array(np.random.uniform(-1, 1, (16, 8)).astype("float32"), ctx=ctx)
+    A = tvm.nd.array(np.random.uniform(-1, 1, (16, 8)).astype("float32"), device=device)
+    B = tvm.nd.array(np.random.uniform(-1, 1, (8, 8)).astype("float32"), device=device)
+    C = tvm.nd.array(np.random.uniform(-1, 1, (16, 8)).astype("float32"), device=device)
     params = {
         "b" : B,
         "c" : C
     }
     # build
     targets = {
-        tvm.expr.IntImm("int32", ctx.device_type): tgt
+        tvm.expr.IntImm("int32", device.device_type): tgt
     }
     g_json, mmod, params = relay.build(relay.Module.from_expr(func), targets, "llvm", params=params)
 
     # test
-    rt = tvm.contrib.graph_runtime.create(g_json, mmod, ctx)
+    rt = tvm.contrib.graph_runtime.create(g_json, mmod, device)
     rt.set_input("a", A)
     rt.load_params(relay.save_param_dict(params))
     rt.run()
@@ -65,8 +65,8 @@ def test_fp16_build():
         print("skip because cuda is not enabled.")
         return
 
-    ctx = tvm.gpu(0)
-    if dtype == "float16" and not have_fp16(ctx.compute_version):
+    device = tvm.gpu(0)
+    if dtype == "float16" and not have_fp16(device.compute_version):
         print("skip because gpu does not support fp16")
         return
 
@@ -74,8 +74,8 @@ def test_fp16_build():
     y = relay.var("y", dtype=dtype, shape=(4, 4))
     z = x + y
     func = relay.Function([x, y], z)
-    X = tvm.nd.array(np.random.uniform(-1, 1, (4, 4)).astype(dtype), ctx=ctx)
-    Y = tvm.nd.array(np.random.uniform(-1, 1, (4, 4)).astype(dtype), ctx=ctx)
+    X = tvm.nd.array(np.random.uniform(-1, 1, (4, 4)).astype(dtype), device=device)
+    Y = tvm.nd.array(np.random.uniform(-1, 1, (4, 4)).astype(dtype), device=device)
     params = {
         "x": X,
         "y": Y,
@@ -85,7 +85,7 @@ def test_fp16_build():
     g_json, mmod, params = relay.build(func, "cuda", params=params)
 
     # test
-    rt = tvm.contrib.graph_runtime.create(g_json, mmod, ctx)
+    rt = tvm.contrib.graph_runtime.create(g_json, mmod, device)
     rt.load_params(relay.save_param_dict(params))
     rt.run()
     out = rt.get_output(0)
@@ -95,11 +95,11 @@ def test_fp16_build():
 
 
 def test_fp16_conversion():
-    def check_conversion(tgt, ctx):
+    def check_conversion(tgt, device):
         if not tvm.module.enabled(tgt):
             print("skip because {} is not enabled.".format(tgt))
             return
-        elif tgt == "cuda" and ctx.exist and not have_fp16(ctx.compute_version):
+        elif tgt == "cuda" and device.exist and not have_fp16(device.compute_version):
             print("skip because gpu does not support fp16")
             return
 
@@ -118,7 +118,7 @@ def test_fp16_conversion():
                 g_json, mmod, params = relay.build(relay.Module.from_expr(func), tgt)
 
             # test
-            rt = tvm.contrib.graph_runtime.create(g_json, mmod, ctx)
+            rt = tvm.contrib.graph_runtime.create(g_json, mmod, device)
             rt.set_input("x", X)
             rt.run()
             out = rt.get_output(0)
@@ -126,8 +126,8 @@ def test_fp16_conversion():
             np.testing.assert_allclose(out.asnumpy(), X.asnumpy().astype(dst),
                                        atol=1e-5, rtol=1e-5)
 
-    for target, ctx in [('llvm', tvm.cpu()), ('cuda', tvm.gpu())]:
-        check_conversion(target, ctx)
+    for target, device in [('llvm', tvm.cpu()), ('cuda', tvm.gpu())]:
+        check_conversion(target, device)
 
 
 if __name__ == "__main__":

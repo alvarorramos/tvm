@@ -56,10 +56,10 @@ def verify_bitserial_conv2d_nchw(batch, in_size, in_channel, num_filter, kernel,
         return a_np, w_np, b_np
     a_np, w_np, b_np = get_ref_data()
 
-    ctx = tvm.cpu(0)
-    a = tvm.nd.array(a_np, ctx)
-    w = tvm.nd.array(w_np, ctx)
-    b = tvm.nd.array(np.zeros(get_const_tuple(B.shape), dtype=B.dtype), ctx)
+    device = tvm.cpu(0)
+    a = tvm.nd.array(a_np, device)
+    w = tvm.nd.array(w_np, device)
+    b = tvm.nd.array(np.zeros(get_const_tuple(B.shape), dtype=B.dtype), device)
     func = tvm.build(s, [A, W, B], "llvm")
     func(a, w, b)
     tvm.testing.assert_allclose(b.asnumpy(), b_np, rtol=1e-5)
@@ -94,10 +94,10 @@ def verify_bitserial_conv2d_nhwc(batch, in_size, in_channel, num_filter, kernel,
         return a_np, w_np, b_np
     a_np, w_np, b_np = get_ref_data()
 
-    ctx = tvm.cpu(0)
-    a = tvm.nd.array(a_np, ctx)
-    w = tvm.nd.array(w_np, ctx)
-    b = tvm.nd.array(np.zeros(get_const_tuple(B.shape), dtype=B.dtype), ctx)
+    device = tvm.cpu(0)
+    a = tvm.nd.array(a_np, device)
+    w = tvm.nd.array(w_np, device)
+    b = tvm.nd.array(np.zeros(get_const_tuple(B.shape), dtype=B.dtype), device)
     func = tvm.build(s, [A, W, B], 'llvm')
 
     func(a, w, b)

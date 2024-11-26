@@ -58,9 +58,9 @@ public class RPCSession {
    * @return The corresponding encoded remote context.
    */
   public TVMContext context(String devType, int devId) {
-    TVMContext ctx = new TVMContext(devType, devId);
+    TVMContext device = new TVMContext(devType, devId);
     int encode = (tblIndex + 1) * RPC.RPC_SESS_MASK;
-    return new TVMRemoteContext(ctx.deviceType + encode, devId, this);
+    return new TVMRemoteContext(device.deviceType + encode, devId, this);
   }
 
   /**

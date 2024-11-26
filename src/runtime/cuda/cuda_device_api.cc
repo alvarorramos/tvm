@@ -35,69 +35,69 @@ namespace runtime {
 
 class CUDADeviceAPI final : public DeviceAPI {
  public:
-  void SetDevice(TVMContext ctx) final {
-    CUDA_CALL(cudaSetDevice(ctx.device_id));
+  void SetDevice(TVMContext device) final {
+    CUDA_CALL(cudaSetDevice(device.device_id));
   }
-  void GetAttr(TVMContext ctx, DeviceAttrKind kind, TVMRetValue* rv) final {
+  void GetAttr(TVMContext device, DeviceAttrKind kind, TVMRetValue* rv) final {
     int value = 0;
     switch (kind) {
       case kExist:
         value = (
             cudaDeviceGetAttribute(
-                &value, cudaDevAttrMaxThreadsPerBlock, ctx.device_id)
+                &value, cudaDevAttrMaxThreadsPerBlock, device.device_id)
             == cudaSuccess);
         break;
       case kMaxThreadsPerBlock: {
         CUDA_CALL(cudaDeviceGetAttribute(
-            &value, cudaDevAttrMaxThreadsPerBlock, ctx.device_id));
+            &value, cudaDevAttrMaxThreadsPerBlock, device.device_id));
         break;
       }
       case kWarpSize: {
         CUDA_CALL(cudaDeviceGetAttribute(
-            &value, cudaDevAttrWarpSize, ctx.device_id));
+            &value, cudaDevAttrWarpSize, device.device_id));
         break;
       }
       case kMaxSharedMemoryPerBlock: {
         CUDA_CALL(cudaDeviceGetAttribute(
-            &value, cudaDevAttrMaxSharedMemoryPerBlock, ctx.device_id));
+            &value, cudaDevAttrMaxSharedMemoryPerBlock, device.device_id));
         break;
       }
       case kComputeVersion: {
         std::ostringstream os;
         CUDA_CALL(cudaDeviceGetAttribute(
-            &value, cudaDevAttrComputeCapabilityMajor, ctx.device_id));
+            &value, cudaDevAttrComputeCapabilityMajor, device.device_id));
         os << value << ".";
         CUDA_CALL(cudaDeviceGetAttribute(
-            &value, cudaDevAttrComputeCapabilityMinor, ctx.device_id));
+            &value, cudaDevAttrComputeCapabilityMinor, device.device_id));
         os << value;
         *rv = os.str();
         return;
       }
       case kDeviceName: {
         std::string name(256, 0);
-        CUDA_DRIVER_CALL(cuDeviceGetName(&name[0], name.size(), ctx.device_id));
+        CUDA_DRIVER_CALL(cuDeviceGetName(&name[0], name.size(), device.device_id));
         name.resize(strlen(name.c_str()));
         *rv = std::move(name);
         return;
       }
       case kMaxClockRate: {
         CUDA_CALL(cudaDeviceGetAttribute(
-            &value, cudaDevAttrClockRate, ctx.device_id));
+            &value, cudaDevAttrClockRate, device.device_id));
         break;
       }
       case kMultiProcessorCount: {
         CUDA_CALL(cudaDeviceGetAttribute(
-            &value, cudaDevAttrMultiProcessorCount, ctx.device_id));
+            &value, cudaDevAttrMultiProcessorCount, device.device_id));
         break;
       }
       case kMaxThreadDimensions: {
         int dims[3];
         CUDA_CALL(cudaDeviceGetAttribute(
-            &dims[0], cudaDevAttrMaxBlockDimX, ctx.device_id));
+            &dims[0], cudaDevAttrMaxBlockDimX, device.device_id));
         CUDA_CALL(cudaDeviceGetAttribute(
-            &dims[1], cudaDevAttrMaxBlockDimY, ctx.device_id));
+            &dims[1], cudaDevAttrMaxBlockDimY, device.device_id));
         CUDA_CALL(cudaDeviceGetAttribute(
-            &dims[2], cudaDevAttrMaxBlockDimZ, ctx.device_id));
+            &dims[2], cudaDevAttrMaxBlockDimZ, device.device_id));
 
         std::stringstream ss;  // use json string to return multiple int values;
         ss << "[" << dims[0] <<", " << dims[1] << ", " << dims[2] << "]";
@@ -108,11 +108,11 @@ class CUDADeviceAPI final : public DeviceAPI {
     }
     *rv = value;
   }
-  void* AllocDataSpace(TVMContext ctx,
+  void* AllocDataSpace(TVMContext device,
                        size_t nbytes,
                        size_t alignment,
                        TVMType type_hint) final {
-    CUDA_CALL(cudaSetDevice(ctx.device_id));
+    CUDA_CALL(cudaSetDevice(device.device_id));
     CHECK_EQ(256 % alignment, 0U)
         << "CUDA space is aligned at 256 bytes";
     void *ret;
@@ -120,8 +120,8 @@ class CUDADeviceAPI final : public DeviceAPI {
     return ret;
   }
 
-  void FreeDataSpace(TVMContext ctx, void* ptr) final {
-    CUDA_CALL(cudaSetDevice(ctx.device_id));
+  void FreeDataSpace(TVMContext device, void* ptr) final {
+    CUDA_CALL(cudaSetDevice(device.device_id));
     CUDA_CALL(cudaFree(ptr));
   }
 
@@ -130,48 +130,48 @@ class CUDADeviceAPI final : public DeviceAPI {
                       void* to,
                       size_t to_offset,
                       size_t size,
-                      TVMContext ctx_from,
-                      TVMContext ctx_to,
+                      TVMContext device_from,
+                      TVMContext device_to,
                       TVMType type_hint,
                       TVMStreamHandle stream) final {
     cudaStream_t cu_stream = static_cast<cudaStream_t>(stream);
     from = static_cast<const char*>(from) + from_offset;
     to = static_cast<char*>(to) + to_offset;
-    if (ctx_from.device_type == kDLGPU && ctx_to.device_type == kDLGPU) {
-      CUDA_CALL(cudaSetDevice(ctx_from.device_id));
-      if (ctx_from.device_id == ctx_to.device_id) {
+    if (device_from.device_type == kDLGPU && device_to.device_type == kDLGPU) {
+      CUDA_CALL(cudaSetDevice(device_from.device_id));
+      if (device_from.device_id == device_to.device_id) {
         GPUCopy(from, to, size, cudaMemcpyDeviceToDevice, cu_stream);
       } else {
-        cudaMemcpyPeerAsync(to, ctx_to.device_id,
-                            from, ctx_from.device_id,
+        cudaMemcpyPeerAsync(to, device_to.device_id,
+                            from, device_from.device_id,
                             size, cu_stream);
       }
-    } else if (ctx_from.device_type == kDLGPU && ctx_to.device_type == kDLCPU) {
-      CUDA_CALL(cudaSetDevice(ctx_from.device_id));
+    } else if (device_from.device_type == kDLGPU && device_to.device_type == kDLCPU) {
+      CUDA_CALL(cudaSetDevice(device_from.device_id));
       GPUCopy(from, to, size, cudaMemcpyDeviceToHost, cu_stream);
-    } else if (ctx_from.device_type == kDLCPU && ctx_to.device_type == kDLGPU) {
-      CUDA_CALL(cudaSetDevice(ctx_to.device_id));
+    } else if (device_from.device_type == kDLCPU && device_to.device_type == kDLGPU) {
+      CUDA_CALL(cudaSetDevice(device_to.device_id));
       GPUCopy(from, to, size, cudaMemcpyHostToDevice, cu_stream);
     } else {
       LOG(FATAL) << "expect copy from/to GPU or between GPU";
     }
   }
 
-  TVMStreamHandle CreateStream(TVMContext ctx) {
-    CUDA_CALL(cudaSetDevice(ctx.device_id));
+  TVMStreamHandle CreateStream(TVMContext device) {
+    CUDA_CALL(cudaSetDevice(device.device_id));
     cudaStream_t retval;
     CUDA_CALL(cudaStreamCreate(&retval));
     return static_cast<TVMStreamHandle>(retval);
   }
 
-  void FreeStream(TVMContext ctx, TVMStreamHandle stream) {
-    CUDA_CALL(cudaSetDevice(ctx.device_id));
+  void FreeStream(TVMContext device, TVMStreamHandle stream) {
+    CUDA_CALL(cudaSetDevice(device.device_id));
     cudaStream_t cu_stream = static_cast<cudaStream_t>(stream);
     CUDA_CALL(cudaStreamDestroy(cu_stream));
   }
 
-  void SyncStreamFromTo(TVMContext ctx, TVMStreamHandle event_src, TVMStreamHandle event_dst) {
-    CUDA_CALL(cudaSetDevice(ctx.device_id));
+  void SyncStreamFromTo(TVMContext device, TVMStreamHandle event_src, TVMStreamHandle event_dst) {
+    CUDA_CALL(cudaSetDevice(device.device_id));
     cudaStream_t src_stream = static_cast<cudaStream_t>(event_src);
     cudaStream_t dst_stream = static_cast<cudaStream_t>(event_dst);
     cudaEvent_t evt;
@@ -181,22 +181,22 @@ class CUDADeviceAPI final : public DeviceAPI {
     CUDA_CALL(cudaEventDestroy(evt));
   }
 
-  void StreamSync(TVMContext ctx, TVMStreamHandle stream) final {
-    CUDA_CALL(cudaSetDevice(ctx.device_id));
+  void StreamSync(TVMContext device, TVMStreamHandle stream) final {
+    CUDA_CALL(cudaSetDevice(device.device_id));
     CUDA_CALL(cudaStreamSynchronize(static_cast<cudaStream_t>(stream)));
   }
 
-  void SetStream(TVMContext ctx, TVMStreamHandle stream) final {
+  void SetStream(TVMContext device, TVMStreamHandle stream) final {
     CUDAThreadEntry::ThreadLocal()
         ->stream = static_cast<cudaStream_t>(stream);
   }
 
-  void* AllocWorkspace(TVMContext ctx, size_t size, TVMType type_hint) final {
-    return CUDAThreadEntry::ThreadLocal()->pool.AllocWorkspace(ctx, size);
+  void* AllocWorkspace(TVMContext device, size_t size, TVMType type_hint) final {
+    return CUDAThreadEntry::ThreadLocal()->pool.AllocWorkspace(device, size);
   }
 
-  void FreeWorkspace(TVMContext ctx, void* data) final {
-    CUDAThreadEntry::ThreadLocal()->pool.FreeWorkspace(ctx, data);
+  void FreeWorkspace(TVMContext device, void* data) final {
+    CUDAThreadEntry::ThreadLocal()->pool.FreeWorkspace(device, data);
   }
 
   static const std::shared_ptr<CUDADeviceAPI>& Global() {

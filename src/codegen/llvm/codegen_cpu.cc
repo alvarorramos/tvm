@@ -34,16 +34,16 @@ namespace codegen {
 
 void CodeGenCPU::Init(const std::string& module_name,
                       llvm::TargetMachine* tm,
-                      llvm::LLVMContext* ctx,
+                      llvm::LLVMContext* device,
                       bool system_lib,
                       bool dynamic_lookup) {
-  CodeGenLLVM::Init(module_name, tm, ctx, system_lib, dynamic_lookup);
+  CodeGenLLVM::Init(module_name, tm, device, system_lib, dynamic_lookup);
   dbg_info_ = CreateDebugInfo(module_.get());
   static_assert(sizeof(TVMValue) == sizeof(double), "invariant");
   func_handle_map_.clear();
   export_system_symbols_.clear();
   // TVM runtime types
-  t_tvm_shape_index_ = llvm::Type::getIntNTy(*ctx, TVMShapeIndexType().bits());
+  t_tvm_shape_index_ = llvm::Type::getIntNTy(*device, TVMShapeIndexType().bits());
   t_tvm_context_ = llvm::StructType::create({t_int_, t_int_});
   t_tvm_type_ = llvm::StructType::create({t_int8_, t_int8_, t_int16_});
   t_tvm_func_handle_ = t_void_p_;
@@ -63,7 +63,7 @@ void CodeGenCPU::Init(const std::string& module_name,
       {t_int_,
        t_tvm_parallel_group_env_->getPointerTo(),
        t_void_p_}, false);
-  md_tbaa_ctx_ptr_ = md_builder_->createTBAAScalarTypeNode("ctx_ptr", md_tbaa_root_);
+  md_tbaa_device_ptr_ = md_builder_->createTBAAScalarTypeNode("device_ptr", md_tbaa_root_);
   // Runtime functions.
   ftype_tvm_func_call_ = llvm::FunctionType::get(t_int_, {
       t_tvm_func_handle_,
@@ -241,7 +241,7 @@ void CodeGenCPU::AddMainFunction(const std::string& entry_func_name) {
 #else
   global->setAlignment(1);
 #endif
-  global->setInitializer(llvm::ConstantDataArray::getString(*ctx_, entry_func_name));
+  global->setInitializer(llvm::ConstantDataArray::getString(*device_, entry_func_name));
 }
 
 std::unique_ptr<llvm::Module> CodeGenCPU::Finish() {
@@ -369,17 +369,17 @@ llvm::Value* CodeGenCPU::GetContextPtr(llvm::GlobalVariable* gv) {
   llvm::LoadInst* faddr = builder_->CreateAlignedLoad(gv, gv->getAlignment());
   faddr->setMetadata(
       "tbaa",
-      md_builder_->createTBAAStructTagNode(md_tbaa_ctx_ptr_, md_tbaa_ctx_ptr_, 0));
+      md_builder_->createTBAAStructTagNode(md_tbaa_device_ptr_, md_tbaa_device_ptr_, 0));
   return faddr;
 }
 
 void CodeGenCPU::InitGlobalContext(bool dynamic_lookup) {
   // Module context
-  gv_mod_ctx_ = InitContextPtr(t_void_p_, tvm::runtime::symbol::tvm_module_ctx);
+  gv_mod_device_ = InitContextPtr(t_void_p_, tvm::runtime::symbol::tvm_module_device);
   // Register back the locations.
   if (f_tvm_register_system_symbol_ != nullptr) {
     export_system_symbols_.emplace_back(
-        std::make_pair(tvm::runtime::symbol::tvm_module_ctx, gv_mod_ctx_));
+        std::make_pair(tvm::runtime::symbol::tvm_module_device, gv_mod_device_));
   } else {
     if (!dynamic_lookup) {
       gv_tvm_func_call_ = InitContextPtr(
@@ -403,9 +403,9 @@ llvm::BasicBlock* CodeGenCPU::CheckCallSuccess(llvm::Value* retcode) {
   // create emit codes that checks and load the function.
   using llvm::BasicBlock;
   BasicBlock* fail_block = BasicBlock::Create(
-      *ctx_, "call_fail", function_);
+      *device_, "call_fail", function_);
   BasicBlock* end_block = BasicBlock::Create(
-      *ctx_, "call_end", function_);
+      *device_, "call_end", function_);
   llvm::Value* succ = builder_->CreateICmpEQ(
       retcode, llvm::ConstantInt::get(t_int_, 0));
   builder_->CreateCondBr(succ, end_block, fail_block, md_very_likely_branch_);
@@ -461,7 +461,7 @@ void CodeGenCPU::CreateComputeScope(const AttrStmt* op) {
   }
   std::swap(function_, fcompute);
   std::swap(new_vmap, var_map_);
-  BasicBlock *compute_entry = BasicBlock::Create(*ctx_, "entry", function_);
+  BasicBlock *compute_entry = BasicBlock::Create(*device_, "entry", function_);
   builder_->SetInsertPoint(compute_entry);
   this->VisitStmt(op->body);
   builder_->CreateRet(ConstInt32(0));
@@ -521,7 +521,7 @@ void CodeGenCPU::CreateParallelLaunch(const Stmt& body, int num_task) {
           RuntimeTVMParallelLaunch(),
           {f, builder_->CreatePointerCast(cdata, t_void_p_), ConstInt32(num_task)}));
   // Setup the closure function.
-  BasicBlock *lambda_entry = BasicBlock::Create(*ctx_, "entry", f);
+  BasicBlock *lambda_entry = BasicBlock::Create(*device_, "entry", f);
   builder_->SetInsertPoint(lambda_entry);
   auto it = f->arg_begin();
   llvm::Value* task_id = &(*it++);
@@ -589,7 +589,7 @@ void CodeGenCPU::CreateStaticInit(const std::string& init_fname, const Stmt& bod
           finit,
           {gv, f, builder_->CreatePointerCast(cdata, t_void_p_), ConstInt32(nbytes)}));
   // Setup the closure function.
-  BasicBlock *lambda_entry = BasicBlock::Create(*ctx_, "entry", f);
+  BasicBlock *lambda_entry = BasicBlock::Create(*device_, "entry", f);
   builder_->SetInsertPoint(lambda_entry);
   auto it = f->arg_begin();
   cdata = builder_->CreatePointerCast(&(*it++), cdata->getType());
@@ -635,9 +635,9 @@ llvm::Value* CodeGenCPU::GetPackedFuncHandle(const std::string& fname) {
   // create emit codes that checks and load the function.
   BasicBlock* pre_block = builder_->GetInsertBlock();
   BasicBlock* init_block = BasicBlock::Create(
-      *ctx_, "handle_init", function_);
+      *device_, "handle_init", function_);
   BasicBlock* end_block = BasicBlock::Create(
-      *ctx_, "handle_init_end", function_);
+      *device_, "handle_init_end", function_);
   llvm::Value* handle = builder_->CreateAlignedLoad(hptr, align);
   llvm::Value* handle_not_null =  builder_->CreateICmpNE(
       handle, llvm::Constant::getNullValue(t_tvm_func_handle_));
@@ -648,13 +648,13 @@ llvm::Value* CodeGenCPU::GetPackedFuncHandle(const std::string& fname) {
   llvm::Value* out = WithFunctionEntry([&]() {
       return builder_->CreateAlloca(t_tvm_func_handle_);
     });
-  llvm::LoadInst* ctx = builder_->CreateAlignedLoad(
-      gv_mod_ctx_, gv_mod_ctx_->getAlignment());
-  ctx->setMetadata(
+  llvm::LoadInst* device = builder_->CreateAlignedLoad(
+      gv_mod_device_, gv_mod_device_->getAlignment());
+  device->setMetadata(
       "tbaa",
-      md_builder_->createTBAAStructTagNode(md_tbaa_ctx_ptr_, md_tbaa_ctx_ptr_, 0));
+      md_builder_->createTBAAStructTagNode(md_tbaa_device_ptr_, md_tbaa_device_ptr_, 0));
   llvm::Value* retcode = builder_->CreateCall(
-      RuntimeTVMGetFuncFromEnv(), {ctx, GetConstString(fname), out});
+      RuntimeTVMGetFuncFromEnv(), {device, GetConstString(fname), out});
   init_block = CheckCallSuccess(retcode);
   llvm::Value* loaded_handle = builder_->CreateAlignedLoad(out, align);
   // Store the handle
@@ -723,11 +723,11 @@ llvm::Value *CodeGenCPU::CreateCallTracePacked(const Call *op) {
   llvm::Value *traced_value = MakeValue(op->args[5]);
   // The update_block handles case when we need to update the return value.
   BasicBlock *update_block =
-      BasicBlock::Create(*ctx_, "update_block", function_);
+      BasicBlock::Create(*device_, "update_block", function_);
   // The continue_block handles case when we need to return original
   // traced value.
   BasicBlock *continue_block =
-      BasicBlock::Create(*ctx_, "continue_block", function_);
+      BasicBlock::Create(*device_, "continue_block", function_);
   llvm::Value *ret_tcode_value = builder_->CreateAlignedLoad(ret_tcode, 8);
   // Check the ret_type_code and create cmp instruction.
   llvm::Value *cmp = builder_->CreateICmpNE(
@@ -773,7 +773,7 @@ void CodeGenCPU::AddStartupFunction() {
         ftype,
         llvm::Function::InternalLinkage,
         "__tvm_module_startup", module_.get());
-    llvm::BasicBlock* startup_entry = llvm::BasicBlock::Create(*ctx_, "entry", function_);
+    llvm::BasicBlock* startup_entry = llvm::BasicBlock::Create(*device_, "entry", function_);
     builder_->SetInsertPoint(startup_entry);
     for (const auto& kv : export_system_symbols_) {
       llvm::Value* name = GetConstString(kv.first);
@@ -856,9 +856,9 @@ void CodeGenCPU::VisitStmt_(const AssertStmt* op) {
   }
   llvm::Value* msg = GetConstString(os.str());
   BasicBlock* fail_block = BasicBlock::Create(
-      *ctx_, "assert_fail", function_);
+      *device_, "assert_fail", function_);
   BasicBlock* end_block = BasicBlock::Create(
-      *ctx_, "assert_end", function_);
+      *device_, "assert_end", function_);
   builder_->CreateCondBr(cond, end_block, fail_block, md_very_likely_branch_);
   // fail condition.
   builder_->SetInsertPoint(fail_block);

@@ -96,13 +96,13 @@ class TVM_DLL GraphRuntime : public ModuleNode {
    * \param graph_json The execution graph.
    * \param module The module containing the compiled functions for the host
    *  processor.
-   * \param ctxs The context of the host and devices where graph nodes will be
+   * \param devices The context of the host and devices where graph nodes will be
    *  executed on.
    */
 
   void Init(const std::string& graph_json,
             tvm::runtime::Module module,
-            const std::vector<TVMContext>& ctxs);
+            const std::vector<TVMContext>& devices);
 
   /*!
    * \brief Get the input index given the name of input.
@@ -409,7 +409,7 @@ class TVM_DLL GraphRuntime : public ModuleNode {
   /*! \brief The code module that contains both host and device code. */
   tvm::runtime::Module module_;
   /*! \brief Execution context of all devices including the host. */
-  std::vector<TVMContext> ctxs_;
+  std::vector<TVMContext> devices_;
   /*! \brief Common storage pool for all devices. */
   std::vector<NDArray> storage_pool_;
   /*! \brief Data entry of each node. */

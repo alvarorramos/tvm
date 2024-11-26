@@ -48,8 +48,8 @@ def verify_conv2d_1x1_nhwc_pack_int8(batch, in_channel, in_size, num_filter, ker
     a_np, w_np, b_np = get_ref_data()
 
     def check_device(device):
-        ctx = tvm.context(device, 0)
-        if not ctx.exist:
+        device = tvm.context(device, 0)
+        if not device.exist:
             print("Skip because %s is not enabled" % device)
             return
         print("Running on target: %s" % device)
@@ -57,9 +57,9 @@ def verify_conv2d_1x1_nhwc_pack_int8(batch, in_channel, in_size, num_filter, ker
         with tvm.target.create(device):
             B = topi.nn.conv2d(A, W, stride, padding, dilation, layout='NHWC', out_dtype="int32")
             s = topi.generic.schedule_conv2d_nhwc_pack([B])
-        a = tvm.nd.array(a_np, ctx)
-        w = tvm.nd.array(w_np, ctx)
-        b = tvm.nd.array(np.zeros(get_const_tuple(B.shape), dtype=B.dtype), ctx)
+        a = tvm.nd.array(a_np, device)
+        w = tvm.nd.array(w_np, device)
+        b = tvm.nd.array(np.zeros(get_const_tuple(B.shape), dtype=B.dtype), device)
         func = tvm.build(s, [A, W, B], device)
         func(a, w, b)
         tvm.testing.assert_allclose(b.asnumpy(), b_np, rtol=1e-5)

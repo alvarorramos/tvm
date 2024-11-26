@@ -36,8 +36,8 @@
 namespace std {
 template <>
 struct hash<TVMContext> {
-  std::size_t operator()(const TVMContext& ctx) const {
-    return ((ctx.device_id << 8) | ctx.device_type);
+  std::size_t operator()(const TVMContext& device) const {
+    return ((device.device_id << 8) | device.device_type);
   }
 };
 
@@ -60,7 +60,7 @@ struct Buffer {
   /*! \brief The size of the block. */
   size_t size{0};
   /*! \brief The context of the allocated buffers. */
-  TVMContext ctx;
+  TVMContext device;
 };
 
 class Allocator {
@@ -70,12 +70,12 @@ class Allocator {
   /*! \brief Allocate an empty NDArray using from the allocator.
    *  \param shape The shape of the NDArray.
    *  \param alignment The datatype of the NDArray.
-   *  \param ctx The context where the array is allocated.
+   *  \param device The context where the array is allocated.
    *  \return The empty NDArray.
    */
   NDArray Empty(std::vector<int64_t> shape,
                 DLDataType dtype,
-                DLDevice ctx);
+                DLDevice device);
   /*! \brief Allocate a buffer given a size, alignment and type.
    *  \param nbytes The size of the buffer.
    *  \param alignment The alignment of the buffer.
@@ -98,7 +98,7 @@ class MemoryManager {
  public:
   static MemoryManager* Global();
 
-  Allocator* GetAllocator(TVMContext ctx);
+  Allocator* GetAllocator(TVMContext device);
 
  private:
   MemoryManager() {}
@@ -123,7 +123,7 @@ class StorageObj : public Object {
   static void Deleter(NDArray::Container* ptr);
 
   ~StorageObj() {
-    auto alloc = MemoryManager::Global()->GetAllocator(buffer.ctx);
+    auto alloc = MemoryManager::Global()->GetAllocator(buffer.device);
     alloc->Free(buffer);
   }
 

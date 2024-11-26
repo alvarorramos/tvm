@@ -114,7 +114,7 @@ class ModulePassNode : public PassNode {
    *
    * \return Return the updated module.
    */
-  Module operator()(const Module& mod, const PassContext& pass_ctx) const final;
+  Module operator()(const Module& mod, const PassContext& pass_device) const final;
 
   /*!
    * \brief Get the pass information/meta data.
@@ -168,7 +168,7 @@ class FunctionPassNode : public PassNode {
    *
    * \return Return the updated module.
    */
-  Module operator()(const Module& mod, const PassContext& pass_ctx) const final;
+  Module operator()(const Module& mod, const PassContext& pass_device) const final;
 
   /*!
    * \brief Get the pass information/meta data.
@@ -251,11 +251,11 @@ class SequentialNode : public PassNode {
    *        memory footprint, etc.
    *
    * \param mod The module that these passes are applied on.
-   * \param pass_ctx The context that these passes execute on.
+   * \param pass_device The context that these passes execute on.
    *
    * \return Return the updated module.
    */
-  Module operator()(const Module& mod, const PassContext& pass_ctx) const final;
+  Module operator()(const Module& mod, const PassContext& pass_device) const final;
 
   static constexpr const char* _type_key = "relay.Sequential";
   TVM_DECLARE_NODE_TYPE_INFO(SequentialNode, PassNode);
@@ -282,14 +282,14 @@ ModulePass ModulePassNode::make(
 
 // Module -> Module optimizations.
 Module ModulePassNode::operator()(const Module& mod,
-                                  const PassContext& pass_ctx) const {
+                                  const PassContext& pass_device) const {
   const PassInfo& pass_info = Info();
   DLOG(INFO) << "Executing module pass : "
              << pass_info->name
              << " with opt level: "
              << pass_info->opt_level;
   CHECK(mod.defined());
-  Module updated_mod = pass_func(mod, pass_ctx);
+  Module updated_mod = pass_func(mod, pass_device);
   CHECK(updated_mod.defined());
   return updated_mod;
 }
@@ -305,7 +305,7 @@ FunctionPass FunctionPassNode::make(
 
 // Perform Module -> Module optimizations at the Function level.
 Module FunctionPassNode::operator()(const Module& mod,
-                                    const PassContext& pass_ctx) const {
+                                    const PassContext& pass_device) const {
   const PassInfo& pass_info = Info();
   CHECK(mod.defined());
   DLOG(INFO) << "Executing function pass : "
@@ -319,7 +319,7 @@ Module FunctionPassNode::operator()(const Module& mod,
   for (const auto& it : updated_mod->functions) {
     auto updated_func = SkipFunction(it.second)
                             ? it.second
-                            : pass_func(it.second, updated_mod, pass_ctx);
+                            : pass_func(it.second, updated_mod, pass_device);
     updates.push_back({it.first, updated_func});
   }
 
@@ -377,17 +377,17 @@ inline bool PassArrayContains(const Array<tvm::Expr>& pass_array,
 }
 
 bool SequentialNode::PassEnabled(const PassInfo& info) const {
-  PassContext ctx = PassContext::Current();
+  PassContext device = PassContext::Current();
 
-  if (PassArrayContains(ctx->disabled_pass, info->name)) {
+  if (PassArrayContains(device->disabled_pass, info->name)) {
     return false;
   }
 
-  if (PassArrayContains(ctx->required_pass, info->name)) {
+  if (PassArrayContains(device->required_pass, info->name)) {
     return true;
   }
 
-  return ctx->opt_level >= info->opt_level;
+  return device->opt_level >= info->opt_level;
 }
 
 Pass GetPass(const std::string& pass_name) {
@@ -403,7 +403,7 @@ Pass GetPass(const std::string& pass_name) {
 // a Sequential without the consideration of their orders. The phase
 // ordering problem needs to be handled in the future.
 Module SequentialNode::operator()(const Module& module,
-                                  const PassContext& pass_ctx) const {
+                                  const PassContext& pass_device) const {
   Module mod = module;
   for (const Pass& pass : passes) {
     CHECK(pass.defined()) << "Found undefined pass for optimization.";
@@ -413,9 +413,9 @@ Module SequentialNode::operator()(const Module& module,
     for (const auto& it : pass_info->required) {
       const auto* name = it.as<tvm::ir::StringImm>();
       CHECK(name);
-      mod = GetPass(name->value)(mod, pass_ctx);
+      mod = GetPass(name->value)(mod, pass_device);
     }
-    mod = pass(mod, pass_ctx);
+    mod = pass(mod, pass_device);
   }
   return mod;
 }
@@ -526,16 +526,16 @@ TVM_REGISTER_NODE_TYPE(PassContextNode);
 
 TVM_REGISTER_API("relay._transform.PassContext")
 .set_body([](TVMArgs args, TVMRetValue* ret) {
-  auto pctx = PassContext::Create();
+  auto pdevice = PassContext::Create();
   int opt_level = args[0];
   int fallback_device = args[1];
   tvm::Array<tvm::Expr> required = args[2];
   tvm::Array<tvm::Expr> disabled = args[3];
-  pctx->opt_level = opt_level;
-  pctx->fallback_device = fallback_device;
-  pctx->required_pass = std::move(required);
-  pctx->disabled_pass = std::move(disabled);
-  *ret = pctx;
+  pdevice->opt_level = opt_level;
+  pdevice->fallback_device = fallback_device;
+  pdevice->required_pass = std::move(required);
+  pdevice->disabled_pass = std::move(disabled);
+  *ret = pdevice;
 });
 
 TVM_STATIC_IR_FUNCTOR(IRPrinter, vtable)
@@ -562,12 +562,12 @@ TVM_STATIC_IR_FUNCTOR(IRPrinter, vtable)
 
 class PassContext::Internal {
  public:
-  static void EnterScope(PassContext pass_ctx) {
-    pass_ctx.EnterWithScope();
+  static void EnterScope(PassContext pass_device) {
+    pass_device.EnterWithScope();
   }
 
-  static void ExitScope(PassContext pass_ctx) {
-    pass_ctx.ExitWithScope();
+  static void ExitScope(PassContext pass_device) {
+    pass_device.ExitWithScope();
   }
 };
 

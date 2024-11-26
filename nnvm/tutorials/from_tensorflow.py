@@ -76,11 +76,11 @@ label_map_url = os.path.join(repo_base, label_map)
 #target = 'cuda'
 #target_host = 'llvm'
 #layout = "NCHW"
-#ctx = tvm.gpu(0)
+#device = tvm.gpu(0)
 target = 'llvm'
 target_host = 'llvm'
 layout = None
-ctx = tvm.cpu(0)
+device = tvm.cpu(0)
 
 ######################################################################
 # Download required files
@@ -156,7 +156,7 @@ graph, lib, params = nnvm.compiler.build(sym, shape=shape_dict, target=target, t
 
 from tvm.contrib import graph_runtime
 dtype = 'uint8'
-m = graph_runtime.create(graph, lib, ctx)
+m = graph_runtime.create(graph, lib, device)
 # set inputs
 m.set_input('DecodeJpeg/contents', tvm.nd.array(x.astype(dtype)))
 m.set_input(**params)

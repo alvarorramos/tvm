@@ -342,7 +342,7 @@ GetExprRefCount(const Expr& body) {
 
 template <typename T>
 bool IsNDArrayAllGreaterEqual(const runtime::NDArray& tensor, T value) {
-  CHECK_EQ(tensor->ctx.device_type, kDLCPU);
+  CHECK_EQ(tensor->device.device_type, kDLCPU);
   CHECK(tensor->strides == nullptr);
   CHECK_EQ(tensor->byte_offset, 0);
   const T* data = static_cast<const T*>(tensor->data);

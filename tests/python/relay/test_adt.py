@@ -30,8 +30,8 @@ add_nat_definitions(p)
 def count(e):
     return count_(p, e)
 
-ctx = tvm.context("llvm", 0)
-intrp = create_executor(mod=mod, ctx=ctx, target="llvm")
+device = tvm.context("llvm", 0)
+intrp = create_executor(mod=mod, device=device, target="llvm")
 
 z = p.z
 s = p.s
@@ -694,7 +694,7 @@ def test_tensor_expand_dims():
         tensor1 = p.get_var('tensor1', dtype)
         mod["main"] = relay.Function([x], expand_dims_func(tensor1(x)))
         for kind in ["debug"]:
-            ex = relay.create_executor(kind, mod=mod, ctx=tvm.cpu(), target="llvm")
+            ex = relay.create_executor(kind, mod=mod, device=tvm.cpu(), target="llvm")
             x_np = np.random.uniform(size=(1,)).astype(dtype)
             result = ex.evaluate()(x_np)
             got = vmobj_to_list(result)
@@ -711,7 +711,7 @@ def test_tensor_array_constructor():
         tensor_array = p.get_var('tensor_array', dtype)
         mod["main"] = relay.Function([x], tensor_array(x))
         for kind in ["debug"]:
-            ex = relay.create_executor(kind, mod=mod, ctx=tvm.cpu(), target="llvm")
+            ex = relay.create_executor(kind, mod=mod, device=tvm.cpu(), target="llvm")
             result = ex.evaluate()(5)
             got = vmobj_to_list(result)
             expected = np.array([0, 0, 0, 0, 0])
@@ -729,7 +729,7 @@ def test_tensor_array_read():
         tensor_array = p.get_var('tensor_array', dtype)
         mod["main"] = relay.Function([l, i], read_func(tensor_array(l), i))
         for kind in ["debug"]:
-            ex = relay.create_executor(kind, mod=mod, ctx=tvm.cpu(), target="llvm")
+            ex = relay.create_executor(kind, mod=mod, device=tvm.cpu(), target="llvm")
             result = ex.evaluate()(10, 5)
             got = vmobj_to_list(result)
             expected = [0]
@@ -781,7 +781,7 @@ def test_tensor_array_stack():
         tensor_array4 = stack(tensor_array3)
         mod["main"] = relay.Function([v], tensor_array4)
         for kind in ["debug"]:
-            ex = relay.create_executor(kind, mod=mod, ctx=tvm.cpu(), target="llvm")
+            ex = relay.create_executor(kind, mod=mod, device=tvm.cpu(), target="llvm")
             t = np.random.uniform(size=(1,)).astype(dtype)
             result = ex.evaluate()(t)
             res = vmobj_to_list(result)
@@ -798,7 +798,7 @@ def test_tensor_array_unstack():
         v = relay.var('v')
         mod["main"] = relay.Function([v], unstack_tensor1(v))
         for kind in ["debug"]:
-            ex = relay.create_executor(kind, mod=mod, ctx=tvm.cpu(), target="llvm")
+            ex = relay.create_executor(kind, mod=mod, device=tvm.cpu(), target="llvm")
             t = np.random.uniform(size=(1,)).astype(dtype)
             result = ex.evaluate()(t)
             res = vmobj_to_list(result)
@@ -817,7 +817,7 @@ def test_tensor_take():
         upper = relay.var('upper')
         mod["main"] = relay.Function([v, lower, upper], take(tensor2(v), lower, upper))
         for kind in ["debug"]:
-            ex = relay.create_executor(kind, mod=mod, ctx=tvm.cpu(), target="llvm")
+            ex = relay.create_executor(kind, mod=mod, device=tvm.cpu(), target="llvm")
             t = np.random.uniform(size=(10, 10)).astype(dtype)
             result = ex.evaluate()(t, 2, 5)
             res = vmobj_to_list(result)

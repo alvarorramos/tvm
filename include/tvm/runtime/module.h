@@ -213,7 +213,7 @@ class ModuleNode : public Object {
 /*! \brief namespace for constant symbols */
 namespace symbol {
 /*! \brief Global variable to store module context. */
-constexpr const char* tvm_module_ctx = "__tvm_module_ctx";
+constexpr const char* tvm_module_device = "__tvm_module_device";
 /*! \brief Global variable to store device module blob */
 constexpr const char* tvm_dev_mblob = "__tvm_dev_mblob";
 /*! \brief Number of bytes of device module blob. */

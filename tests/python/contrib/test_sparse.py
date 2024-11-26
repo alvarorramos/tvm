@@ -24,21 +24,21 @@ def test_static_tensor():
     dtype = 'float32'
     stype = 'csr'
     target = 'llvm'
-    ctx = tvm.context(target, 0)
+    device = tvm.context(target, 0)
     m = tvm.var('m')
     n = tvm.var('n')
     A = tvmsp.placeholder(shape=(m, n), name='A', dtype=dtype)
     assert(A.stype == 'csr')
     n = 3
     a = np.maximum(np.random.uniform(size=(n,n)).astype(dtype)-.6, 0.)
-    a = tvmsp.array(a, ctx)
+    a = tvmsp.array(a, device)
     A.data = tvm.placeholder(a.data.shape, dtype, name='A_data')
     Ab = tvm.decl_buffer(a.data.shape, dtype, name='A_data')
     binds = {A.data: Ab}
     C = tvm.compute(A.data.shape, lambda i: A.data[i] * 2., tag='cs_scatter')
     s = tvm.create_schedule(C.op)
     f = tvm.build(s, [A.data, C], target, binds=binds)
-    c = tvmsp.array(np.zeros((n,n), dtype), ctx)
+    c = tvmsp.array(np.zeros((n,n), dtype), device)
     c.data = tvm.nd.empty(a.data.shape, dtype)
     c.indices = a.indices
     c.indptr = a.indptr
@@ -49,7 +49,7 @@ def test_dynamic_tensor():
     dtype = 'float32'
     stype = 'csr'
     target = 'llvm'
-    ctx = tvm.context(target, 0)
+    device = tvm.context(target, 0)
     nr, nc, n = tvm.var('nr'), tvm.var('nc'), tvm.var('n')
     A = tvmsp.placeholder(shape=(nr, nc), nonzeros=n, name='A', dtype=dtype)
     assert(A.stype == 'csr')
@@ -57,14 +57,14 @@ def test_dynamic_tensor():
     s = tvm.create_schedule(C.op)
     _nr, _nc = 3, 5
     a = np.maximum(np.random.uniform(size=(_nr, _nc)).astype(dtype)-.6, 0.)
-    a = tvmsp.array(a, ctx)
+    a = tvmsp.array(a, device)
     assert a.data.dtype == a.dtype
     Ab = namedtuple('CSRBuffer', ['data', 'indices', 'indptr'])
     Ab.data = tvm.decl_buffer(a.data.shape, a.data.dtype, name='A_data')
     Ab.indices = tvm.decl_buffer(a.data.shape, a.data.dtype, name='A_indices')
     binds = {A.data: Ab.data, A.indices: Ab.indices}
     f = tvm.build(s, [nr, A.data, C], target, binds=binds)
-    c = tvmsp.array(np.zeros((_nr, _nc), dtype), ctx)
+    c = tvmsp.array(np.zeros((_nr, _nc), dtype), device)
     c.data = tvm.nd.empty(a.data.shape, dtype)
     c.indices = a.indices
     c.indptr = a.indptr
@@ -75,7 +75,7 @@ def test_sparse_array_tuple():
     dtype, itype = 'float32', 'int32'
     stype = 'csr'
     target = 'llvm'
-    ctx = tvm.context(target, 0)
+    device = tvm.context(target, 0)
     nr, nc, n = tvm.var('nr'), tvm.var('nc'), tvm.var('n')
     A = tvmsp.placeholder(shape=(nr, nc), nonzeros=n, name='A', dtype=dtype)
     assert(A.stype == 'csr')
@@ -87,22 +87,22 @@ def test_sparse_array_tuple():
     source_array = a
     ridx, cidx = np.nonzero(source_array)
     data = source_array[ridx, cidx]
-    a_data = _nd.array(data, ctx)
+    a_data = _nd.array(data, device)
     indices = np.nonzero(source_array)[1].astype(itype)
-    a_indices = _nd.array(indices, ctx)
+    a_indices = _nd.array(indices, device)
     indptr = [0]+np.apply_along_axis(np.count_nonzero, axis=1, arr=source_array).tolist()
     indptr = np.cumsum(np.array(indptr, itype)).astype(itype)
-    a_indptr = _nd.array(indptr, ctx)
+    a_indptr = _nd.array(indptr, device)
     a_init = (a_data, a_indices, a_indptr)
     # construct tvm sparse array with tuple
-    a = tvmsp.array(a_init, shape=source_array.shape, ctx=ctx)
+    a = tvmsp.array(a_init, shape=source_array.shape, device=device)
     assert a.data.dtype == a.dtype
     Ab = namedtuple('CSRBuffer', ['data', 'indices', 'indptr'])
     Ab.data = tvm.decl_buffer(a.data.shape, a.data.dtype, name='A_data')
     Ab.indices = tvm.decl_buffer(a.data.shape, a.data.dtype, name='A_indices')
     binds = {A.data: Ab.data, A.indices: Ab.indices}
     f = tvm.build(s, [nr, A.data, C], target, binds=binds)
-    c = tvmsp.array(np.zeros((_nr, _nc), dtype), ctx)
+    c = tvmsp.array(np.zeros((_nr, _nc), dtype), device)
     c.data = tvm.nd.empty(a.data.shape, dtype)
     c.indices = a.indices
     c.indptr = a.indptr

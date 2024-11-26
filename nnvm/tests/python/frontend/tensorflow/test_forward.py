@@ -71,9 +71,9 @@ def run_tvm_graph(graph_def, input_data, input_node, num_output=1, target='llvm'
     graph, lib, params = nnvm.compiler.build(sym, target=target, target_host=target_host, shape=shape_dict,
                                              dtype=dtype_dict, params=params)
 
-    ctx = tvm.context(target, 0)
+    device = tvm.context(target, 0)
     from tvm.contrib import graph_runtime
-    m = graph_runtime.create(graph, lib, ctx)
+    m = graph_runtime.create(graph, lib, device)
     # set inputs
     for i, e in enumerate(input_node):
         m.set_input(e, tvm.nd.array(input_data[i].astype(input_data[i].dtype)))
@@ -133,8 +133,8 @@ def compare_tf_with_tvm(in_data, in_name, out_name, init_global_variables=False,
         tf_output = run_tf_graph(sess, in_data, in_name, out_name)
 
         for device in ["llvm", "cuda"]:
-            ctx = tvm.context(device, 0)
-            if not ctx.exist:
+            device = tvm.context(device, 0)
+            if not device.exist:
                 print("Skip because %s is not enabled" % device)
                 continue
             if no_gpu and device == 'cuda':
@@ -933,8 +933,8 @@ def test_forward_resnetv2():
             with tf.Session() as sess:
                 tf_output = run_tf_graph(sess, data, 'input_tensor:0', out_node + ':0')
                 for device in ["llvm", "cuda"]:
-                    ctx = tvm.context(device, 0)
-                    if not ctx.exist:
+                    device = tvm.context(device, 0)
+                    if not device.exist:
                         print("Skip because %s is not enabled" % device)
                         continue
                     tvm_output = run_tvm_graph(graph_def, data, 'input_tensor', len(tf_output), target=device)
@@ -1001,8 +1001,8 @@ def test_forward_ptb():
         graph, lib, params = nnvm.compiler.build(sym, target, shape_dict,
                                                  dtype=dtype_dict, params=params)
         from tvm.contrib import graph_runtime
-        ctx = tvm.cpu(0)
-        return params, graph_runtime.create(graph, lib, ctx)
+        device = tvm.cpu(0)
+        return params, graph_runtime.create(graph, lib, device)
 
     def _do_tvm_sample(model, data, in_states, params, num_samples):
         """Sampled from the model"""

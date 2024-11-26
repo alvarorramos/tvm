@@ -219,7 +219,7 @@ class CustomPipeline:
         self.multiplier = multiplier
 
     # This function can define a pass.
-    def transform_function(self, func, mod, ctx):
+    def transform_function(self, func, mod, device):
         obj = self
 
         class ReplaceConstant(tvm.relay.ExprMutator):

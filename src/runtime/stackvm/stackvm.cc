@@ -192,14 +192,14 @@ std::ostream& operator<<(std::ostream& os, const StackVM& vm) {  // NOLINT(*)
 }
 
 void StackVM::Run(const runtime::TVMArgs& args,
-                  runtime::ModuleNode* mod_ctx) const {
+                  runtime::ModuleNode* mod_device) const {
   StackVM::State* s = StackVM::ThreadLocalState();
   if (s->heap.size() < heap_size) {
     s->heap.resize(heap_size);
   }
   s->sp = 0;
   s->pc = 0;
-  s->mod_ctx = mod_ctx;
+  s->mod_device = mod_device;
   s->heap[0].v_handle = (void*)args.values;  // NOLINT(*)
   s->heap[1].v_handle = (void*)args.type_codes;  // NOLINT(*)
   s->heap[2].v_int64 = args.num_args;
@@ -426,11 +426,11 @@ void StackVM::Run(State* s) const {
                 arr[index].byte_offset); break;
           }
           case intrinsic::kArrDeviceId: {
-            stack[sp].v_int64 = arr[index].ctx.device_id; break;
+            stack[sp].v_int64 = arr[index].device.device_id; break;
           }
           case intrinsic::kArrDeviceType: {
             stack[sp].v_int64 = static_cast<int64_t>(
-                arr[index].ctx.device_type); break;
+                arr[index].device.device_type); break;
           }
           case intrinsic::kArrAddr: {
             stack[sp].v_handle = arr + index; break;
@@ -481,11 +481,11 @@ void StackVM::Run(State* s) const {
             break;
           }
           case intrinsic::kArrDeviceId: {
-            arr[index].ctx.device_id = static_cast<int>(stack[sp].v_int64);
+            arr[index].device.device_id = static_cast<int>(stack[sp].v_int64);
             break;
           }
           case intrinsic::kArrDeviceType: {
-            arr[index].ctx.device_type = static_cast<DLDeviceType>(stack[sp].v_int64);
+            arr[index].device.device_type = static_cast<DLDeviceType>(stack[sp].v_int64);
             break;
           }
           case intrinsic::kTVMValueContent: {
@@ -546,9 +546,9 @@ const PackedFunc& StackVM::GetExtern(State* s, int fid) const {
   // allow race write in this, since write is idempotent
   PackedFunc& f = extern_func_cache_[fid];
   if (f == nullptr) {
-    CHECK(s->mod_ctx != nullptr)
+    CHECK(s->mod_device != nullptr)
         << "No local context is set in stackvm";
-    const PackedFunc* pf = s->mod_ctx->GetFuncFromEnv(extern_func_name[fid]);
+    const PackedFunc* pf = s->mod_device->GetFuncFromEnv(extern_func_name[fid]);
     CHECK(pf != nullptr);
     f = *pf;
   }

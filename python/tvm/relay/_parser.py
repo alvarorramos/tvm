@@ -181,9 +181,9 @@ def spanify(f):
         # Assumes 0th arg is self and gets source_name from object.
         sn = args[0].source_name
         # Assumes 1st arg is an ANTLR parser context.
-        ctx = args[1]
+        device = args[1]
         ast = f(*args, **kwargs)
-        line, col = ctx.getSourceInterval()
+        line, col = device.getSourceInterval()
         sp = Span(sn, line, col)
         if isinstance(ast, tvm.relay.expr.TupleWrapper):
             ast = ast.astuple()
@@ -275,8 +275,8 @@ class ParseTreeToRelayIR(RelayVisitor):
                 return "ADT definition"
         return "function definition"
 
-    def visitProjection(self, ctx):
-        return expr.TupleGetItem(self.visit(ctx.expr()), self.visit(ctx.NAT()))
+    def visitProjection(self, device):
+        return expr.TupleGetItem(self.visit(device.expr()), self.visit(device.NAT()))
 
     def visitTerminal(self, node) -> Union[expr.Expr, int, float]:
         """Visit lexer tokens that aren't ignored or visited by other functions."""
@@ -297,8 +297,8 @@ class ParseTreeToRelayIR(RelayVisitor):
             return literal_eval(node_text)
         raise ParseError("unhandled terminal \"{0}\" of type `{1}`".format(node_text, node_type))
 
-    def visitGeneralIdent(self, ctx):
-        name = ctx.getText()
+    def visitGeneralIdent(self, device):
+        name = device.getText()
         # Look through all type prefixes for a match.
         for type_prefix in TYPE_PREFIXES:
             if name.startswith(type_prefix):
@@ -314,119 +314,119 @@ class ParseTreeToRelayIR(RelayVisitor):
                 type_expr = expr.Call(type_expr, [])
             return type_expr
         # Check if it's an operator.
-        op_name = ".".join([name.getText() for name in ctx.CNAME()])
+        op_name = ".".join([name.getText() for name in device.CNAME()])
         if op_name in FUNC_OPS:
             return FuncOp(FUNC_OPS[op_name])
         return ExprOp(op.get(op_name))
 
-    def visitGlobalVar(self, ctx):
-        var_name = ctx.CNAME().getText()
+    def visitGlobalVar(self, device):
+        var_name = device.CNAME().getText()
         global_var = self.global_vars.get(var_name, None)
         if global_var is None:
             raise ParseError("unbound global var `{0}`".format(var_name))
         return global_var
 
-    def visitLocalVar(self, ctx):
-        var_name = ctx.CNAME().getText()
+    def visitLocalVar(self, device):
+        var_name = device.CNAME().getText()
         local_var = lookup(self.var_scopes, var_name)
         if local_var is None:
             raise ParseError("unbound local var `{0}`".format(var_name))
         return local_var
 
-    def visitGraphVar(self, ctx):
-        return self.graph_expr[int(ctx.NAT().getText())]
+    def visitGraphVar(self, device):
+        return self.graph_expr[int(device.NAT().getText())]
 
-    def visit_list(self, ctx_list) -> List[Any]:
+    def visit_list(self, device_list) -> List[Any]:
         """"Visit a list of contexts."""
-        assert isinstance(ctx_list, list)
+        assert isinstance(device_list, list)
 
-        return [self.visit(ctx) for ctx in ctx_list]
+        return [self.visit(device) for device in device_list]
 
-    def getTypeExpr(self, ctx: Optional[RelayParser.TypeExprContext]) -> Optional[ty.Type]:
+    def getTypeExpr(self, device: Optional[RelayParser.TypeExprContext]) -> Optional[ty.Type]:
         """Return a (possibly None) Relay type."""
-        if ctx is None:
+        if device is None:
             return None
 
-        return self.visit(ctx)
+        return self.visit(device)
 
-    def visitProg(self, ctx: RelayParser.ProgContext) -> Union[expr.Expr, module.Module]:
+    def visitProg(self, device: RelayParser.ProgContext) -> Union[expr.Expr, module.Module]:
         self.meta = None
-        if ctx.METADATA():
-            header, data = str(ctx.METADATA()).split("\n", 1)
+        if device.METADATA():
+            header, data = str(device.METADATA()).split("\n", 1)
             assert header == "METADATA:"
             self.meta = tvm.load_json(data)
-        if ctx.defn():
-            self.visit_list(ctx.defn())
+        if device.defn():
+            self.visit_list(device.defn())
             return self.module
 
-        if ctx.expr():
-            return self.visit(ctx.expr())
+        if device.expr():
+            return self.visit(device.expr())
 
         return self.module
 
     # Exprs
-    def visitOpIdent(self, ctx) -> op.Op:
-        op_name = ".".join([name.getText() for name in ctx.CNAME()])
+    def visitOpIdent(self, device) -> op.Op:
+        op_name = ".".join([name.getText() for name in device.CNAME()])
         if op_name in FUNC_OPS:
             return FuncOp(FUNC_OPS[op_name])
         return ExprOp(op.get(op_name))
 
     # pass through
-    def visitParen(self, ctx: RelayParser.ParenContext) -> expr.Expr:
-        return self.visit(ctx.expr())
+    def visitParen(self, device: RelayParser.ParenContext) -> expr.Expr:
+        return self.visit(device.expr())
 
     # pass through
-    def visitTypeParen(self, ctx: RelayParser.TypeParenContext) -> expr.Expr:
-        return self.visit(ctx.typeExpr())
+    def visitTypeParen(self, device: RelayParser.TypeParenContext) -> expr.Expr:
+        return self.visit(device.typeExpr())
 
     # pass through
-    def visitBody(self, ctx: RelayParser.BodyContext) -> expr.Expr:
-        return self.visit(ctx.expr())
+    def visitBody(self, device: RelayParser.BodyContext) -> expr.Expr:
+        return self.visit(device.expr())
 
-    def visitScalarFloat(self, ctx: RelayParser.ScalarFloatContext) -> expr.Constant:
-        return expr.const(self.visit(ctx.FLOAT()))
+    def visitScalarFloat(self, device: RelayParser.ScalarFloatContext) -> expr.Constant:
+        return expr.const(self.visit(device.FLOAT()))
 
-    def visitScalarInt(self, ctx: RelayParser.ScalarIntContext) -> expr.Constant:
-        return expr.const(self.visit(ctx.NAT()))
+    def visitScalarInt(self, device: RelayParser.ScalarIntContext) -> expr.Constant:
+        return expr.const(self.visit(device.NAT()))
 
-    def visitScalarBool(self, ctx: RelayParser.ScalarBoolContext) -> expr.Constant:
-        return expr.const(self.visit(ctx.BOOL_LIT()))
+    def visitScalarBool(self, device: RelayParser.ScalarBoolContext) -> expr.Constant:
+        return expr.const(self.visit(device.BOOL_LIT()))
 
-    def visitNeg(self, ctx: RelayParser.NegContext) -> Union[expr.Constant, expr.Call]:
-        val = self.visit(ctx.expr())
+    def visitNeg(self, device: RelayParser.NegContext) -> Union[expr.Constant, expr.Call]:
+        val = self.visit(device.expr())
         if isinstance(val, expr.Constant) and val.data.asnumpy().ndim == 0:
             # fold Neg in for scalars
             return expr.const(-val.data.asnumpy().item())
 
         return op.negative(val)
 
-    def visitTuple(self, ctx: RelayParser.TupleContext) -> expr.Tuple:
-        tup = self.visit_list(ctx.expr())
+    def visitTuple(self, device: RelayParser.TupleContext) -> expr.Tuple:
+        tup = self.visit_list(device.expr())
         return expr.Tuple(tup)
 
-    def visitLet(self, ctx: RelayParser.LetContext) -> expr.Let:
+    def visitLet(self, device: RelayParser.LetContext) -> expr.Let:
         """Desugar various sequence constructs to Relay Let nodes."""
 
-        if ctx.var() is None:
+        if device.var() is None:
             # anonymous identity
             ident = "_"
             typ = None
             var = self.mk_var(ident, typ)
         else:
-            var = self.visitVar(ctx.var())
+            var = self.visitVar(device.var())
 
         self.enter_var_scope()
-        value = self.visit(ctx.expr(0))
+        value = self.visit(device.expr(0))
         self.exit_var_scope()
 
-        body = self.visit(ctx.expr(1))
+        body = self.visit(device.expr(1))
 
         return expr.Let(var, value, body)
 
-    def visitBinOp(self, ctx: RelayParser.BinOpContext) -> expr.Call:
+    def visitBinOp(self, device: RelayParser.BinOpContext) -> expr.Call:
         """Desugar binary operators."""
-        arg0, arg1 = self.visit_list(ctx.expr())
-        relay_op = BINARY_OPS.get(ctx.op.type)
+        arg0, arg1 = self.visit_list(device.expr())
+        relay_op = BINARY_OPS.get(device.op.type)
 
         if relay_op is None:
             raise ParseError("unimplemented binary op.")
@@ -434,55 +434,55 @@ class ParseTreeToRelayIR(RelayVisitor):
         return relay_op(arg0, arg1)
 
     @spanify
-    def visitVar(self, ctx: RelayParser.VarContext) -> expr.Var:
+    def visitVar(self, device: RelayParser.VarContext) -> expr.Var:
         """Visit a single variable."""
-        ident = ctx.localVar()
+        ident = device.localVar()
 
         if ident is None:
             raise ParseError("only local ids may be used in vars.")
 
-        typeExpr = self.getTypeExpr(ctx.typeExpr())
+        typeExpr = self.getTypeExpr(device.typeExpr())
 
         return self.mk_var(ident.getText()[1:], typeExpr)
 
-    def visitVarList(self, ctx: RelayParser.VarListContext) -> List[expr.Var]:
-        return self.visit_list(ctx.var())
+    def visitVarList(self, device: RelayParser.VarListContext) -> List[expr.Var]:
+        return self.visit_list(device.var())
 
     # TODO: support a larger class of values than just Relay exprs
-    def visitAttr(self, ctx: RelayParser.AttrContext) -> Tuple[str, expr.Expr]:
-        return (ctx.CNAME().getText(), self.visit(ctx.expr()))
+    def visitAttr(self, device: RelayParser.AttrContext) -> Tuple[str, expr.Expr]:
+        return (device.CNAME().getText(), self.visit(device.expr()))
 
-    def visitArgNoAttr(self, ctx: RelayParser.ArgNoAttrContext):
-        return (self.visit_list(ctx.varList().var()), None)
+    def visitArgNoAttr(self, device: RelayParser.ArgNoAttrContext):
+        return (self.visit_list(device.varList().var()), None)
 
-    def visitAttrSeq(self, ctx: RelayParser.AttrSeqContext) -> Dict[str, expr.Expr]:
-        return dict(self.visit_list(ctx.attr()))
+    def visitAttrSeq(self, device: RelayParser.AttrSeqContext) -> Dict[str, expr.Expr]:
+        return dict(self.visit_list(device.attr()))
 
-    def visitArgWithAttr(self, ctx: RelayParser.AttrSeqContext) \
+    def visitArgWithAttr(self, device: RelayParser.AttrSeqContext) \
         -> Tuple[List[expr.Var], Dict[str, expr.Expr]]:
-        return (self.visit_list(ctx.var()), self.visitAttrSeq(ctx.attrSeq()))
+        return (self.visit_list(device.var()), self.visitAttrSeq(device.attrSeq()))
 
-    def visitArgList(self, ctx: RelayParser.ArgListContext) \
+    def visitArgList(self, device: RelayParser.ArgListContext) \
             -> Tuple[Optional[List[expr.Var]], Optional[Dict[str, expr.Expr]]]:
-        var_list = self.visit(ctx.varList()) if ctx.varList() else None
-        attr_list = self.visit(ctx.attrList()) if ctx.attrList() else None
+        var_list = self.visit(device.varList()) if device.varList() else None
+        attr_list = self.visit(device.attrList()) if device.attrList() else None
         return (var_list, attr_list)
 
-    def visitMeta(self, ctx: RelayParser.MetaContext):
-        type_key = str(ctx.CNAME())
-        index = int(self.visit(ctx.NAT()))
+    def visitMeta(self, device: RelayParser.MetaContext):
+        type_key = str(device.CNAME())
+        index = int(self.visit(device.NAT()))
         return self.meta[type_key][index]
 
     def mk_func(
             self,
-            ctx: Union[RelayParser.FuncContext, RelayParser.DefnContext]) \
+            device: Union[RelayParser.FuncContext, RelayParser.DefnContext]) \
             -> expr.Function:
         """Construct a function from either a Func or Defn."""
         # Enter var scope early to put params in scope.
         self.enter_var_scope()
         # Capture type params in params.
         self.enter_type_param_scope()
-        type_params = ctx.typeParamList()
+        type_params = device.typeParamList()
 
         if type_params is not None:
             type_params = type_params.typeExpr()
@@ -491,12 +491,12 @@ class ParseTreeToRelayIR(RelayVisitor):
                 name = ty_param.getText()
                 self.mk_typ(name, ty.Kind.Type)
 
-        var_list, attr_list = self.visit(ctx.argList())
+        var_list, attr_list = self.visit(device.argList())
         if var_list is None:
             var_list = []
-        ret_type = self.getTypeExpr(ctx.typeExpr())
+        ret_type = self.getTypeExpr(device.typeExpr())
 
-        body = self.visit(ctx.body())
+        body = self.visit(device.body())
         # NB(@jroesch): you must stay in the type parameter scope until
         # after you exit the body, you can reference the type parameters
         # of your parent scopes.
@@ -509,25 +509,25 @@ class ParseTreeToRelayIR(RelayVisitor):
         return expr.Function(var_list, body, ret_type, type_params, attrs)
 
     @spanify
-    def visitFunc(self, ctx: RelayParser.FuncContext) -> expr.Function:
-        return self.mk_func(ctx)
+    def visitFunc(self, device: RelayParser.FuncContext) -> expr.Function:
+        return self.mk_func(device)
 
     # TODO: how to set spans for definitions?
     # @spanify
-    def visitFuncDefn(self, ctx: RelayParser.DefnContext) -> None:
-        ident_name = ctx.globalVar().getText()[1:]
+    def visitFuncDefn(self, device: RelayParser.DefnContext) -> None:
+        ident_name = device.globalVar().getText()[1:]
         ident = self.mk_global_var(ident_name)
-        func = self.mk_func(ctx)
+        func = self.mk_func(device)
         self.module[ident] = func
 
     def handle_adt_header(
             self,
-            ctx: Union[RelayParser.ExternAdtDefnContext, RelayParser.AdtDefnContext]):
+            device: Union[RelayParser.ExternAdtDefnContext, RelayParser.AdtDefnContext]):
         """Handles parsing of the name and type params of an ADT definition."""
-        adt_name = ctx.generalIdent().getText()
+        adt_name = device.generalIdent().getText()
         adt_var = self.mk_global_typ_var(adt_name, ty.Kind.AdtHandle)
         # parse type params
-        type_params = ctx.typeParamList()
+        type_params = device.typeParamList()
         if type_params is None:
             type_params = []
         else:
@@ -535,19 +535,19 @@ class ParseTreeToRelayIR(RelayVisitor):
                            for type_ident in type_params.typeExpr()]
         return adt_var, type_params
 
-    def visitExternAdtDefn(self, ctx: RelayParser.ExternAdtDefnContext):
+    def visitExternAdtDefn(self, device: RelayParser.ExternAdtDefnContext):
         # TODO(weberlo): update this handler once extern is implemented
         self.enter_type_param_scope()
-        adt_var, type_params = self.handle_adt_header(ctx)
+        adt_var, type_params = self.handle_adt_header(device)
         # update module being built
         self.module[adt_var] = adt.TypeData(adt_var, type_params, [])
         self.exit_type_param_scope()
 
-    def visitAdtDefn(self, ctx: RelayParser.AdtDefnContext):
+    def visitAdtDefn(self, device: RelayParser.AdtDefnContext):
         self.enter_type_param_scope()
-        adt_var, type_params = self.handle_adt_header(ctx)
+        adt_var, type_params = self.handle_adt_header(device)
         # parse constructors
-        adt_cons_defns = ctx.adtConsDefnList()
+        adt_cons_defns = device.adtConsDefnList()
         if adt_cons_defns is None:
             adt_cons_defns = []
         else:
@@ -563,8 +563,8 @@ class ParseTreeToRelayIR(RelayVisitor):
         self.module[adt_var] = adt.TypeData(adt_var, type_params, parsed_constructors)
         self.exit_type_param_scope()
 
-    def visitMatch(self, ctx: RelayParser.MatchContext):
-        match_type = ctx.matchType().getText()
+    def visitMatch(self, device: RelayParser.MatchContext):
+        match_type = device.matchType().getText()
         if match_type == "match":
             complete_match = True
         elif match_type == "match?":
@@ -572,8 +572,8 @@ class ParseTreeToRelayIR(RelayVisitor):
         else:
             raise RuntimeError("unknown match type {0}".format(match_type))
 
-        match_data = self.visit(ctx.expr())
-        match_clauses = ctx.matchClauseList()
+        match_data = self.visit(device.expr())
+        match_clauses = device.matchClauseList()
         if match_clauses is None:
             match_clauses = []
         else:
@@ -587,35 +587,35 @@ class ParseTreeToRelayIR(RelayVisitor):
             parsed_clauses.append(adt.Clause(pattern, clause_body))
         return adt.Match(match_data, parsed_clauses, complete=complete_match)
 
-    def visitWildcardPattern(self, ctx: RelayParser.WildcardPatternContext):
+    def visitWildcardPattern(self, device: RelayParser.WildcardPatternContext):
         return adt.PatternWildcard()
 
-    def visitVarPattern(self, ctx: RelayParser.VarPatternContext):
-        text = ctx.localVar().getText()
-        typ = ctx.typeExpr()
+    def visitVarPattern(self, device: RelayParser.VarPatternContext):
+        text = device.localVar().getText()
+        typ = device.typeExpr()
         if typ is not None:
             typ = self.visit(typ)
         var = self.mk_var(text[1:], typ=typ)
         return adt.PatternVar(var)
 
-    def visitConstructorPattern(self, ctx: RelayParser.ConstructorPatternContext):
-        constructor_name = ctx.constructorName().getText()
+    def visitConstructorPattern(self, device: RelayParser.ConstructorPatternContext):
+        constructor_name = device.constructorName().getText()
         constructor = self.global_type_vars[constructor_name]
-        pattern_list = ctx.patternList()
+        pattern_list = device.patternList()
         if pattern_list is None:
             patterns = []
         else:
             patterns = [self.visit(pattern) for pattern in pattern_list.pattern()]
         return adt.PatternConstructor(constructor, patterns)
 
-    def visitTuplePattern(self, ctx: RelayParser.TuplePatternContext):
-        return adt.PatternTuple([self.visit(pattern) for pattern in ctx.patternList().pattern()])
+    def visitTuplePattern(self, device: RelayParser.TuplePatternContext):
+        return adt.PatternTuple([self.visit(pattern) for pattern in device.patternList().pattern()])
 
-    def visitCallNoAttr(self, ctx: RelayParser.CallNoAttrContext):
-        return (self.visit_list(ctx.exprList().expr()), None)
+    def visitCallNoAttr(self, device: RelayParser.CallNoAttrContext):
+        return (self.visit_list(device.exprList().expr()), None)
 
-    def visitCallWithAttr(self, ctx: RelayParser.CallWithAttrContext):
-        return (self.visit_list(ctx.expr()), self.visit(ctx.attrSeq()))
+    def visitCallWithAttr(self, device: RelayParser.CallWithAttrContext):
+        return (self.visit_list(device.expr()), self.visit(device.attrSeq()))
 
     def call(self, func, args, attrs, type_args):
         if isinstance(func, OpWrapper):
@@ -625,34 +625,34 @@ class ParseTreeToRelayIR(RelayVisitor):
         return expr.Call(func, args, attrs, type_args)
 
     @spanify
-    def visitCall(self, ctx: RelayParser.CallContext) -> expr.Call:
-        func = self.visit(ctx.expr())
-        args, attrs = self.visit(ctx.callList())
+    def visitCall(self, device: RelayParser.CallContext) -> expr.Call:
+        func = self.visit(device.expr())
+        args, attrs = self.visit(device.callList())
         res = self.call(func, args, attrs, [])
         return res
 
     @spanify
-    def visitIfElse(self, ctx: RelayParser.IfElseContext) -> expr.If:
+    def visitIfElse(self, device: RelayParser.IfElseContext) -> expr.If:
         """Construct a Relay If node. Creates a new scope for each branch."""
-        cond = self.visit(ctx.expr())
+        cond = self.visit(device.expr())
 
         self.enter_var_scope()
-        true_branch = self.visit(ctx.body(0))
+        true_branch = self.visit(device.body(0))
         self.exit_var_scope()
 
         self.enter_var_scope()
-        false_branch = self.visit(ctx.body(1))
+        false_branch = self.visit(device.body(1))
         self.exit_var_scope()
 
         return expr.If(cond, true_branch, false_branch)
 
     @spanify
-    def visitGraph(self, ctx: RelayParser.GraphContext) -> expr.Expr:
+    def visitGraph(self, device: RelayParser.GraphContext) -> expr.Expr:
         """Visit a graph variable assignment."""
-        graph_nid = int(ctx.graphVar().getText()[1:])
+        graph_nid = int(device.graphVar().getText()[1:])
 
         self.enter_var_scope()
-        value = self.visit(ctx.expr(0))
+        value = self.visit(device.expr(0))
         self.exit_var_scope()
 
         if graph_nid != len(self.graph_expr):
@@ -661,34 +661,34 @@ class ParseTreeToRelayIR(RelayVisitor):
                 "but got `%{}`".format(graph_nid))
         self.graph_expr.append(value)
 
-        kont = self.visit(ctx.expr(1))
+        kont = self.visit(device.expr(1))
         return kont
 
     # Types
 
     # pylint: disable=unused-argument
-    def visitIncompleteType(self, ctx: RelayParser.IncompleteTypeContext) -> None:
+    def visitIncompleteType(self, device: RelayParser.IncompleteTypeContext) -> None:
         return None
 
-    def visitTypeCallType(self, ctx: RelayParser.TypeCallTypeContext):
-        func = self.visit(ctx.generalIdent())
-        args = [self.visit(arg) for arg in ctx.typeParamList().typeExpr()]
+    def visitTypeCallType(self, device: RelayParser.TypeCallTypeContext):
+        func = self.visit(device.generalIdent())
+        args = [self.visit(arg) for arg in device.typeParamList().typeExpr()]
         return ty.TypeCall(func, args)
 
-    def visitParensShape(self, ctx: RelayParser.ParensShapeContext) -> int:
-        return self.visit(ctx.shape())
+    def visitParensShape(self, device: RelayParser.ParensShapeContext) -> int:
+        return self.visit(device.shape())
 
-    def visitShapeList(self, ctx: RelayParser.ShapeListContext) -> List[int]:
-        return self.visit_list(ctx.shape())
+    def visitShapeList(self, device: RelayParser.ShapeListContext) -> List[int]:
+        return self.visit_list(device.shape())
 
-    def visitTensor(self, ctx: RelayParser.TensorContext):
-        return tuple(self.visit_list(ctx.expr()))
+    def visitTensor(self, device: RelayParser.TensorContext):
+        return tuple(self.visit_list(device.expr()))
 
-    def visitTensorType(self, ctx: RelayParser.TensorTypeContext) -> ty.TensorType:
+    def visitTensorType(self, device: RelayParser.TensorTypeContext) -> ty.TensorType:
         """Create a simple tensor type. No generics."""
 
-        shape = self.visit(ctx.shapeList())
-        dtype = self.visit(ctx.typeExpr())
+        shape = self.visit(device.shapeList())
+        dtype = self.visit(device.typeExpr())
 
         if not isinstance(dtype, ty.TensorType):
             raise ParseError("expected dtype to be a Relay base type.")
@@ -697,11 +697,11 @@ class ParseTreeToRelayIR(RelayVisitor):
 
         return ty.TensorType(shape, dtype)
 
-    def visitTupleType(self, ctx: RelayParser.TupleTypeContext) -> ty.TupleType:
-        return ty.TupleType(self.visit_list(ctx.typeExpr()))
+    def visitTupleType(self, device: RelayParser.TupleTypeContext) -> ty.TupleType:
+        return ty.TupleType(self.visit_list(device.typeExpr()))
 
-    def visitFuncType(self, ctx: RelayParser.FuncTypeContext) -> ty.FuncType:
-        types = self.visit_list(ctx.typeExpr())
+    def visitFuncType(self, device: RelayParser.FuncTypeContext) -> ty.FuncType:
+        types = self.visit_list(device.typeExpr())
 
         arg_types = types[:-1]
         ret_type = types[-1]

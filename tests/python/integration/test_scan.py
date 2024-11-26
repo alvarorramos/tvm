@@ -45,8 +45,8 @@ def test_scan():
 
     # one line to build the function.
     def check_device(device):
-        ctx = tvm.context(device, 0)
-        if not ctx.exist:
+        device = tvm.context(device, 0)
+        if not device.exist:
             print("skip because %s is not enabled.." % device)
             return
         fscan = tvm.build(s, [X, res],
@@ -56,8 +56,8 @@ def test_scan():
         n = 1024
         m = 10
         a_np = np.random.uniform(size=(m, n)).astype(res.dtype)
-        a = tvm.nd.array(a_np, ctx)
-        b = tvm.nd.array(np.zeros((m, n), dtype=res.dtype), ctx)
+        a = tvm.nd.array(a_np, device)
+        b = tvm.nd.array(np.zeros((m, n), dtype=res.dtype), device)
         fscan(a, b)
         tvm.testing.assert_allclose(
             b.asnumpy(), np.cumsum(a_np, axis=0))

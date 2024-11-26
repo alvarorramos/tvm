@@ -418,7 +418,7 @@ f = remote.load_module("gemm.o")
 #
 
 # Get the remote device context
-ctx = remote.ext_dev(0)
+device = remote.ext_dev(0)
 
 # Initialize the A and B arrays randomly in the int range of (-128, 128]
 A_orig = np.random.randint(
@@ -433,9 +433,9 @@ B_packed = B_orig.reshape(
     m, env.BLOCK_OUT, n, env.BLOCK_IN).transpose((0, 2, 1, 3))
 
 # Format the input/output arrays with tvm.nd.array to the DLPack standard
-A_nd = tvm.nd.array(A_packed, ctx)
-B_nd = tvm.nd.array(B_packed, ctx)
-C_nd = tvm.nd.array(np.zeros((o, m, env.BATCH, env.BLOCK_OUT)).astype(C.dtype), ctx)
+A_nd = tvm.nd.array(A_packed, device)
+B_nd = tvm.nd.array(B_packed, device)
+C_nd = tvm.nd.array(np.zeros((o, m, env.BATCH, env.BLOCK_OUT)).astype(C.dtype), device)
 
 # Clear stats
 if env.TARGET in ["sim", "tsim"]:

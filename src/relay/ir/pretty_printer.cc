@@ -425,7 +425,7 @@ class PrettyPrinter :
     if (op->is_scalar()) {
       std::ostringstream os;
       DataType dtype = TVMType2Type(op->data->dtype);
-      CHECK_EQ(op->data->ctx.device_type, kDLCPU);
+      CHECK_EQ(op->data->device.device_type, kDLCPU);
       if (dtype == Int(32)) {
         return PrintConstScalar(dtype, static_cast<const int32_t*>(op->data->data));
       } else if (dtype == Int(64)) {

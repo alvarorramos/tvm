@@ -28,17 +28,17 @@ fn main() {
     let shape = &mut [2];
     let mut data = vec![3f32, 4.0];
 
-    let (ctx, ctx_name) = if cfg!(feature = "cpu") {
+    let (device, device_name) = if cfg!(feature = "cpu") {
         (TVMContext::cpu(0), "cpu")
     } else {
         (TVMContext::gpu(0), "gpu")
     };
     let dtype = TVMType::from_str("float32").unwrap();
-    let mut arr = NDArray::empty(shape, ctx, dtype);
+    let mut arr = NDArray::empty(shape, device, dtype);
     arr.copy_from_buffer(data.as_mut_slice());
-    let mut ret = NDArray::empty(shape, ctx, dtype);
+    let mut ret = NDArray::empty(shape, device, dtype);
     let mut fadd = Module::load(&concat!(env!("OUT_DIR"), "/test_add.so")).unwrap();
-    if !fadd.enabled(ctx_name) {
+    if !fadd.enabled(device_name) {
         return;
     }
     if cfg!(feature = "gpu") {

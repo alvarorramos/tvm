@@ -14,25 +14,21 @@
 # KIND, either express or implied.  See the License for the
 # specific language governing permissions and limitations
 # under the License.
-import os.path as osp
-import numpy as np
-import tvm
 
-CWD = osp.abspath(osp.dirname(__file__))
+# Minimum docker image for demo purposes
+# prebuilt-image: tvmai/demo-cpu
+# FROM tvmai/ci-cpu:v0.52
+FROM tvm.ci_cpu_06:latest
 
+# Jupyter notebook.
+# RUN pip3 install matplotlib Image Pillow jupyter[notebook]
 
-def main():
-    device = tvm.context('cpu', 0)
-    model = tvm.module.load(osp.join(CWD, 'build', 'enclave.signed.so'))
-    inp = tvm.nd.array(np.ones((1, 3, 224, 224), dtype='float32'), device)
-    out = tvm.nd.array(np.empty((1, 1000), dtype='float32'), device)
-    model(inp, out)
-    if abs(out.asnumpy().sum() - 1) < 0.001:
-        print('It works!')
-    else:
-        print('It doesn\'t work!')
-        exit(1)
+# Deep learning frameworks
+# RUN pip3 install mxnet tensorflow keras gluoncv dgl
 
+# Build TVM
+COPY install/install_tvm_cpu.sh /install/install_tvm_cpu.sh
+RUN bash /install/install_tvm_cpu.sh
 
-if __name__ == '__main__':
-    main()
+# Environment variables
+ENV PYTHONPATH=/usr/tvm/python:/usr/tvm/topi/python:/usr/tvm/nnvm/python/:/usr/tvm/vta/python:${PYTHONPATH}

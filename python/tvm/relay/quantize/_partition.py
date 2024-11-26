@@ -46,7 +46,7 @@ def partition_expr_check(expr):
 
 
 @register_partition_function("nn.conv2d")
-def conv2d_partition_function(ref_call, new_args, ctx):
+def conv2d_partition_function(ref_call, new_args, device):
     """Rewrite function for conv2d for partition"""
     data_cond, data = partition_expr_check(new_args[0])
     kernel_cond, kernel = partition_expr_check(new_args[1])
@@ -58,7 +58,7 @@ def conv2d_partition_function(ref_call, new_args, ctx):
     return QPartitionExpr(ret)
 
 
-def identity_partition_function(ref_call, new_args, ctx):
+def identity_partition_function(ref_call, new_args, device):
     cond, expr = partition_expr_check(new_args[0])
     if cond:
         return QPartitionExpr(_forward_op(ref_call, [expr]))
@@ -69,7 +69,7 @@ register_partition_function("nn.relu", identity_partition_function)
 register_partition_function("nn.max_pool2d", identity_partition_function)
 
 
-def add_partition_generic(ref_call, new_args, ctx):
+def add_partition_generic(ref_call, new_args, device):
     """Rewrite function for ewise add for partition for generic devices"""
     lhs_cond, lhs = partition_expr_check(new_args[0])
     rhs_cond, rhs = partition_expr_check(new_args[1])
@@ -131,17 +131,17 @@ def add_partition_generic(ref_call, new_args, ctx):
 # TODO(ziheng) enhance `register_partition_function` to dispatch
 # for target automatically
 @register_partition_function("add")
-def add_partition_function(ref_call, new_args, ctx):
+def add_partition_function(ref_call, new_args, device):
     """Rewrite function for ewise add for partition"""
     target = _target.current_target()
     if target and 'cuda' in target.keys:
         #TODO(wuwei/ziheng) cuda specific rules
-        return add_partition_generic(ref_call, new_args, ctx)
-    return add_partition_generic(ref_call, new_args, ctx)
+        return add_partition_generic(ref_call, new_args, device)
+    return add_partition_generic(ref_call, new_args, device)
 
 
 @register_partition_function("multiply")
-def multiply_partition_function(ref_call, new_args, ctx):
+def multiply_partition_function(ref_call, new_args, device):
     """Rewrite function for ewise add for partition"""
     lhs_cond, lhs = partition_expr_check(new_args[0])
     rhs_cond, rhs = partition_expr_check(new_args[1])

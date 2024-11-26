@@ -52,8 +52,8 @@ TVM_REGISTER_GLOBAL("tvm.contrib.cudnn.conv2d.forward")
   entry_ptr->conv_entry.tensor_format = static_cast<cudnnTensorFormat_t>(format);
   // Set Algo
   entry_ptr->conv_entry.fwd_algo = static_cast<cudnnConvolutionFwdAlgo_t>(algo);
-  // Set Ctx
-  entry_ptr->conv_entry.ctx = x->ctx;
+  // Set device
+  entry_ptr->conv_entry.device = x->device;
   // Set Data Type
   entry_ptr->conv_entry.data_type = CuDNNDataType::DLTypeToCuDNNType(x->dtype);
   // Set Desc

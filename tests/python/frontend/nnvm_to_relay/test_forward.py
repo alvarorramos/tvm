@@ -21,35 +21,35 @@ import nnvm
 import nnvm.testing
 from nnvm.to_relay import to_relay
 from tvm import relay
-from tvm.relay.testing.config import ctx_list
+from tvm.relay.testing.config import device_list
 from tvm.contrib import graph_runtime
 
 def verify_nnvm_to_relay(nnvm_sym, params, data_shape=(1, 3, 224, 224)):
-    def get_nnvm_output(sym, x, params, target, ctx, dtype='float32'):
+    def get_nnvm_output(sym, x, params, target, device, dtype='float32'):
         shape_dict = {'data': x.shape}
         with nnvm.compiler.build_config(opt_level=3):
             graph, lib, params = nnvm.compiler.build(sym, target, shape_dict, params=params)
-        m = graph_runtime.create(graph, lib, ctx)
+        m = graph_runtime.create(graph, lib, device)
         m.set_input("data", tvm.nd.array(x.astype(dtype)))
         m.set_input(**params)
         m.run()
         return m.get_output(0).asnumpy()
 
-    def get_relay_output(sym, x, params, target, ctx, dtype='float32'):
+    def get_relay_output(sym, x, params, target, device, dtype='float32'):
         shape_dict = {'data': x.shape}
         func, params = to_relay(sym, shape_dict, dtype, params)
         with relay.build_config(opt_level=3):
             graph, lib, params = relay.build(func, target=target, params=params)
-        m = graph_runtime.create(graph, lib, ctx)
+        m = graph_runtime.create(graph, lib, device)
         m.set_input("data", tvm.nd.array(x.astype(dtype)))
         m.set_input(**params)
         m.run()
         return m.get_output(0).asnumpy()
 
     x = np.random.uniform(size=data_shape)
-    for target, ctx in ctx_list():
-        nnvm_out = get_nnvm_output(nnvm_sym, x, params, target, ctx)
-        relay_out = get_relay_output(nnvm_sym, x, params, target, ctx)
+    for target, device in device_list():
+        nnvm_out = get_nnvm_output(nnvm_sym, x, params, target, device)
+        relay_out = get_relay_output(nnvm_sym, x, params, target, device)
         tvm.testing.assert_allclose(nnvm_out, relay_out, rtol=1e-5, atol=1e-5)
 
 

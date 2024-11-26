@@ -33,11 +33,11 @@ TVM_REGISTER_GLOBAL("tvm.contrib.mps.buffer2img")
   MetalThreadEntry *entry_ptr = MetalThreadEntry::ThreadLocal();
   runtime::metal::MetalThreadEntry *rt =
       runtime::metal::MetalThreadEntry::ThreadLocal();
-  id<MTLDevice> dev = entry_ptr->metal_api->GetDevice(buf->ctx);
-  id<MTLBuffer> temp = rt->GetTempBuffer(buf->ctx, [mtlbuf length]);
+  id<MTLDevice> dev = entry_ptr->metal_api->GetDevice(buf->device);
+  id<MTLBuffer> temp = rt->GetTempBuffer(buf->device, [mtlbuf length]);
   entry_ptr->metal_api->CopyDataFromTo(
       (__bridge void *)mtlbuf, 0, (__bridge void *)temp, 0, [mtlbuf length],
-      buf->ctx, buf->ctx, nullptr
+      buf->device, buf->device, nullptr
   );
 
   MPSImageDescriptor *desc = [MPSImageDescriptor
@@ -69,7 +69,7 @@ TVM_REGISTER_GLOBAL("tvm.contrib.mps.img2buffer")
   MetalThreadEntry *entry_ptr = MetalThreadEntry::ThreadLocal();
   runtime::metal::MetalThreadEntry *rt =
       runtime::metal::MetalThreadEntry::ThreadLocal();
-  id<MTLBuffer> temp = rt->GetTempBuffer(buf->ctx, [mtlbuf length]);
+  id<MTLBuffer> temp = rt->GetTempBuffer(buf->device, [mtlbuf length]);
 
   [mpsimg readBytes:[temp contents]
          dataLayout:MPSDataLayoutHeightxWidthxFeatureChannels
@@ -77,7 +77,7 @@ TVM_REGISTER_GLOBAL("tvm.contrib.mps.img2buffer")
 
   entry_ptr->metal_api->CopyDataFromTo(
       (__bridge void *)temp, 0, (__bridge void *)mtlbuf, 0, [mtlbuf length],
-      buf->ctx, buf->ctx, nullptr);
+      buf->device, buf->device, nullptr);
 
     });
 
@@ -111,9 +111,9 @@ TVM_REGISTER_GLOBAL("tvm.contrib.mps.conv2d")
   MetalThreadEntry *entry_ptr = MetalThreadEntry::ThreadLocal();
   runtime::metal::MetalThreadEntry *rt =
       runtime::metal::MetalThreadEntry::ThreadLocal();
-  id<MTLDevice> dev = entry_ptr->metal_api->GetDevice(data->ctx);
+  id<MTLDevice> dev = entry_ptr->metal_api->GetDevice(data->device);
   id<MTLCommandQueue> queue =
-      entry_ptr->metal_api->GetCommandQueue(data->ctx);
+      entry_ptr->metal_api->GetCommandQueue(data->device);
   id<MTLCommandBuffer> cb = [queue commandBuffer];
   // data to MPSImage
   DLTensor tmp_in;
@@ -121,10 +121,10 @@ TVM_REGISTER_GLOBAL("tvm.contrib.mps.conv2d")
   MPSImage *tempA = (__bridge MPSImage *)tmp_in.data;
   // weight to temp memory
   id<MTLBuffer> bufB = (__bridge id<MTLBuffer>)(weight->data);
-  id<MTLBuffer> tempB = rt->GetTempBuffer(weight->ctx, [bufB length]);
+  id<MTLBuffer> tempB = rt->GetTempBuffer(weight->device, [bufB length]);
   entry_ptr->metal_api->CopyDataFromTo(
       (__bridge void *)bufB, 0, (__bridge void *)tempB, 0, [bufB length],
-      weight->ctx, weight->ctx, nullptr);
+      weight->device, weight->device, nullptr);
   float *ptr_w = (float *)[tempB contents];
   // output to MPSImage
   DLTensor tmp_out;

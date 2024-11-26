@@ -185,13 +185,13 @@ def create(func_name, args, target, target_host=None, template_key=None):
     ret.config_space = ConfigSpace()
     ret.config_space.template_key = template_key or ""
 
-    ctx = ApplyConfig(ret.config_space)
-    with ctx:
+    device = ApplyConfig(ret.config_space)
+    with device:
         with target:
             sch, _ = func(*args)
             ret.config_space.code_hash = getattr(sch, 'code_hash', None)
 
-    ret.workload = ctx.workload
+    ret.workload = device.workload
     ret.flop = ret.config_space.flop or compute_flop(sch)
     ret.target = target
     ret.target_host = target_host

@@ -37,7 +37,7 @@ def benchmark_fc_int8_acc16():
             print("skip because %s is not enabled..." % target)
             return
 
-        ctx = tvm.context(target, 0)
+        device = tvm.context(target, 0)
         X = tvm.placeholder((m, k), name='X', dtype="uint8")
         W = tvm.placeholder((n, k), name='W', dtype="int8")
         pc = dot_16x1x16_uint8_int8_int16()
@@ -60,7 +60,7 @@ def benchmark_fc_int8_acc16():
        	t_sch[t_fc].tensorize(a_yi, pc)
         # print(tvm.lower(t_sch, [X, packedW, t_fc], simple_mode=True))
         t_func = tvm.build(t_sch, [X, packedW, t_fc], target, name="intrinsic")
-        t_evaluator = t_func.time_evaluator(t_func.entry_name, ctx, number=10)
+        t_evaluator = t_func.time_evaluator(t_func.entry_name, device, number=10)
 
 	    # generate the plain data
         a_ = np.random.uniform(1, 10, size=(m, k)).astype("uint8")
@@ -73,9 +73,9 @@ def benchmark_fc_int8_acc16():
                 for t_idx in range(2):
                     packW[r_idx][s_idx][t_idx] = b_[r_idx*128+s_idx%128][s_idx//128*2+t_idx]
 
-        x = tvm.nd.array(a_, ctx)
-        w = tvm.nd.array(packW, ctx)
-        y = tvm.nd.array(np.zeros((m, n), dtype="int16"), ctx)
+        x = tvm.nd.array(a_, device)
+        w = tvm.nd.array(packW, device)
+        y = tvm.nd.array(np.zeros((m, n), dtype="int16"), device)
 
         result = t_evaluator(x, w, y)
         gops_per_sec = gops_per_mm/result.mean/1e9

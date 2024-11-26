@@ -60,7 +60,7 @@ def context(dev_type, dev_id=0):
 
     Returns
     -------
-    ctx: TVMContext
+    device: TVMContext
         The corresponding context.
 
     Examples
@@ -95,11 +95,11 @@ def numpyasarray(np_data):
     arr.dtype = TVMType(np.dtype(data.dtype).name)
     arr.ndim = data.ndim
     # CPU device
-    arr.ctx = context(1, 0)
+    arr.device = context(1, 0)
     return arr, shape
 
 
-def empty(shape, dtype="float32", ctx=context(1, 0)):
+def empty(shape, dtype="float32", device=context(1, 0)):
     """Create an empty array given shape and device
 
     Parameters
@@ -110,7 +110,7 @@ def empty(shape, dtype="float32", ctx=context(1, 0)):
     dtype : type or str
         The data type of the array.
 
-    ctx : TVMContext
+    device : TVMContext
         The context of the array
 
     Returns
@@ -127,8 +127,8 @@ def empty(shape, dtype="float32", ctx=context(1, 0)):
         ctypes.c_int(dtype.type_code),
         ctypes.c_int(dtype.bits),
         ctypes.c_int(dtype.lanes),
-        ctx.device_type,
-        ctx.device_id,
+        device.device_type,
+        device.device_id,
         ctypes.byref(handle)))
     return _make_array(handle, False, False)
 
@@ -165,14 +165,14 @@ class NDArrayBase(_NDArrayBase):
         return str(self.handle.contents.dtype)
 
     @property
-    def ctx(self):
+    def device(self):
         """context of this array"""
-        return self.handle.contents.ctx
+        return self.handle.contents.device
 
     @property
     def context(self):
         """context of this array"""
-        return self.ctx
+        return self.device
 
     def __hash__(self):
         return ctypes.cast(self.handle, ctypes.c_void_p).value

@@ -49,8 +49,8 @@ def verify_depthwise_conv2d_back_input(batch, in_channel, in_h, channel_multipli
     schedule = schedule_depthwise_conv2d_backward_input_nhwc(In_grad)
 
     def check_device(device):
-        ctx = tvm.context(device, 0)
-        if not ctx.exist:
+        device = tvm.context(device, 0)
+        if not device.exist:
             print("Skip because %s is not enabled" % device)
             return
         print("Running on target: %s" % device)
@@ -90,11 +90,11 @@ def verify_depthwise_conv2d_back_input(batch, in_channel, in_h, channel_multipli
 
         (out_grad_np, filter_np, in_grad_np) = get_ref_data()
 
-        out_grad_tvm = tvm.nd.array(out_grad_np, ctx)
-        filter_tvm = tvm.nd.array(filter_np, ctx)
-        in_grad_tvm = tvm.nd.array(np.zeros(shape=ishape, dtype=dtype), ctx)
+        out_grad_tvm = tvm.nd.array(out_grad_np, device)
+        filter_tvm = tvm.nd.array(filter_np, device)
+        in_grad_tvm = tvm.nd.array(np.zeros(shape=ishape, dtype=dtype), device)
         # launch the kernel
-        timer = f.time_evaluator(f.entry_name, ctx, number=1)
+        timer = f.time_evaluator(f.entry_name, device, number=1)
         tcost = timer(filter_tvm, out_grad_tvm, in_grad_tvm).mean
         tvm.testing.assert_allclose(in_grad_np, in_grad_tvm.asnumpy(), rtol=1e-5)
 

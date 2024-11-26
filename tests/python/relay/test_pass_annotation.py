@@ -35,29 +35,29 @@ def run_opt_pass(expr, passes):
 
 
 def test_redundant_annotation():
-    ctx1 = tvm.context(1)
-    ctx2 = tvm.context(2)
+    device1 = tvm.context(1)
+    device2 = tvm.context(2)
     x = relay.var("x", shape=(3,))
     y = relay.var("y", shape=(3,))
     z = relay.var("z", shape=(3,))
 
     def annotated():
         add = relay.add(x, y)
-        _add1 = relay.annotation.on_device(add, ctx2)
-        _add2 = relay.annotation.on_device(add, ctx2)
+        _add1 = relay.annotation.on_device(add, device2)
+        _add2 = relay.annotation.on_device(add, device2)
         sub1 = relay.subtract(_add1, z)
         sub2 = relay.subtract(_add2, z)
 
         func = relay.Function([x, y, z], relay.Tuple([sub1, sub2]))
         func = run_opt_pass(func,
-                            transform.RewriteAnnotatedOps(ctx1.device_type))
+                            transform.RewriteAnnotatedOps(device1.device_type))
         return func
 
     def expected():
         add = relay.add(x, y)
-        copy_add_sub1 = relay.device_copy(add, ctx2, ctx1)
+        copy_add_sub1 = relay.device_copy(add, device2, device1)
         sub1 = relay.subtract(copy_add_sub1, z)
-        copy_add_sub2 = relay.device_copy(add, ctx2, ctx1)
+        copy_add_sub2 = relay.device_copy(add, device2, device1)
         sub2 = relay.subtract(copy_add_sub2, z)
         func = relay.Function([x, y, z], relay.Tuple([sub1, sub2]))
         return func
@@ -68,24 +68,24 @@ def test_redundant_annotation():
 
 
 def test_annotate_expr():
-    ctx1 = tvm.context(1)
-    ctx2 = tvm.context(2)
+    device1 = tvm.context(1)
+    device2 = tvm.context(2)
     x = relay.var("x", shape=(3,))
     y = relay.var("y", shape=(3,))
     z = relay.var("z", shape=(3,))
 
     def annotated():
         add = relay.add(x, y)
-        _add = relay.annotation.on_device(add, ctx1)
+        _add = relay.annotation.on_device(add, device1)
         sub = relay.subtract(_add, z)
-        _sub = relay.annotation.on_device(sub, ctx2)
+        _sub = relay.annotation.on_device(sub, device2)
         expr = run_opt_pass(_sub,
-                            transform.RewriteAnnotatedOps(ctx1.device_type))
+                            transform.RewriteAnnotatedOps(device1.device_type))
         return expr
 
     def expected():
         add = relay.add(x, y)
-        copy_add_sub = relay.device_copy(add, ctx1, ctx2)
+        copy_add_sub = relay.device_copy(add, device1, device2)
         sub = relay.subtract(copy_add_sub, z)
         return sub
 
@@ -95,21 +95,21 @@ def test_annotate_expr():
 
 
 def test_annotate_all():
-    ctx1 = tvm.context(1)
-    ctx2 = tvm.context(2)
+    device1 = tvm.context(1)
+    device2 = tvm.context(2)
     x = relay.var("x", shape=(3,))
     y = relay.var("y", shape=(3,))
     z = relay.var("z", shape=(3,))
 
     def annotated():
         add = relay.add(x, y)
-        _add = relay.annotation.on_device(add, ctx2)
+        _add = relay.annotation.on_device(add, device2)
         sub = relay.subtract(_add, z)
-        _sub = relay.annotation.on_device(sub, ctx2)
+        _sub = relay.annotation.on_device(sub, device2)
 
         func = relay.Function([x, y, z], _sub)
         func = run_opt_pass(func,
-                            transform.RewriteAnnotatedOps(ctx1.device_type))
+                            transform.RewriteAnnotatedOps(device1.device_type))
         return func
 
     def expected():
@@ -124,8 +124,8 @@ def test_annotate_all():
 
 
 def test_annotate_none():
-    ctx1 = tvm.context(1)
-    ctx2 = tvm.context(2)
+    device1 = tvm.context(1)
+    device2 = tvm.context(2)
     x = relay.var("x", shape=(3,))
     y = relay.var("y", shape=(3,))
     z = relay.var("z", shape=(3,))
@@ -135,7 +135,7 @@ def test_annotate_none():
         sub = relay.subtract(add, z)
         func = relay.Function([x, y, z], sub)
         func = run_opt_pass(func,
-                            transform.RewriteAnnotatedOps(ctx1.device_type))
+                            transform.RewriteAnnotatedOps(device1.device_type))
         return func
 
     def expected():
@@ -367,31 +367,31 @@ def run_fusible_network(dev, tgt):
         """ Only log and add are fused."""
         fallback_device = tvm.context("cpu")
         target = {"cpu": "llvm", device: tgt}
-        cpu_ctx = fallback_device
-        dev_ctx = tvm.context(device)
+        cpu_device = fallback_device
+        dev_device = tvm.context(device)
 
         def annotated():
             add = relay.add(x, y)
             sqrt = relay.sqrt(add)
-            _sqrt = relay.annotation.on_device(sqrt, dev_ctx)
+            _sqrt = relay.annotation.on_device(sqrt, dev_device)
             log = relay.log(add)
             subtract = relay.subtract(_sqrt, log)
             exp = relay.exp(subtract)
-            _exp = relay.annotation.on_device(exp, dev_ctx)
+            _exp = relay.annotation.on_device(exp, dev_device)
 
             func = relay.Function([x, y], _exp)
             func = run_opt_pass(
-                func, transform.RewriteAnnotatedOps(cpu_ctx.device_type))
+                func, transform.RewriteAnnotatedOps(cpu_device.device_type))
             return func
 
         def expected():
             add = relay.add(x, y)
-            copy_add_sqrt = relay.device_copy(add, cpu_ctx, dev_ctx)
+            copy_add_sqrt = relay.device_copy(add, cpu_device, dev_device)
             sqrt = relay.sqrt(copy_add_sqrt)
             log = relay.log(add)
-            copy_sqrt_subtract = relay.device_copy(sqrt, dev_ctx, cpu_ctx)
+            copy_sqrt_subtract = relay.device_copy(sqrt, dev_device, cpu_device)
             subtract = relay.subtract(copy_sqrt_subtract, log)
-            copy_sub_exp = relay.device_copy(subtract, cpu_ctx, dev_ctx)
+            copy_sub_exp = relay.device_copy(subtract, cpu_device, dev_device)
             exp = relay.exp(copy_sub_exp)
 
             func = relay.Function([x, y], exp)
@@ -399,8 +399,8 @@ def run_fusible_network(dev, tgt):
 
         annotated_func = annotated()
         expected_func = expected()
-        ctx = tvm.context(device, 0)
-        dev_idx = ctx.device_type
+        device = tvm.context(device, 0)
+        dev_idx = device.device_type
         expected_index = [1, 1, 1, dev_idx, dev_idx, 1, 1, dev_idx, dev_idx]
         check_annotated_graph(annotated_func, expected_func)
         test_runtime(target, device, annotated_func, fallback_device,
@@ -410,24 +410,24 @@ def run_fusible_network(dev, tgt):
         """Fuse all operators."""
         fallback_device = tvm.context("cpu")
         target = {"cpu": "llvm", device: tgt}
-        cpu_ctx = fallback_device
-        dev_ctx = tvm.context(device)
+        cpu_device = fallback_device
+        dev_device = tvm.context(device)
 
         def annotated():
             add = relay.add(x, y)
-            _add = relay.annotation.on_device(add, dev_ctx)
+            _add = relay.annotation.on_device(add, dev_device)
             sqrt = relay.sqrt(_add)
-            _sqrt = relay.annotation.on_device(sqrt, dev_ctx)
+            _sqrt = relay.annotation.on_device(sqrt, dev_device)
             log = relay.log(_add)
-            _log = relay.annotation.on_device(log, dev_ctx)
+            _log = relay.annotation.on_device(log, dev_device)
             subtract = relay.subtract(_sqrt, _log)
-            _subtract = relay.annotation.on_device(subtract, dev_ctx)
+            _subtract = relay.annotation.on_device(subtract, dev_device)
             exp = relay.exp(_subtract)
-            _exp = relay.annotation.on_device(exp, dev_ctx)
+            _exp = relay.annotation.on_device(exp, dev_device)
 
             func = relay.Function([x, y], _exp)
             func = run_opt_pass(
-                func, transform.RewriteAnnotatedOps(cpu_ctx.device_type))
+                func, transform.RewriteAnnotatedOps(cpu_device.device_type))
             return func
 
         annotated_func = annotated()
@@ -438,8 +438,8 @@ def run_fusible_network(dev, tgt):
     def test_fallback_exp(device, tgt):
         fallback_device = tvm.context("cpu")
         target = {"cpu": "llvm", device: tgt}
-        cpu_ctx = fallback_device
-        dev_ctx = tvm.context(device)
+        cpu_device = fallback_device
+        dev_device = tvm.context(device)
 
         def annotated():
             add = relay.add(x, y)
@@ -447,11 +447,11 @@ def run_fusible_network(dev, tgt):
             log = relay.log(add)
             subtract = relay.subtract(sqrt, log)
             exp = relay.exp(subtract)
-            _exp = relay.annotation.on_device(exp, cpu_ctx)
+            _exp = relay.annotation.on_device(exp, cpu_device)
 
             func = relay.Function([x, y], _exp)
             func = run_opt_pass(
-                func, transform.RewriteAnnotatedOps(dev_ctx.device_type))
+                func, transform.RewriteAnnotatedOps(dev_device.device_type))
             return func
 
         def expected():
@@ -459,7 +459,7 @@ def run_fusible_network(dev, tgt):
             sqrt = relay.sqrt(add)
             log = relay.log(add)
             subtract = relay.subtract(sqrt, log)
-            copy_sub_exp = relay.device_copy(subtract, dev_ctx, cpu_ctx)
+            copy_sub_exp = relay.device_copy(subtract, dev_device, cpu_device)
             exp = relay.exp(copy_sub_exp)
 
             func = relay.Function([x, y], exp)
@@ -467,8 +467,8 @@ def run_fusible_network(dev, tgt):
 
         annotated_func = annotated()
         expected_func = expected()
-        ctx = tvm.context(device, 0)
-        dev_idx = ctx.device_type
+        device = tvm.context(device, 0)
+        dev_idx = device.device_type
         expected_index = [dev_idx, dev_idx, dev_idx, 1, 1]
         check_annotated_graph(annotated_func, expected_func)
         test_runtime(target, device, annotated_func, fallback_device,
@@ -510,25 +510,25 @@ def run_unpropagatable_graph(dev, tgt):
 
     fallback_device = tvm.context("cpu")
     target = {"cpu": "llvm", dev: tgt}
-    cpu_ctx = fallback_device
-    dev_ctx = tvm.context(dev)
+    cpu_device = fallback_device
+    dev_device = tvm.context(dev)
 
     def annotated():
         add = relay.add(a, b)
-        _add = relay.annotation.on_device(add, dev_ctx)
+        _add = relay.annotation.on_device(add, dev_device)
         mul = relay.multiply(c, d)
-        _mul = relay.annotation.on_device(mul, cpu_ctx)
+        _mul = relay.annotation.on_device(mul, cpu_device)
         sub = relay.subtract(_add, _mul)
-        _sub = relay.annotation.on_device(sub, dev_ctx)
+        _sub = relay.annotation.on_device(sub, dev_device)
         func = relay.Function([a, b, c, d], _sub)
         func = run_opt_pass(
-            func, transform.RewriteAnnotatedOps(dev_ctx.device_type))
+            func, transform.RewriteAnnotatedOps(dev_device.device_type))
         return func
 
     def expected():
         add = relay.add(a, b)
         mul = relay.multiply(c, d)
-        copy_mul_sub = relay.device_copy(mul, cpu_ctx, dev_ctx)
+        copy_mul_sub = relay.device_copy(mul, cpu_device, dev_device)
         sub = relay.subtract(add, copy_mul_sub)
         func = relay.Function([a, b, c, d], sub)
         return func
@@ -570,14 +570,14 @@ def test_tuple_get_item():
         print("Skip test because %s is not enabled." % dev)
         return
 
-    cpu_ctx = tvm.cpu(0)
-    gpu_ctx = tvm.context(dev)
+    cpu_device = tvm.cpu(0)
+    gpu_device = tvm.context(dev)
 
     def expected():
         x = relay.var("x", relay.ty.TensorType((3, 3, 4), "float32"))
         split = relay.op.split(x, 3)
-        elem0 = relay.device_copy(split[0], gpu_ctx, cpu_ctx)
-        elem1 = relay.device_copy(split[1], gpu_ctx, cpu_ctx)
+        elem0 = relay.device_copy(split[0], gpu_device, cpu_device)
+        elem1 = relay.device_copy(split[1], gpu_device, cpu_device)
         sub = elem0 - elem1
         func = relay.Function(relay.analysis.free_vars(sub), sub)
         return func
@@ -586,12 +586,12 @@ def test_tuple_get_item():
         x = relay.var("x", relay.ty.TensorType((3, 3, 4), "float32"))
         split = relay.op.split(x, 3)
         split = split.astuple()
-        split = relay.annotation.on_device(split, gpu_ctx)
+        split = relay.annotation.on_device(split, gpu_device)
         split = relay.TupleWrapper(split, 3)
         sub = split[0] - split[1]
         func = relay.Function(relay.analysis.free_vars(sub), sub)
         func = run_opt_pass(
-            func, transform.RewriteAnnotatedOps(cpu_ctx.device_type))
+            func, transform.RewriteAnnotatedOps(cpu_device.device_type))
         return func
 
     annotated_func = annotated()

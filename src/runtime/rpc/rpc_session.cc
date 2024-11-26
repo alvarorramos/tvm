@@ -192,12 +192,12 @@ class RPCSession::EventHandler : public dmlc::Stream {
     arg_buf_.reset();
   }
   // strip session on mask
-  TVMContext StripSessMask(TVMContext ctx) {
-    int dev_type = ctx.device_type;
+  TVMContext StripSessMask(TVMContext device) {
+    int dev_type = device.device_type;
     CHECK_EQ(dev_type / kRPCSessMask, rpc_sess_table_index_ + 1)
         << "Can not pass in local context or context with a different remote session";
-    ctx.device_type = static_cast<DLDeviceType>(dev_type % kRPCSessMask);
-    return ctx;
+    device.device_type = static_cast<DLDeviceType>(dev_type % kRPCSessMask);
+    return device;
   }
   // Send Packed sequence to writer.
   // return_ndarray is a special flag to handle returning of ndarray
@@ -234,8 +234,8 @@ class RPCSession::EventHandler : public dmlc::Stream {
           break;
         }
         case kTVMContext: {
-          value.v_ctx = StripSessMask(value.v_ctx);
-          this->Write(value.v_ctx);
+          value.v_device = StripSessMask(value.v_device);
+          this->Write(value.v_device);
           break;
         }
         case kFuncHandle:
@@ -249,25 +249,25 @@ class RPCSession::EventHandler : public dmlc::Stream {
         case kNDArrayContainer:
         case kArrayHandle: {
           DLTensor* arr = static_cast<DLTensor*>(value.v_handle);
-          TVMContext ctx;
+          TVMContext device;
           uint64_t data;
           if (!return_ndarray) {
             // in the client mode
-            // ctx contains the remote table index
+            // device contains the remote table index
             // the space is wrapped by an RemoteSpace
             // that holds reference to the session.
-            ctx = StripSessMask(arr->ctx);
+            device = StripSessMask(arr->device);
             data = reinterpret_cast<uint64_t>(
                 static_cast<RemoteSpace*>(arr->data)->data);
           } else {
             // When we return NDArray, we directly return
             // the space and the context
             // The client will be further wrapping
-            ctx = arr->ctx;
+            device = arr->device;
             data = reinterpret_cast<uint64_t>(arr->data);
           }
           this->Write(data);
-          this->Write(ctx);
+          this->Write(device);
           this->Write(arr->ndim);
           this->Write(arr->dtype);
           this->WriteArray(arr->shape, arr->ndim);
@@ -356,7 +356,7 @@ class RPCSession::EventHandler : public dmlc::Stream {
   // Internal temporal data space.
   std::string temp_data_;
   // Temp variables for copy request state.
-  TVMContext copy_ctx_;
+  TVMContext copy_device_;
   TVMType copy_dtype_;
   uint64_t copy_handle_, copy_offset_, copy_size_;
   // State switcher
@@ -475,7 +475,7 @@ class RPCSession::EventHandler : public dmlc::Stream {
           break;
         }
         case kTVMContext: {
-          this->Read(&(value.v_ctx));
+          this->Read(&(value.v_device));
           ++arg_index_;
           this->SwitchToState(kRecvPackedSeqArg);
           break;
@@ -513,7 +513,7 @@ class RPCSession::EventHandler : public dmlc::Stream {
           this->Read(&handle);
           DLTensor& tensor = temp_array_->tensor;
           tensor.data = reinterpret_cast<void*>(handle);
-          this->Read(&(tensor.ctx));
+          this->Read(&(tensor.device));
           this->Read(&(tensor.ndim));
           this->Read(&(tensor.dtype));
           temp_array_->shape.resize(tensor.ndim);
@@ -611,16 +611,16 @@ class RPCSession::EventHandler : public dmlc::Stream {
 
   void HandleCopyFromRemote() {
     uint64_t handle, offset, num_bytes;
-    TVMContext ctx;
+    TVMContext device;
     TVMType type_hint;
     this->Read(&handle);
     this->Read(&offset);
     this->Read(&num_bytes);
-    this->Read(&ctx);
+    this->Read(&device);
     this->Read(&type_hint);
     size_t elem_bytes = (type_hint.bits * type_hint.lanes + 7) / 8;
 
-    if (ctx.device_type == kDLCPU) {
+    if (device.device_type == kDLCPU) {
       RPCCode code = RPCCode::kCopyAck;
       this->Write(code);
       char* dptr = reinterpret_cast<char*>(handle) + offset;
@@ -635,13 +635,13 @@ class RPCSession::EventHandler : public dmlc::Stream {
     } else {
       temp_data_.resize(num_bytes + 1);
       try {
-        TVMContext cpu_ctx;
-        cpu_ctx.device_type = kDLCPU;
-        cpu_ctx.device_id = 0;
-        DeviceAPI::Get(ctx)->CopyDataFromTo(
+        TVMContext cpu_device;
+        cpu_device.device_type = kDLCPU;
+        cpu_device.device_id = 0;
+        DeviceAPI::Get(device)->CopyDataFromTo(
             reinterpret_cast<void*>(handle), offset,
             dmlc::BeginPtr(temp_data_), 0,
-            num_bytes, ctx, cpu_ctx, type_hint, nullptr);
+            num_bytes, device, cpu_device, type_hint, nullptr);
         RPCCode code = RPCCode::kCopyAck;
         this->Write(code);
         if (!DMLC_IO_NO_ENDIAN_SWAP) {
@@ -667,7 +667,7 @@ class RPCSession::EventHandler : public dmlc::Stream {
       CHECK(this->Read(&copy_handle_));
       CHECK(this->Read(&copy_offset_));
       CHECK(this->Read(&copy_size_));
-      CHECK(this->Read(&copy_ctx_));
+      CHECK(this->Read(&copy_device_));
       CHECK(this->Read(&copy_dtype_));
       arg_recv_stage_ = 1;
       CHECK_EQ(pending_request_bytes_, 0U);
@@ -681,7 +681,7 @@ class RPCSession::EventHandler : public dmlc::Stream {
       std::string errmsg;
 
       size_t elem_bytes = (copy_dtype_.bits * copy_dtype_.lanes + 7) / 8;
-      if (copy_ctx_.device_type == kDLCPU) {
+      if (copy_device_.device_type == kDLCPU) {
         char* dptr = reinterpret_cast<char*>(copy_handle_) + copy_offset_;
         this->ReadArray(dptr, copy_size_);
         if (!DMLC_IO_NO_ENDIAN_SWAP) {
@@ -694,13 +694,13 @@ class RPCSession::EventHandler : public dmlc::Stream {
           dmlc::ByteSwap(dmlc::BeginPtr(temp_data_), elem_bytes, copy_size_ / elem_bytes);
         }
         try {
-          TVMContext cpu_ctx;
-          cpu_ctx.device_type = kDLCPU;
-          cpu_ctx.device_id = 0;
-          DeviceAPI::Get(copy_ctx_)->CopyDataFromTo(
+          TVMContext cpu_device;
+          cpu_device.device_type = kDLCPU;
+          cpu_device.device_id = 0;
+          DeviceAPI::Get(copy_device_)->CopyDataFromTo(
               temp_data_.data(), 0,
               reinterpret_cast<void*>(copy_handle_), copy_offset_,
-              copy_size_, cpu_ctx, copy_ctx_, copy_dtype_, nullptr);
+              copy_size_, cpu_device, copy_device_, copy_dtype_, nullptr);
         } catch (const std::runtime_error &e) {
           code = RPCCode::kException;
           errmsg = e.what();
@@ -968,10 +968,10 @@ void RPCSession::CopyToRemote(void* from,
                               void* to,
                               size_t to_offset,
                               size_t data_size,
-                              TVMContext ctx_to,
+                              TVMContext device_to,
                               TVMType type_hint) {
   std::lock_guard<std::recursive_mutex> lock(mutex_);
-  ctx_to = handler_->StripSessMask(ctx_to);
+  device_to = handler_->StripSessMask(device_to);
   RPCCode code = RPCCode::kCopyToRemote;
   handler_->Write(code);
   uint64_t handle = reinterpret_cast<uint64_t>(to);
@@ -980,7 +980,7 @@ void RPCSession::CopyToRemote(void* from,
   handler_->Write(offset);
   uint64_t size = static_cast<uint64_t>(data_size);
   handler_->Write(size);
-  handler_->Write(ctx_to);
+  handler_->Write(device_to);
   handler_->Write(type_hint);
   handler_->WriteArray(reinterpret_cast<char*>(from) + from_offset, data_size);
   TVMRetValue rv;
@@ -992,10 +992,10 @@ void RPCSession::CopyFromRemote(void* from,
                                 void* to,
                                 size_t to_offset,
                                 size_t data_size,
-                                TVMContext ctx_from,
+                                TVMContext device_from,
                                 TVMType type_hint) {
   std::lock_guard<std::recursive_mutex> lock(mutex_);
-  ctx_from = handler_->StripSessMask(ctx_from);
+  device_from = handler_->StripSessMask(device_from);
   RPCCode code = RPCCode::kCopyFromRemote;
   handler_->Write(code);
   uint64_t handle = reinterpret_cast<uint64_t>(from);
@@ -1004,7 +1004,7 @@ void RPCSession::CopyFromRemote(void* from,
   handler_->Write(offset);
   uint64_t size = static_cast<uint64_t>(data_size);
   handler_->Write(size);
-  handler_->Write(ctx_from);
+  handler_->Write(device_from);
   handler_->Write(type_hint);
   TVMRetValue rv;
   CHECK(HandleUntilReturnEvent(&rv, true, nullptr) == RPCCode::kCopyAck);
@@ -1023,9 +1023,9 @@ void RPCSession::CopyFromRemote(void* from,
 }
 
 RPCFuncHandle RPCSession::GetTimeEvaluator(
-    RPCFuncHandle fhandle, TVMContext ctx, int number, int repeat, int min_repeat_ms) {
+    RPCFuncHandle fhandle, TVMContext device, int number, int repeat, int min_repeat_ms) {
   return this->CallRemote(
-      RPCCode::kGetTimeEvaluator, fhandle, ctx, number, repeat, min_repeat_ms);
+      RPCCode::kGetTimeEvaluator, fhandle, device, number, repeat, min_repeat_ms);
 }
 
 // Event handler functions
@@ -1045,46 +1045,46 @@ void RPCFreeFunc(TVMArgs args, TVMRetValue *rv) {
 }
 
 void RPCDevSetDevice(TVMArgs args, TVMRetValue *rv) {
-  TVMContext ctx = args[0];
-  DeviceAPI::Get(ctx)->SetDevice(ctx);
+  TVMContext device = args[0];
+  DeviceAPI::Get(device)->SetDevice(device);
 }
 
 void RPCDevGetAttr(TVMArgs args, TVMRetValue *rv) {
-  TVMContext ctx = args[0];
+  TVMContext device = args[0];
   DeviceAttrKind kind = static_cast<DeviceAttrKind>(args[1].operator int());
   if (kind == kExist) {
-    DeviceAPI* api = DeviceAPI::Get(ctx, true);
+    DeviceAPI* api = DeviceAPI::Get(device, true);
     if (api != nullptr) {
-      api->GetAttr(ctx, kind, rv);
+      api->GetAttr(device, kind, rv);
     } else {
       *rv = 0;
     }
   } else {
-    DeviceAPI::Get(ctx)->GetAttr(
-        ctx, static_cast<DeviceAttrKind>(kind), rv);
+    DeviceAPI::Get(device)->GetAttr(
+        device, static_cast<DeviceAttrKind>(kind), rv);
   }
 }
 
 void RPCDevAllocData(TVMArgs args, TVMRetValue *rv) {
-  TVMContext ctx = args[0];
+  TVMContext device = args[0];
   uint64_t nbytes = args[1];
   uint64_t alignment = args[2];
   TVMType type_hint = args[3];
-  void* data = DeviceAPI::Get(ctx)->AllocDataSpace(
-      ctx, nbytes, alignment, type_hint);
+  void* data = DeviceAPI::Get(device)->AllocDataSpace(
+      device, nbytes, alignment, type_hint);
   *rv = data;
 }
 
 void RPCDevFreeData(TVMArgs args, TVMRetValue *rv) {
-  TVMContext ctx = args[0];
+  TVMContext device = args[0];
   void* ptr = args[1];
-  DeviceAPI::Get(ctx)->FreeDataSpace(ctx, ptr);
+  DeviceAPI::Get(device)->FreeDataSpace(device, ptr);
 }
 
 void RPCDevStreamSync(TVMArgs args, TVMRetValue *rv) {
-  TVMContext ctx = args[0];
+  TVMContext device = args[0];
   TVMStreamHandle handle = args[1];
-  DeviceAPI::Get(ctx)->StreamSync(ctx, handle);
+  DeviceAPI::Get(device)->StreamSync(device, handle);
 }
 
 void RPCCopyAmongRemote(TVMArgs args, TVMRetValue *rv) {
@@ -1093,22 +1093,22 @@ void RPCCopyAmongRemote(TVMArgs args, TVMRetValue *rv) {
   void* to = args[2];
   uint64_t to_offset = args[3];
   uint64_t size = args[4];
-  TVMContext ctx_from = args[5];
-  TVMContext ctx_to = args[6];
+  TVMContext device_from = args[5];
+  TVMContext device_to = args[6];
   TVMType type_hint = args[7];
   TVMStreamHandle stream = args[8];
-  TVMContext ctx = ctx_from;
-  if (ctx.device_type == kDLCPU) {
-    ctx = ctx_to;
+  TVMContext device = device_from;
+  if (device.device_type == kDLCPU) {
+    device = device_to;
   } else {
-    CHECK(ctx_to.device_type == kDLCPU ||
-          ctx_to.device_type == ctx_from.device_type)
-        << "Can not copy across different ctx types directly";
+    CHECK(device_to.device_type == kDLCPU ||
+          device_to.device_type == device_from.device_type)
+        << "Can not copy across different device types directly";
   }
-  DeviceAPI::Get(ctx)->CopyDataFromTo(
+  DeviceAPI::Get(device)->CopyDataFromTo(
       from, from_offset,
       to, to_offset,
-      size, ctx_from, ctx_to, type_hint, stream);
+      size, device_from, device_to, type_hint, stream);
 }
 
 void RPCModuleLoad(TVMArgs args, TVMRetValue *rv) {
@@ -1216,16 +1216,16 @@ void RPCSession::EventHandler::HandlePackedCall() {
 }
 
 PackedFunc WrapTimeEvaluator(PackedFunc pf,
-                             TVMContext ctx,
+                             TVMContext device,
                              int number,
                              int repeat,
                              int min_repeat_ms) {
-  auto ftimer = [pf, ctx, number, repeat, min_repeat_ms](TVMArgs args, TVMRetValue *rv) mutable {
+  auto ftimer = [pf, device, number, repeat, min_repeat_ms](TVMArgs args, TVMRetValue *rv) mutable {
     TVMRetValue temp;
     std::ostringstream os;
     // skip first time call, to activate lazy compilation components.
     pf.CallPacked(args, &temp);
-    DeviceAPI::Get(ctx)->StreamSync(ctx, nullptr);
+    DeviceAPI::Get(device)->StreamSync(device, nullptr);
 
     for (int i = 0; i < repeat; ++i) {
       std::chrono::time_point<
@@ -1244,7 +1244,7 @@ PackedFunc WrapTimeEvaluator(PackedFunc pf,
         for (int i = 0; i < number; ++i) {
           pf.CallPacked(args, &temp);
         }
-        DeviceAPI::Get(ctx)->StreamSync(ctx, nullptr);
+        DeviceAPI::Get(device)->StreamSync(device, nullptr);
         tend = std::chrono::high_resolution_clock::now();
 
         duration_ms = std::chrono::duration_cast<std::chrono::duration<double> >

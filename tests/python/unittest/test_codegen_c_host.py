@@ -33,12 +33,12 @@ def test_add():
         mhost.export_library(path_dso)
         m = tvm.module.load(path_dso)
         fadd = m['fadd']
-        ctx = tvm.cpu(0)
+        device = tvm.cpu(0)
         # launch the kernel.
         n = nn
-        a = tvm.nd.array(np.random.uniform(size=n).astype(A.dtype), ctx)
-        b = tvm.nd.array(np.random.uniform(size=n).astype(B.dtype), ctx)
-        c = tvm.nd.array(np.zeros(n, dtype=C.dtype), ctx)
+        a = tvm.nd.array(np.random.uniform(size=n).astype(A.dtype), device)
+        b = tvm.nd.array(np.random.uniform(size=n).astype(B.dtype), device)
+        c = tvm.nd.array(np.zeros(n, dtype=C.dtype), device)
         fadd(a, b, c)
         tvm.testing.assert_allclose(
             c.asnumpy(), a.asnumpy() + b.asnumpy())
@@ -81,12 +81,12 @@ def test_add_pipeline():
         mhost.export_library(path_dso)
         m = tvm.module.load(path_dso)
         fadd = m["fadd_pipeline"]
-        ctx = tvm.cpu(0)
+        device = tvm.cpu(0)
         # launch the kernel.
         n = nn
-        a = tvm.nd.array(np.random.uniform(size=n).astype(A.dtype), ctx)
-        b = tvm.nd.array(np.random.uniform(size=n).astype(B.dtype), ctx)
-        c = tvm.nd.array(np.zeros(n, dtype=C.dtype), ctx)
+        a = tvm.nd.array(np.random.uniform(size=n).astype(A.dtype), device)
+        b = tvm.nd.array(np.random.uniform(size=n).astype(B.dtype), device)
+        c = tvm.nd.array(np.zeros(n, dtype=C.dtype), device)
         fadd(a, b, c)
         tvm.testing.assert_allclose(
             c.asnumpy(), a.asnumpy() + b.asnumpy())
@@ -109,10 +109,10 @@ def test_reinterpret():
         mhost.export_library(path_dso)
         m = tvm.module.load(path_dso)
         fadd = m['reinterpret']
-        ctx = tvm.cpu(0)
+        device = tvm.cpu(0)
         n = nn
-        a = tvm.nd.array(np.random.randint(-2 ** 30, 2 ** 30, size=n).astype(A.dtype), ctx)
-        b = tvm.nd.array(np.zeros(n, dtype=B.dtype), ctx)
+        a = tvm.nd.array(np.random.randint(-2 ** 30, 2 ** 30, size=n).astype(A.dtype), device)
+        b = tvm.nd.array(np.zeros(n, dtype=B.dtype), device)
         fadd(a, b)
         tvm.testing.assert_allclose(
             b.asnumpy(), a.asnumpy().view('float32'))

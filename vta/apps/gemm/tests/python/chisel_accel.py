@@ -138,7 +138,7 @@ def compute(A, B, i_width, w_width):
 def test_accel(A, B, i_width, w_width):
     assert A.shape[1] == B.shape[2], "sliced shape not match"
     dtype = A.dtype
-    ctx = tvm.cpu(0)
+    device = tvm.cpu(0)
     f = tsim.load_module()
 
     a_arr = []
@@ -147,7 +147,7 @@ def test_accel(A, B, i_width, w_width):
         list_a = np.zeros(A.shape[1]).astype(dtype)
         for j in range(A.shape[1]):
             list_a[j] = A[i][j]
-        a_arr.append(tvm.nd.array(list_a.astype(dtype), ctx))
+        a_arr.append(tvm.nd.array(list_a.astype(dtype), device))
 
     for i in range(B.shape[0]):
         # transpose
@@ -155,10 +155,10 @@ def test_accel(A, B, i_width, w_width):
         for j in range(B.shape[2]):
             for k in range(B.shape[1]):
                 list_b[j][k] = B[i][j][k]
-        b_arr.append(tvm.nd.array(list_b.astype(dtype), ctx))
+        b_arr.append(tvm.nd.array(list_b.astype(dtype), device))
 
     cycles = 0
-    accum = tvm.nd.array(np.zeros(A.shape[1]).astype("uint32"), ctx)
+    accum = tvm.nd.array(np.zeros(A.shape[1]).astype("uint32"), device)
     for i in range(len(a_arr)):
         for j in range(len(b_arr)):
             shift = np.uint8(i*i_width + j*w_width)

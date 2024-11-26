@@ -40,8 +40,8 @@ def verify_reorg(batch, in_size, in_channel, stride):
 
     def check_device(device):
         '''Cheching devices is enabled or not'''
-        ctx = tvm.context(device, 0)
-        if not ctx.exist:
+        device = tvm.context(device, 0)
+        if not device.exist:
             print("Skip because %s is not enabled" % device)
             return
         print("Running on target: %s" % device)
@@ -50,8 +50,8 @@ def verify_reorg(batch, in_size, in_channel, stride):
                 s = topi.generic.schedule_reorg([B])
             else:
                 s = topi.cuda.schedule_reorg([B])
-        a = tvm.nd.array(a_np, ctx)
-        b = tvm.nd.array(np.zeros(get_const_tuple(B.shape), dtype=B.dtype), ctx)
+        a = tvm.nd.array(a_np, device)
+        b = tvm.nd.array(np.zeros(get_const_tuple(B.shape), dtype=B.dtype), device)
         func = tvm.build(s, [A, B], device)
         func(a, b)
         tvm.testing.assert_allclose(b.asnumpy(), b_np, rtol=1e-5)

@@ -26,16 +26,16 @@ from topi.util import get_const_tuple
 from common import get_all_backend
 
 def check_device(A, B, a_np, b_np, device, name):
-    ctx = tvm.context(device, 0)
-    if not ctx.exist:
+    device = tvm.context(device, 0)
+    if not device.exist:
         print("Skip because %s is not enabled" % device)
         return
     print("Running on target: %s" % device)
     with tvm.target.create(device):
         s = topi.generic.schedule_softmax(B)
 
-    a = tvm.nd.array(a_np, ctx)
-    b = tvm.nd.array(np.zeros(get_const_tuple(B.shape), dtype=B.dtype), ctx)
+    a = tvm.nd.array(a_np, device)
+    b = tvm.nd.array(np.zeros(get_const_tuple(B.shape), dtype=B.dtype), device)
     f = tvm.build(s, [A, B], device, name="softmax")
     f(a, b)
     tvm.testing.assert_allclose(b.asnumpy(), b_np, rtol=1e-5)

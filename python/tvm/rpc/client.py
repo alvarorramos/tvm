@@ -67,14 +67,14 @@ class RPCSession(object):
 
         Returns
         -------
-        ctx: TVMContext
+        device: TVMContext
             The corresponding encoded remote context.
         """
-        ctx = nd.context(dev_type, dev_id)
+        device = nd.context(dev_type, dev_id)
         encode = (self._tbl_index + 1) * base.RPC_SESS_MASK
-        ctx.device_type += encode
-        ctx._rpc_sess = self
-        return ctx
+        device.device_type += encode
+        device._rpc_sess = self
+        return device
 
     def upload(self, data, target=None):
         """Upload file to remote runtime temp folder

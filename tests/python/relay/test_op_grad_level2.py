@@ -20,7 +20,7 @@ import topi
 import topi.testing
 import tvm
 from tvm import relay
-from tvm.relay.testing import check_grad, ctx_list, run_infer_type
+from tvm.relay.testing import check_grad, device_list, run_infer_type
 from tvm.relay.transform import gradient
 
 
@@ -41,8 +41,8 @@ def verify_max_pool2d_grad(x_shape, pool_size, strides, padding, ceil_mode):
                                            padding=[ph, pw, ph, pw],
                                            pool_type='max', ceil_mode=ceil_mode)
 
-    for target, ctx in ctx_list():
-        intrp = relay.create_executor(ctx=ctx, target=target)
+    for target, device in device_list():
+        intrp = relay.create_executor(device=device, target=target)
         op_res, (op_grad, ) = intrp.evaluate(bwd_func)(data)
         np.testing.assert_allclose(op_grad.asnumpy(), ref_grad, rtol=0.01)
 
@@ -69,8 +69,8 @@ def verify_avg_pool2d_grad(x_shape, pool_size, strides, padding, ceil_mode, coun
                                            padding=[ph, pw, ph, pw],
                                            pool_type='avg', ceil_mode=ceil_mode)
 
-    for target, ctx in ctx_list():
-        intrp = relay.create_executor(ctx=ctx, target=target)
+    for target, device in device_list():
+        intrp = relay.create_executor(device=device, target=target)
         op_res, (op_grad, ) = intrp.evaluate(bwd_func)(data)
         np.testing.assert_allclose(op_grad.asnumpy(), ref_grad, rtol=0.01)
 
@@ -96,8 +96,8 @@ def verify_global_avg_pool2d_grad(x_shape):
                                             strides=(1, 1), padding=[0, 0, 0, 0], pool_type='avg', 
                                             ceil_mode=False)
 
-    for target, ctx in ctx_list():
-        intrp = relay.create_executor(ctx=ctx, target=target)
+    for target, device in device_list():
+        intrp = relay.create_executor(device=device, target=target)
         op_res, (op_grad, ) = intrp.evaluate(bwd_func)(data)
         np.testing.assert_allclose(op_grad.asnumpy(), ref_grad, rtol=0.01)
 
@@ -135,10 +135,10 @@ def verify_conv2d_grad(dshape, wshape, strides, padding, dilation, groups=1, mod
                            .detach().numpy()
 
 
-    for target, ctx in ctx_list():
-        data = tvm.nd.array(data_pt.detach().numpy(), ctx)
-        weight = tvm.nd.array(weight_pt.detach().numpy(), ctx)
-        intrp = relay.create_executor(ctx=ctx, target=target)
+    for target, device in device_list():
+        data = tvm.nd.array(data_pt.detach().numpy(), device)
+        weight = tvm.nd.array(weight_pt.detach().numpy(), device)
+        intrp = relay.create_executor(device=device, target=target)
         op_res, (grad_input, grad_weight) = intrp.evaluate(bwd_func)(data, weight)
         np.testing.assert_allclose(grad_input.asnumpy(), grad_input_pt, rtol=1e-4, atol=1e-4)
         np.testing.assert_allclose(grad_weight.asnumpy(), grad_weight_pt, rtol=1e-4, atol=1e-4)

@@ -62,12 +62,12 @@ void GraphRuntime::Run() {
  * \param graph_json The execution graph.
  * \param module The module containing the compiled functions for the host
  * processor.
- * \param ctxs The context of the host and devices where graph nodes will be
+ * \param devices The context of the host and devices where graph nodes will be
  * executed on.
  */
 void GraphRuntime::Init(const std::string& graph_json,
                         tvm::runtime::Module module,
-                        const std::vector<TVMContext>& ctxs) {
+                        const std::vector<TVMContext>& devices) {
 #ifndef _LIBCPP_SGX_NO_IOSTREAMS
   std::istringstream is(graph_json);
 #else
@@ -76,7 +76,7 @@ void GraphRuntime::Init(const std::string& graph_json,
   dmlc::JSONReader reader(&is);
   this->Load(&reader);
   module_ = module;
-  ctxs_ = ctxs;
+  devices_ = devices;
   this->SetupStorage();
   this->SetupOpExecs();
   for (size_t i = 0; i < input_nodes_.size(); i++) {
@@ -122,8 +122,8 @@ void GraphRuntime::SetInputZeroCopy(int index, DLTensor* data_ref) {
   CHECK_EQ(data_alignment_[eid], details::GetDataAlignment(*data_ref));
   CHECK_EQ(reinterpret_cast<size_t>(data_ref->data) % kAllocAlignment, 0);
   CHECK_EQ(old_t->ndim, static_cast<size_t>(data_ref->ndim));
-  CHECK_EQ(old_t->ctx.device_type, data_ref->ctx.device_type);
-  CHECK_EQ(old_t->ctx.device_id, data_ref->ctx.device_id);
+  CHECK_EQ(old_t->device.device_type, data_ref->device.device_type);
+  CHECK_EQ(old_t->device.device_id, data_ref->device.device_id);
   for (auto i = 0; i < data_ref->ndim; ++i) {
     CHECK_EQ(old_t->shape[i], data_ref->shape[i]);
   }
@@ -262,7 +262,7 @@ void GraphRuntime::SetupStorage() {
   for (size_t i = 0; i < attrs_.shape.size(); ++i) {
     int storage_id = attrs_.storage_id[i];
     // Use the fallback device if no device index is available.
-    int device_type = static_cast<int>(ctxs_[0].device_type);
+    int device_type = static_cast<int>(devices_[0].device_type);
     if (!attrs_.device_index.empty()) {
       device_type = attrs_.device_index[i];
     }
@@ -294,13 +294,13 @@ void GraphRuntime::SetupStorage() {
     // This for loop is very fast since there are usually only a couple of
     // devices available on the same hardware.
     const auto& cit =
-        std::find_if(ctxs_.begin(), ctxs_.end(), [&pit](const TVMContext& c) {
+        std::find_if(devices_.begin(), devices_.end(), [&pit](const TVMContext& c) {
           return pit.device_type == static_cast<int>(c.device_type);
         });
-    TVMContext ctx = cit == ctxs_.end() ? ctxs_[0] : *cit;
+    TVMContext device = cit == devices_.end() ? devices_[0] : *cit;
     shape.push_back(static_cast<int64_t>(pit.size + 3) / 4);
     storage_pool_.push_back(
-        NDArray::Empty(shape, DLDataType{kDLFloat, 32, 1}, ctx));
+        NDArray::Empty(shape, DLDataType{kDLFloat, 32, 1}, device));
   }
 
   // Assign the pooled entries. A unified memory pool is used to simplifiy
@@ -477,9 +477,9 @@ PackedFunc GraphRuntime::GetFunction(
 
 Module GraphRuntimeCreate(const std::string& sym_json,
                           const tvm::runtime::Module& m,
-                          const std::vector<TVMContext>& ctxs) {
+                          const std::vector<TVMContext>& devices) {
   auto exec = make_object<GraphRuntime>();
-  exec->Init(sym_json, m, ctxs);
+  exec->Init(sym_json, m, devices);
   return Module(exec);
 }
 
@@ -487,12 +487,12 @@ Module GraphRuntimeCreate(const std::string& sym_json,
 std::vector<TVMContext> GetAllContext(const TVMArgs& args) {
   // Reserve the first item as the fallback device.
   std::vector<TVMContext> ret;
-  TVMContext ctx;
+  TVMContext device;
   for (int i = 2; i < args.num_args; i += 2) {
     int dev_type = args[i];
-    ctx.device_type = static_cast<DLDeviceType>(dev_type);
-    ctx.device_id = args[i + 1];
-    ret.push_back(ctx);
+    device.device_type = static_cast<DLDeviceType>(dev_type);
+    device.device_id = args[i + 1];
+    ret.push_back(device);
   }
   return ret;
 }

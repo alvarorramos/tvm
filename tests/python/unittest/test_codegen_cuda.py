@@ -43,10 +43,10 @@ def test_cuda_vectorize_add():
         s[B].bind(xo, bx)
         s[B].bind(xi, tx)
         fun = tvm.build(s, [A, B], "cuda")
-        ctx = tvm.gpu(0)
-        a = tvm.nd.empty((n,), A.dtype, ctx).copyfrom(
+        device = tvm.gpu(0)
+        a = tvm.nd.empty((n,), A.dtype, device).copyfrom(
             np.random.uniform(size=(n, lanes)))
-        c = tvm.nd.empty((n,), B.dtype, ctx)
+        c = tvm.nd.empty((n,), B.dtype, device)
         fun(a, c)
         tvm.testing.assert_allclose(c.asnumpy(), a.asnumpy() + 1)
 
@@ -82,11 +82,11 @@ def test_cuda_multiply_add():
         np_b = np.random.randint(low=-128, high=127, size=(n,lanes))
         np_c = np.random.randint(low=0, high=127, size=(n,))
         np_d = [sum(x * y) + z for x, y, z in zip(np_a, np_b, np_c)]
-        ctx = tvm.gpu(0)
-        a = tvm.nd.empty((n,), A.dtype, ctx).copyfrom(np_a)
-        b = tvm.nd.empty((n,), B.dtype, ctx).copyfrom(np_b)
-        c = tvm.nd.empty((n,), C.dtype, ctx).copyfrom(np_c)
-        d = tvm.nd.empty((n,), D.dtype, ctx)
+        device = tvm.gpu(0)
+        a = tvm.nd.empty((n,), A.dtype, device).copyfrom(np_a)
+        b = tvm.nd.empty((n,), B.dtype, device).copyfrom(np_b)
+        c = tvm.nd.empty((n,), C.dtype, device).copyfrom(np_c)
+        d = tvm.nd.empty((n,), D.dtype, device)
         fun(a, b, c, d)
         tvm.testing.assert_allclose(d.asnumpy(), np_d)
     check_cuda("int8", 64, 4)
@@ -97,7 +97,7 @@ def test_cuda_vectorize_load():
         if not tvm.gpu(0).exist or not tvm.module.enabled("cuda"):
             print("skip because cuda is not enabled..")
             return
-        ctx = tvm.gpu(0)
+        device = tvm.gpu(0)
         A = tvm.placeholder((n,), name='A', dtype="%sx%d" % (dtype, lanes))
         B = tvm.compute((n,), lambda i: A[i], name='B')
         s = tvm.create_schedule(B.op)
@@ -106,8 +106,8 @@ def test_cuda_vectorize_load():
         s[B].bind(thread, tx)
         fun = tvm.build(s, [A, B], "cuda", name="vector_load")
         np_a = np.random.randint(low=-128, high=127, size=(n,lanes))
-        a = tvm.nd.empty((n,), A.dtype, ctx).copyfrom(np_a)
-        b = tvm.nd.empty((n,), B.dtype, ctx)
+        a = tvm.nd.empty((n,), A.dtype, device).copyfrom(np_a)
+        b = tvm.nd.empty((n,), B.dtype, device)
         fun(a,b)
         tvm.testing.assert_allclose(a.asnumpy(), b.asnumpy())
     check_cuda("int8", 64, 8)
@@ -120,7 +120,7 @@ def test_cuda_make_int8x4():
             return
         lanes = 4
         dtype = 'int8'
-        ctx = tvm.gpu(0)
+        device = tvm.gpu(0)
         A = tvm.compute((n, lanes), lambda i,j: tvm.const(value, dtype=dtype))
         s = tvm.create_schedule(A.op)
         y, x = s[A].op.axis
@@ -128,7 +128,7 @@ def test_cuda_make_int8x4():
         s[A].bind(y, bx)
         fun = tvm.build(s, [A], "cuda", name="make_int8x4")
         np_a = np.full((n, lanes), value, dtype=dtype)
-        a = tvm.nd.empty(np_a.shape, dtype, ctx)
+        a = tvm.nd.empty(np_a.shape, dtype, device)
         fun(a)
         np.testing.assert_equal(a.asnumpy(), np_a)
     check_cuda(64, 0xAB)
@@ -138,15 +138,15 @@ def test_cuda_make_int8x4():
 
 def test_cuda_inf_nan():
     target = 'cuda'
-    def check_inf_nan(ctx, n, value, dtype):
+    def check_inf_nan(device, n, value, dtype):
         A = tvm.placeholder((n,), name='A', dtype=dtype)
         inf_value = tvm.const(value, dtype=dtype)
         C = tvm.compute((n,), lambda i: inf_value, name='C')
         s = tvm.create_schedule(C.op)
         s[C].bind(s[C].op.axis[0], tx)
         fun = tvm.build(s, [A, C], target)
-        a = tvm.nd.empty((n,), A.dtype, ctx)
-        c = tvm.nd.empty((n,), A.dtype, ctx)
+        a = tvm.nd.empty((n,), A.dtype, device)
+        c = tvm.nd.empty((n,), A.dtype, device)
         # Only need to test compiling here
         fun(a, c)
 
@@ -154,14 +154,14 @@ def test_cuda_inf_nan():
         print("skip because cuda is not enabled..")
         return
 
-    ctx = tvm.context(target, 0)
+    device = tvm.context(target, 0)
 
-    check_inf_nan(ctx, 1, -float('inf'), 'float32')
-    check_inf_nan(ctx, 1, -float('inf'), 'float64')
-    check_inf_nan(ctx, 1, float('inf'), 'float32')
-    check_inf_nan(ctx, 1, float('inf'), 'float64')
-    check_inf_nan(ctx, 1, float('nan'), 'float32')
-    check_inf_nan(ctx, 1, float('nan'), 'float64')
+    check_inf_nan(device, 1, -float('inf'), 'float32')
+    check_inf_nan(device, 1, -float('inf'), 'float64')
+    check_inf_nan(device, 1, float('inf'), 'float32')
+    check_inf_nan(device, 1, float('inf'), 'float64')
+    check_inf_nan(device, 1, float('nan'), 'float32')
+    check_inf_nan(device, 1, float('nan'), 'float64')
 
 
 def test_cuda_shuffle():

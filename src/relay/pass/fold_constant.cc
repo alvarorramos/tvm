@@ -223,17 +223,17 @@ class ConstantFolder : public ExprMutator {
     }
 
     // Get the constant shape
-    DLDevice ctx;
-    ctx.device_type = kDLCPU;
-    ctx.device_id = 0;
+    DLDevice device;
+    device.device_type = kDLCPU;
+    device.device_id = 0;
     runtime::NDArray value;
     auto cdtype = Type2TVMType(Int(32));
     if (ishape.size() == 0) {
-      value = runtime::NDArray::Empty({}, cdtype, ctx);
+      value = runtime::NDArray::Empty({}, cdtype, device);
     } else {
       CHECK_NE(ishape.size(), 0);
       std::vector<int64_t> cshape = { static_cast<int64_t>(ishape.size()) };
-      value = runtime::NDArray::Empty(cshape, cdtype, ctx);
+      value = runtime::NDArray::Empty(cshape, cdtype, device);
       int32_t* dims = static_cast<int32_t*>(value->data);
       using ::tvm::ir::IntImm;
       for (size_t i = 0; i < ishape.size(); ++i) {
@@ -248,7 +248,7 @@ class ConstantFolder : public ExprMutator {
     Constant shape = Downcast<Constant>(ValueToExpr(TensorValueNode::make(value)));
 
     if (shape->data.Shape().size() == 0 && GetScalarFromConstant<int32_t>(shape) == 0) {
-      auto ndarray = runtime::NDArray::Empty({}, cdtype, ctx);
+      auto ndarray = runtime::NDArray::Empty({}, cdtype, device);
       shape = ConstantNode::make(ndarray);
     }
 
@@ -263,16 +263,16 @@ class ConstantFolder : public ExprMutator {
 
 
 Expr FoldConstant(const Expr& expr, const Module& mod) {
-  DLDevice ctx;
-  ctx.device_type = kDLCPU;
-  ctx.device_id = 0;
+  DLDevice device;
+  device.device_type = kDLCPU;
+  device.device_id = 0;
   Target target = Target::Create("llvm");
   // use a fresh build context
   // in case we are already in a build context.
-  With<BuildConfig> fresh_build_ctx(BuildConfig::Create());
+  With<BuildConfig> fresh_build_device(BuildConfig::Create());
 
   return ConstantFolder(CreateInterpreter(
-      mod, ctx, target), mod).Mutate(expr);
+      mod, device, target), mod).Mutate(expr);
 }
 
 namespace transform {

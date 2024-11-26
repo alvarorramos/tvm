@@ -28,8 +28,8 @@ from tvm.relay.transform import gradient
 from tvm.relay.testing import add_nat_definitions, make_nat_expr, run_infer_type
 
 def check_eval(expr, expected_result, mod=None, rtol=1e-07):
-    ctx = tvm.context("llvm", 0)
-    intrp = create_executor(mod=mod, ctx=ctx, target="llvm")
+    device = tvm.context("llvm", 0)
+    intrp = create_executor(mod=mod, device=device, target="llvm")
 
     result = intrp.evaluate(expr)
     np.testing.assert_allclose(result.asnumpy(), expected_result, rtol=rtol)

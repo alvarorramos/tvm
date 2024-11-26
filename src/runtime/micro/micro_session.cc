@@ -215,9 +215,9 @@ DevPtr MicroSession::EncoderAppend(TargetDataLayoutEncoder* encoder, const TVMAr
   TVMArray dev_arr = arr;
   // Update the device type to look like a host, because codegen generates
   // checks that it is a host array.
-  CHECK(dev_arr.ctx.device_type == static_cast<DLDeviceType>(kDLMicroDev))
+  CHECK(dev_arr.device.device_type == static_cast<DLDeviceType>(kDLMicroDev))
     << "attempt to write TVMArray with non-micro device type";
-  dev_arr.ctx.device_type = DLDeviceType::kDLCPU;
+  dev_arr.device.device_type = DLDeviceType::kDLCPU;
   // Add the base address of the device to the array's data's device offset to
   // get a device address.
   DevBaseOffset arr_offset(reinterpret_cast<std::uintptr_t>(arr.data));

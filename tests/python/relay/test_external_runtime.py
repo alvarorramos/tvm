@@ -472,7 +472,7 @@ def run_extern(label, get_extern_src, **kwargs):
         var = "w" + str(i)
         mod.set_input(var, data)
     mod.run()
-    out = tvm.nd.empty((30, 10), ctx=tvm.cpu())
+    out = tvm.nd.empty((30, 10), device=tvm.cpu())
     out = mod.get_output(0, out)
     tvm.testing.assert_allclose(
         out.asnumpy(),
@@ -542,7 +542,7 @@ def test_json_extern():
         mod.set_input(var, data)
 
     mod.run()
-    out = tvm.nd.empty((30, 10), ctx=tvm.cpu())
+    out = tvm.nd.empty((30, 10), device=tvm.cpu())
     out = mod.get_output(0, out)
     tvm.testing.assert_allclose(
         out.asnumpy(),

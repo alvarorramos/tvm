@@ -165,7 +165,7 @@ def lstm():
         num_step = n_num_step
         flstm = tvm.build(s, [Xi2h, Wh2h, scan_h, scan_c],
                           target)
-        ctx = tvm.gpu(0) if target == "cuda" else tvm.cl(0)
+        device = tvm.gpu(0) if target == "cuda" else tvm.cl(0)
         # launch the kernel.
         scan_h_np = np.zeros(
             (num_step, batch_size, num_hidden)).astype("float32")
@@ -175,14 +175,14 @@ def lstm():
             size=(num_step, batch_size, 4, num_hidden)).astype("float32")
         Wh2h_np = np.random.normal(
             size=(4, num_hidden, num_hidden)).astype("float32")
-        scan_h_a = tvm.nd.array(scan_h_np, ctx)
-        scan_c_a = tvm.nd.array(scan_c_np, ctx)
-        Xi2h_a = tvm.nd.array(Xi2h_np, ctx)
-        Wh2h_a = tvm.nd.array(Wh2h_np, ctx)
+        scan_h_a = tvm.nd.array(scan_h_np, device)
+        scan_c_a = tvm.nd.array(scan_c_np, device)
+        Xi2h_a = tvm.nd.array(Xi2h_np, device)
+        Wh2h_a = tvm.nd.array(Wh2h_np, device)
         flstm(Xi2h_a, Wh2h_a, scan_h_a, scan_c_a)
-        ctx.sync()
+        device.sync()
         # measure time cost of second step.
-        evaluator = flstm.time_evaluator(flstm.entry_name, ctx, 1, repeat=1000)
+        evaluator = flstm.time_evaluator(flstm.entry_name, device, 1, repeat=1000)
         eval_result = evaluator(Xi2h_a, Wh2h_a, scan_h_a, scan_c_a)
         print("Time cost=%g" % eval_result.mean)
 

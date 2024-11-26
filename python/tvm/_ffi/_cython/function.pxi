@@ -131,7 +131,7 @@ cdef inline int make_arg(object arg,
         tcode[0] = kStr
         temp_args.append(tstr)
     elif isinstance(arg, TVMContext):
-        value[0].v_ctx = (<DLDevice*>(
+        value[0].v_device = (<DLDevice*>(
             <unsigned long long>ctypes.addressof(arg)))[0]
         tcode[0] = kTVMContext
     elif isinstance(arg, bytearray):
@@ -201,7 +201,7 @@ cdef inline object make_ret(TVMValue value, int tcode):
     elif tcode == kHandle:
         return ctypes_handle(value.v_handle)
     elif tcode == kTVMContext:
-        return TVMContext(value.v_ctx.device_type, value.v_ctx.device_id)
+        return TVMContext(value.v_device.device_type, value.v_device.device_id)
     elif tcode == kModuleHandle:
         return _CLASS_MODULE(ctypes_handle(value.v_handle))
     elif tcode == kFuncHandle:

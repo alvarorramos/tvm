@@ -19,7 +19,7 @@ import tvm
 from tvm.contrib import graph_runtime as runtime
 import nnvm.symbol as sym
 import nnvm.compiler
-from nnvm.testing.config import ctx_list
+from nnvm.testing.config import device_list
 
 def get_sym(layout, kernel_layout, channels):
     data = sym.Variable(name="data")
@@ -35,9 +35,9 @@ def get_sym(layout, kernel_layout, channels):
 
 
 def build_and_run(sym, params, data, out_shape):
-    ctx = tvm.cpu(0)
+    device = tvm.cpu(0)
     graph, lib, params = nnvm.compiler.build(sym, "llvm", shape={"data":data.shape}, params=params)
-    module = runtime.create(graph, lib, ctx)
+    module = runtime.create(graph, lib, device)
     module.set_input(**params)
     module.set_input("data", data)
     module.run()
@@ -53,12 +53,12 @@ def test_nhwc():
     conv_weight = np.random.uniform(-1, 1, (out_channel, 3, 3, 3)).astype(np.float32)
     conv_bias = np.random.uniform(-1, 1, (out_channel)).astype(np.float32)
     nchw_params = {
-        "conv2d0_weight" : tvm.nd.array(conv_weight, ctx=tvm.cpu(0)),
-        "conv2d0_bias" : tvm.nd.array(conv_bias, ctx=tvm.cpu(0))
+        "conv2d0_weight" : tvm.nd.array(conv_weight, device=tvm.cpu(0)),
+        "conv2d0_bias" : tvm.nd.array(conv_bias, device=tvm.cpu(0))
     }
     nhwc_params = {
-        "conv2d1_weight" : tvm.nd.array(conv_weight.transpose(2, 3, 1, 0), ctx=tvm.cpu(0)),
-        "conv2d1_bias" : tvm.nd.array(conv_bias, ctx=tvm.cpu(0))
+        "conv2d1_weight" : tvm.nd.array(conv_weight.transpose(2, 3, 1, 0), device=tvm.cpu(0)),
+        "conv2d1_bias" : tvm.nd.array(conv_bias, device=tvm.cpu(0))
     }
 
     data = np.random.uniform(-1, 1, data_shape).astype(np.float32)

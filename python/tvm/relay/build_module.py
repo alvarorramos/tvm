@@ -306,17 +306,17 @@ class GraphExecutor(_interpreter.Executor):
     mod : :py:class:`~tvm.relay.module.Module`
         The module to support the execution.
 
-    ctx : :py:class:`TVMContext`
+    device : :py:class:`TVMContext`
         The runtime context to run the code on.
 
     target : :py:class:`Target`
         The target option to build the function.
     """
 
-    def __init__(self, mod, ctx, target):
+    def __init__(self, mod, device, target):
         assert mod is not None
         self.mod = mod
-        self.ctx = ctx
+        self.device = device
         self.target = target
 
     def _make_executor(self, expr=None):
@@ -325,7 +325,7 @@ class GraphExecutor(_interpreter.Executor):
         ret_type = self.mod["main"].checked_type.ret_type
         num_outputs = len(ret_type.fields) if isinstance(ret_type, _ty.TupleType) else 1
         graph_json, mod, params = build(self.mod, target=self.target)
-        gmodule = _graph_rt.create(graph_json, mod, self.ctx)
+        gmodule = _graph_rt.create(graph_json, mod, self.device)
         if params:
             gmodule.set_input(**params)
 
@@ -349,7 +349,7 @@ class GraphExecutor(_interpreter.Executor):
 
 def create_executor(kind="debug",
                     mod=None,
-                    ctx=None,
+                    device=None,
                     target="llvm"):
     """Factory function to create an executor.
 
@@ -361,7 +361,7 @@ def create_executor(kind="debug",
     mod : :py:class:`~tvm.relay.module.Module`
         The Relay module containing collection of functions
 
-    ctx : :py:class:`tvm.TVMContext`
+    device : :py:class:`tvm.TVMContext`
         The context to execute the code.
 
     target : :py:class:`tvm.Target`
@@ -369,18 +369,18 @@ def create_executor(kind="debug",
     """
     if mod is None:
         mod = _Module()
-    if ctx is not None:
-        assert ctx.device_type == _nd.context(str(target), 0).device_type
+    if device is not None:
+        assert device.device_type == _nd.context(str(target), 0).device_type
     else:
-        ctx = _nd.context(str(target), 0)
+        device = _nd.context(str(target), 0)
 
     if isinstance(target, str):
         target = _target.create(target)
     if kind == "debug":
-        return _interpreter.Interpreter(mod, ctx, target)
+        return _interpreter.Interpreter(mod, device, target)
     if kind == "graph":
-        return GraphExecutor(mod, ctx, target)
+        return GraphExecutor(mod, device, target)
     elif kind == "vm":
-        return VMExecutor(mod, ctx, target)
+        return VMExecutor(mod, device, target)
     else:
         raise RuntimeError("unknown execution strategy: {0}".format(kind))

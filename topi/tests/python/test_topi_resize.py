@@ -48,15 +48,15 @@ def verify_resize(batch, in_channel, in_height, in_width, out_height, out_width,
         b_np = topi.testing.upsampling_python(a_np, (scale_h, scale_w), layout)
 
     def check_device(device):
-        ctx = tvm.context(device, 0)
-        if not ctx.exist:
+        device = tvm.context(device, 0)
+        if not device.exist:
             print("Skip because %s is not enabled" % device)
             return
         print("Running on target: %s" % device)
         with tvm.target.create(device):
             s = topi.generic.schedule_injective(B)
-        a = tvm.nd.array(a_np, ctx)
-        b = tvm.nd.array(np.zeros(out_shape, dtype=dtype), ctx)
+        a = tvm.nd.array(a_np, device)
+        b = tvm.nd.array(np.zeros(out_shape, dtype=dtype), device)
         f = tvm.build(s, [A, B], device)
         f(a, b)
 

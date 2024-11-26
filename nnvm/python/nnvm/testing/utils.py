@@ -69,5 +69,5 @@ def create_workload(net, batch_size, image_shape=(3, 224, 224),
             continue
         init_value = np.zeros(v).astype(dtype)
         initializer(k, init_value)
-        params[k] = tvm.nd.array(init_value, ctx=tvm.cpu(0))
+        params[k] = tvm.nd.array(init_value, device=tvm.cpu(0))
     return net, params

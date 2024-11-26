@@ -157,7 +157,7 @@ class RPCSession {
    * \param to The target array.
    * \param to_offset The byte offset in the to.
    * \param nbytes The size of the memory in bytes.
-   * \param ctx_to The target context.
+   * \param device_to The target context.
    * \param type_hint Hint of content data type.
    */
   void CopyToRemote(void* from,
@@ -165,7 +165,7 @@ class RPCSession {
                     void* to,
                     size_t to_offset,
                     size_t nbytes,
-                    TVMContext ctx_to,
+                    TVMContext device_to,
                     TVMType type_hint);
   /*!
    * \brief Copy bytes from remote array content.
@@ -174,7 +174,7 @@ class RPCSession {
    * \param to The target array.
    * \param to_offset The byte offset in the to.
    * \param nbytes The size of the memory in bytes.
-   * \param ctx_from The source context.
+   * \param device_from The source context.
    * \param type_hint Hint of content data type.
    */
   void CopyFromRemote(void* from,
@@ -182,14 +182,14 @@ class RPCSession {
                       void* to,
                       size_t to_offset,
                       size_t nbytes,
-                      TVMContext ctx_from,
+                      TVMContext device_from,
                       TVMType type_hint);
   /*!
-   * \brief Get a remote timer function on ctx.
+   * \brief Get a remote timer function on device.
    *  This function consumes fhandle, caller should not call Free on fhandle.
    *
    * \param fhandle The function handle.
-   * \param ctx The ctx to run measurement on.
+   * \param device The device to run measurement on.
    * \param number The number of times to run this function for taking average.
           We call these runs as one `repeat` of measurement.
    * \param repeat The number of times to repeat the measurement.
@@ -206,7 +206,7 @@ class RPCSession {
    * \return A remote timer function
    */
   RPCFuncHandle GetTimeEvaluator(RPCFuncHandle fhandle,
-                                 TVMContext ctx,
+                                 TVMContext device,
                                  int number,
                                  int repeat,
                                  int min_repeat_ms);
@@ -305,7 +305,7 @@ class CallbackChannel final : public RPCChannel {
 /*!
  * \brief Wrap a timer function to measure the time cost of a given packed function.
  * \param f The function argument.
- * \param ctx The context.
+ * \param device The context.
  * \param number The number of times to run this function for taking average.
           We call these runs as one `repeat` of measurement.
  * \param repeat The number of times to repeat the measurement.
@@ -322,7 +322,7 @@ class CallbackChannel final : public RPCChannel {
  * \return f_timer A timer function.
  */
 PackedFunc WrapTimeEvaluator(PackedFunc f,
-                             TVMContext ctx,
+                             TVMContext device,
                              int number,
                              int repeat,
                              int min_repeat_ms);

@@ -36,7 +36,7 @@ use ndarray::{Array, ArrayD, Axis};
 use tvm::*;
 
 fn main() {
-    let ctx = TVMContext::cpu(0);
+    let device = TVMContext::cpu(0);
     let img = image::open(concat!(env!("CARGO_MANIFEST_DIR"), "/cat.png")).unwrap();
     println!("original image dimensions: {:?}", img.dimensions());
     // for bigger size images, one needs to first resize to 256x256
@@ -86,8 +86,8 @@ fn main() {
         runtime_create_fn,
         graph,
         &lib,
-        &ctx.device_type,
-        &ctx.device_id
+        &device.device_type,
+        &device.device_id
     )
     .unwrap();
     // get graph runtime module

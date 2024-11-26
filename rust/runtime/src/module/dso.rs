@@ -36,7 +36,7 @@ use crate::{
 use super::Module;
 
 const TVM_MAIN: &'static [u8] = b"__tvm_main__";
-const TVM_MODULE_CTX: &'static [u8] = b"__tvm_module_ctx";
+const TVM_MODULE_device: &'static [u8] = b"__tvm_module_device";
 
 /// A module backed by a Dynamic Shared Object (dylib).
 pub struct DsoModule<'a> {
@@ -83,7 +83,7 @@ impl<'a> DsoModule<'a> {
             ),
         );
 
-        // Pin the module in memory so that `ctx` pointer (below) is stable.
+        // Pin the module in memory so that `device` pointer (below) is stable.
         let dso_mod = Box::pin(Self {
             lib,
             packed_funcs: RefCell::new(HashMap::new()),
@@ -91,8 +91,8 @@ impl<'a> DsoModule<'a> {
         });
 
         unsafe {
-            if let Ok(ctx) = dso_mod.lib.get::<*mut *const c_void>(TVM_MODULE_CTX) {
-                **ctx = &dso_mod as *const _ as *const c_void;
+            if let Ok(device) = dso_mod.lib.get::<*mut *const c_void>(TVM_MODULE_device) {
+                **device = &dso_mod as *const _ as *const c_void;
             }
         }
 

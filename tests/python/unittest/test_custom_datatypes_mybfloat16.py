@@ -66,7 +66,7 @@ def test_bfloat_add_and_cast_1():
     s = tvm.create_schedule([Z.op])
     built_cast = lower_datatypes_and_build(s, [X,Y,Z])
 
-    ctx = tvm.context(tgt, 0)
+    device = tvm.context(tgt, 0)
 
     # Used float32 calculator at http://www.weitz.de/ieee/. Generated float32s
     # with at most 7-bit mantissas which, when added, produce a result with at
@@ -74,12 +74,12 @@ def test_bfloat_add_and_cast_1():
     # float32->bfloat16 conversions.
     x = tvm.nd.array(
         np.array([4.4103796E-32, 14942208.0, 1.78125]).astype("float32"),
-        ctx=ctx)
+        device=device)
     y = tvm.nd.array(
-        np.array([-3.330669E-14, 19660800.0, 2.25]).astype("float32"), ctx=ctx)
+        np.array([-3.330669E-14, 19660800.0, 2.25]).astype("float32"), device=device)
     z_expected = np.array([-3.330669E-14, 34603008.0,
                            4.03125]).astype("float32")
-    z = tvm.nd.empty(Z.shape, dtype=Z.dtype, ctx=ctx)
+    z = tvm.nd.empty(Z.shape, dtype=Z.dtype, device=device)
 
     built_cast(x, y, z)
 
@@ -97,7 +97,7 @@ def test_bfloat_add_and_cast_2():
     s = tvm.create_schedule([Z.op])
     built_cast = lower_datatypes_and_build(s, [X,Y,Z])
 
-    ctx = tvm.context(tgt, 0)
+    device = tvm.context(tgt, 0)
 
     # Used float32 calculator at http://www.weitz.de/ieee/. Generated
     # unconstrained float32s for the operands and copied them in to x and y.
@@ -108,13 +108,13 @@ def test_bfloat_add_and_cast_2():
     # z_expected.
     x = tvm.nd.array(
         np.array([1.2348297, -1.0298302E25, 1.2034023E-30]).astype("float32"),
-        ctx=ctx)
+        device=device)
     y = tvm.nd.array(
         np.array([-2.4992788, -9.888288E19, 9.342338E-29]).astype("float32"),
-        ctx=ctx)
+        device=device)
     z_expected = np.array([-1.25, -1.027587E25,
                            9.426888E-29]).astype("float32")
-    z = tvm.nd.empty(Z.shape, dtype=Z.dtype, ctx=ctx)
+    z = tvm.nd.empty(Z.shape, dtype=Z.dtype, device=device)
 
     built_cast(x, y, z)
 
@@ -132,11 +132,11 @@ def test_bfloat_add_and_cast_FloatImm():
     s = tvm.create_schedule([Z.op])
     built_cast = lower_datatypes_and_build(s, [X,Z])
 
-    ctx = tvm.context(tgt, 0)
+    device = tvm.context(tgt, 0)
 
-    x = tvm.nd.array(np.array([0.0, 1.0, 1.5]).astype("float32"), ctx=ctx)
+    x = tvm.nd.array(np.array([0.0, 1.0, 1.5]).astype("float32"), device=device)
     z_expected = np.array([1.5, 2.5, 3.0]).astype("float32")
-    z = tvm.nd.empty(Z.shape, dtype=Z.dtype, ctx=ctx)
+    z = tvm.nd.empty(Z.shape, dtype=Z.dtype, device=device)
 
     built_cast(x, z)
 

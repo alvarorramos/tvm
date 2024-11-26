@@ -19,7 +19,7 @@ import tvm
 target = 'opencl'
 
 def test_opencl_ternary_expression():
-    def check_if_then_else(ctx, n, dtype):
+    def check_if_then_else(device, n, dtype):
         A = tvm.placeholder((n,), name='A', dtype=dtype)
         true_value = tvm.const(1, dtype=dtype)
         false_value = tvm.const(3, dtype=dtype)
@@ -30,12 +30,12 @@ def test_opencl_ternary_expression():
         s[C].bind(s[C].op.axis[0], tvm.thread_axis("threadIdx.x"))
         fun = tvm.build(s, [A, C], target)
 
-        a = tvm.nd.empty((n,), A.dtype, ctx)
-        c = tvm.nd.empty((n,), A.dtype, ctx)
+        a = tvm.nd.empty((n,), A.dtype, device)
+        c = tvm.nd.empty((n,), A.dtype, device)
         # Only need to test compiling here
         fun(a, c)
 
-    def check_select(ctx, n, dtype):
+    def check_select(device, n, dtype):
         A = tvm.placeholder((n,), name='A', dtype=dtype)
         true_value = tvm.const(1, dtype=dtype)
         false_value = tvm.const(3, dtype=dtype)
@@ -46,8 +46,8 @@ def test_opencl_ternary_expression():
         s[C].bind(s[C].op.axis[0], tvm.thread_axis("threadIdx.x"))
         fun = tvm.build(s, [A, C], target)
 
-        a = tvm.nd.empty((n,), A.dtype, ctx)
-        c = tvm.nd.empty((n,), A.dtype, ctx)
+        a = tvm.nd.empty((n,), A.dtype, device)
+        c = tvm.nd.empty((n,), A.dtype, device)
         # Only need to test compiling here
         fun(a, c)
 
@@ -55,27 +55,27 @@ def test_opencl_ternary_expression():
         print("skip because opencl is not enabled..")
         return
 
-    ctx = tvm.context(target, 0)
+    device = tvm.context(target, 0)
 
-    check_if_then_else(ctx, 1, 'int8')
-    check_if_then_else(ctx, 1, 'uint8')
-    check_if_then_else(ctx, 1, 'int16')
-    check_if_then_else(ctx, 1, 'uint16')
-    check_select(ctx, 1, 'int8')
-    check_select(ctx, 1, 'uint8')
-    check_select(ctx, 1, 'int16')
-    check_select(ctx, 1, 'uint16')
+    check_if_then_else(device, 1, 'int8')
+    check_if_then_else(device, 1, 'uint8')
+    check_if_then_else(device, 1, 'int16')
+    check_if_then_else(device, 1, 'uint16')
+    check_select(device, 1, 'int8')
+    check_select(device, 1, 'uint8')
+    check_select(device, 1, 'int16')
+    check_select(device, 1, 'uint16')
 
 def test_opencl_inf_nan():
-    def check_inf_nan(ctx, n, value, dtype):
+    def check_inf_nan(device, n, value, dtype):
         A = tvm.placeholder((n,), name='A', dtype=dtype)
         inf_value = tvm.const(value, dtype=dtype)
         C = tvm.compute((n,), lambda i: inf_value, name='C')
         s = tvm.create_schedule(C.op)
         s[C].bind(s[C].op.axis[0], tvm.thread_axis("threadIdx.x"))
         fun = tvm.build(s, [A, C], target)
-        a = tvm.nd.empty((n,), A.dtype, ctx)
-        c = tvm.nd.empty((n,), A.dtype, ctx)
+        a = tvm.nd.empty((n,), A.dtype, device)
+        c = tvm.nd.empty((n,), A.dtype, device)
         # Only need to test compiling here
         fun(a, c)
 
@@ -83,14 +83,14 @@ def test_opencl_inf_nan():
         print("skip because opencl is not enabled..")
         return
 
-    ctx = tvm.context(target, 0)
+    device = tvm.context(target, 0)
 
-    check_inf_nan(ctx, 1, -float('inf'), 'float32')
-    check_inf_nan(ctx, 1, -float('inf'), 'float64')
-    check_inf_nan(ctx, 1, float('inf'), 'float32')
-    check_inf_nan(ctx, 1, float('inf'), 'float64')
-    check_inf_nan(ctx, 1, float('nan'), 'float32')
-    check_inf_nan(ctx, 1, float('nan'), 'float64')
+    check_inf_nan(device, 1, -float('inf'), 'float32')
+    check_inf_nan(device, 1, -float('inf'), 'float64')
+    check_inf_nan(device, 1, float('inf'), 'float32')
+    check_inf_nan(device, 1, float('inf'), 'float64')
+    check_inf_nan(device, 1, float('nan'), 'float32')
+    check_inf_nan(device, 1, float('nan'), 'float64')
 
 
 if __name__ == "__main__":

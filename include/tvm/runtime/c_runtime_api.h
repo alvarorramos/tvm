@@ -153,7 +153,7 @@ typedef union {
   void* v_handle;
   const char* v_str;
   TVMType v_type;
-  TVMContext v_ctx;
+  TVMContext v_device;
 } TVMValue;
 
 /*!

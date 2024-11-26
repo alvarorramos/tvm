@@ -222,7 +222,7 @@ def _alter_conv2d_layout(attrs, inputs, tinfo, F):
     if groups != 1 and not is_depthwise:
         return None
 
-    dispatch_ctx = autotvm.task.DispatchContext.current
+    dispatch_device = autotvm.task.DispatchContext.current
     target = tvm.target.current_target()
 
     # query schedule and fallback if necessary
@@ -233,7 +233,7 @@ def _alter_conv2d_layout(attrs, inputs, tinfo, F):
             [data, kernel, strides, padding, dilation, layout, out_dtype], conv2d)
     if is_depthwise:
         return None
-    cfg = dispatch_ctx.query(target, workload)
+    cfg = dispatch_device.query(target, workload)
     if cfg.is_fallback:
         _get_default_config(cfg, data, kernel, strides, padding, out_dtype, is_depthwise)
 
@@ -257,7 +257,7 @@ def _alter_conv2d_layout(attrs, inputs, tinfo, F):
         [new_data, new_kernel, strides, padding, dilation, new_attrs[layout_name],
          new_attrs['out_layout'], out_dtype], conv2d_NCHWc)
 
-    dispatch_ctx.update(target, new_workload, cfg)
+    dispatch_device.update(target, new_workload, cfg)
     if F == sym:
         return F.contrib.conv2d_NCHWc(*copy_inputs, **new_attrs)
     return F.nn.contrib_conv2d_nchwc(*copy_inputs, **new_attrs)

@@ -41,7 +41,7 @@ def test_rpc_executor():
     lib.save(lib_name)
     remote = rpc.connect(host, port)
     remote.upload(lib_name)
-    ctx = remote.cpu(0)
+    device = remote.cpu(0)
     # load remote
     rlib = remote.load_module("net.o")
 
@@ -49,15 +49,15 @@ def test_rpc_executor():
     m = graph_runtime.create(graph, rlib, remote.cpu(0))
     # get member functions
     set_input, run, get_output = m["set_input"], m["run"], m["get_output"]
-    na = tvm.nd.array(np.ones(shape).astype(dtype), ctx)
-    nb = tvm.nd.array(np.ones(shape).astype(dtype), ctx)
+    na = tvm.nd.array(np.ones(shape).astype(dtype), device)
+    nb = tvm.nd.array(np.ones(shape).astype(dtype), device)
     # set inputs
     set_input("x", na)
     set_input("y", nb)
     # execute
     run()
     # get outputs
-    out = tvm.nd.empty(shape, dtype, ctx)
+    out = tvm.nd.empty(shape, dtype, device)
     get_output(0, out)
     tvm.testing.assert_allclose(
         out.asnumpy(), np.exp(na.asnumpy() + nb.asnumpy()))

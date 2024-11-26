@@ -71,11 +71,11 @@ def test_conv2d_hwcn_map():
         if not tvm.module.enabled(device):
             print("Skip because %s is not enabled" % device)
             return
-        ctx = tvm.context(device, 0)
-        a = tvm.nd.array(a_np, ctx)
-        w = tvm.nd.array(w_np, ctx)
-        b = tvm.nd.array(np.zeros(get_const_tuple(B.shape), dtype=B.dtype), ctx)
-        c = tvm.nd.array(np.zeros(get_const_tuple(C.shape), dtype=C.dtype), ctx)
+        device = tvm.context(device, 0)
+        a = tvm.nd.array(a_np, device)
+        w = tvm.nd.array(w_np, device)
+        b = tvm.nd.array(np.zeros(get_const_tuple(B.shape), dtype=B.dtype), device)
+        c = tvm.nd.array(np.zeros(get_const_tuple(C.shape), dtype=C.dtype), device)
         with tvm.build_config(auto_unroll_max_step=128,
                               unroll_explicit=device == 'rocm'):
             func1 = tvm.build(s1, [A, W, B], device)

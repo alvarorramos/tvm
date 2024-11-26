@@ -527,17 +527,17 @@ bool StatefulOp(const Expr& e) {
 using FInterpreter = runtime::TypedPackedFunc<Value(Expr)>;
 
 DLDevice CPUContext() {
-  DLDevice ctx;
-  ctx.device_type = kDLCPU;
-  ctx.device_id = 0;
-  return ctx;
+  DLDevice device;
+  device.device_type = kDLCPU;
+  device.device_id = 0;
+  return device;
 }
 
 FInterpreter CPUInterpreter() {
   Target target = Target::Create("llvm");
   // use a fresh build context
   // in case we are already in a build context.
-  With<BuildConfig> fresh_build_ctx(BuildConfig::Create());
+  With<BuildConfig> fresh_build_device(BuildConfig::Create());
 
   return CreateInterpreter(Module(nullptr), CPUContext(), target);
 }

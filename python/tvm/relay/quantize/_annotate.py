@@ -98,17 +98,17 @@ def register_annotate_function(op_name, frewrite=None, level=10):
     level : int, optional
         The priority level
     """
-    def default_rewrite(ref_call, new_args, ctx):
+    def default_rewrite(ref_call, new_args, device):
         # recover from QAnnotateExpr
         args = [_get_expr_kind(x)[0] for x in new_args]
         return _forward_op(ref_call, args)
 
     def _register(func):
         """internal register function"""
-        def frewrite_with_guard(ref_call, new_args, ctx):
+        def frewrite_with_guard(ref_call, new_args, device):
             if not current_qconfig().guard(ref_call):
-                return default_rewrite(ref_call, new_args, ctx)
-            return func(ref_call, new_args, ctx)
+                return default_rewrite(ref_call, new_args, device)
+            return func(ref_call, new_args, device)
         _reg._Register(op_name, "FQAnnotateRewrite", frewrite_with_guard, level)
         return frewrite_with_guard
 
@@ -131,31 +131,31 @@ def attach_simulated_quantize(data, kind, sign=True, rounding="round"):
         if data.attrs.kind == kind and data.attrs.sign == sign and data.attrs.rounding == rounding:
             return data
 
-    qctx = quantize_context()
+    qdevice = quantize_context()
     key = tuple([data, kind, sign, rounding])
-    if key in qctx.qnode_map:
-        return qctx.qnode_map[key]
+    if key in qdevice.qnode_map:
+        return qdevice.qnode_map[key]
 
     dom_scale = _expr.var("dom_scale")
     clip_min = _expr.var("clip_min")
     clip_max = _expr.var("clip_max")
     qnode = _quantize.simulated_quantize(
         data, dom_scale, clip_min, clip_max, kind, sign, rounding)
-    qctx.qnode_map[key] = qnode
+    qdevice.qnode_map[key] = qnode
     return qnode
 
 register_func("relay.quantize.attach_simulated_quantize", attach_simulated_quantize)
 
 
 @register_annotate_function("nn.contrib_conv2d_NCHWc")
-def conv2d_nchwc_rewrite(ref_call, new_args, ctx):
+def conv2d_nchwc_rewrite(ref_call, new_args, device):
     warnings.warn("NCHWc layout Conv2D detected, please use a lower "
                   "optimization level before applying the quantization "
                   "pass as quantization will have no effect here...")
 
 
 @register_annotate_function("nn.conv2d")
-def conv2d_rewrite(ref_call, new_args, ctx):
+def conv2d_rewrite(ref_call, new_args, device):
     """Rewrite function for conv2d. Lhs of conv will be quantized to
     input field, and rhs of conv will be quantized to weight field.
     Output would be in activation field"""
@@ -178,7 +178,7 @@ def conv2d_rewrite(ref_call, new_args, ctx):
 
 # TODO(tmoreau89,ziheng) need to include an option to turn off dense quant
 # @register_annotate_function("nn.dense")
-def dense_rewrite(ref_call, new_args, ctx):
+def dense_rewrite(ref_call, new_args, device):
     """Rewrite function for dense. Lhs of dense will be quantized to input field, and rhs of
     dense will be quantized to weight field. Output would be in activation field."""
     if quantize_context().check_to_skip(ref_call):
@@ -199,7 +199,7 @@ def dense_rewrite(ref_call, new_args, ctx):
 
 
 @register_annotate_function("multiply")
-def multiply_rewrite(ref_call, new_args, ctx):
+def multiply_rewrite(ref_call, new_args, device):
     """Rewrite function for multiply."""
     if quantize_context().check_to_skip(ref_call):
         return None
@@ -225,7 +225,7 @@ def multiply_rewrite(ref_call, new_args, ctx):
 
 
 @register_annotate_function("add")
-def add_rewrite(ref_call, new_args, ctx):
+def add_rewrite(ref_call, new_args, device):
     """Rewrite function for add."""
     if quantize_context().check_to_skip(ref_call):
         return None
@@ -268,7 +268,7 @@ def add_rewrite(ref_call, new_args, ctx):
     raise ValueError()
 
 
-def identity_rewrite(ref_call, new_args, ctx):
+def identity_rewrite(ref_call, new_args, device):
     """Simply forward the original operation"""
     if quantize_context().check_to_skip(ref_call):
         return None
@@ -288,7 +288,7 @@ register_annotate_function("nn.avg_pool2d", identity_rewrite)
 register_annotate_function("annotation.stop_fusion", identity_rewrite)
 
 
-def pool2d_rewrite(ref_call, new_args, ctx):
+def pool2d_rewrite(ref_call, new_args, device):
     """Rewrite function for max pool2d"""
     if quantize_context().check_to_skip(ref_call):
         return None
@@ -308,7 +308,7 @@ register_annotate_function("nn.max_pool2d", pool2d_rewrite)
 
 
 @register_annotate_function("annotation.cast_hint")
-def cast_hint_rewrite(ref_call, new_args, ctx):
+def cast_hint_rewrite(ref_call, new_args, device):
     """Rewrite function to force cast"""
     expr, x_kind = _get_expr_kind(new_args[0])
 
@@ -325,7 +325,7 @@ def cast_hint_rewrite(ref_call, new_args, ctx):
 
 
 @register_annotate_function("concatenate")
-def concatenate_rewrite(ref_call, new_args, ctx):
+def concatenate_rewrite(ref_call, new_args, device):
     """Rewrite function for concatenate"""
     if quantize_context().check_to_skip(ref_call):
         return None
@@ -346,7 +346,7 @@ def concatenate_rewrite(ref_call, new_args, ctx):
 
 
 @register_annotate_function("nn.global_avg_pool2d")
-def global_avg_pool2d_rewrite(ref_call, new_args, ctx):
+def global_avg_pool2d_rewrite(ref_call, new_args, device):
     """Rewrite function for global_avg_pool2d for stopping quantize"""
     if quantize_context().check_to_skip(ref_call):
         return None

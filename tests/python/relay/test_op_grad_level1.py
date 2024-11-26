@@ -19,7 +19,7 @@ import pytest
 
 import tvm
 from tvm import relay
-from tvm.relay.testing import check_grad, ctx_list, run_infer_type
+from tvm.relay.testing import check_grad, device_list, run_infer_type
 from tvm.relay.transform import gradient
 
 
@@ -49,8 +49,8 @@ def test_unary_op():
             fwd_func = run_infer_type(fwd_func)
             bwd_func = run_infer_type(gradient(fwd_func))
 
-            for target, ctx in ctx_list():
-                intrp = relay.create_executor(ctx=ctx, target=target)
+            for target, device in device_list():
+                intrp = relay.create_executor(device=device, target=target)
                 op_res, (op_grad, ) = intrp.evaluate(bwd_func)(data)
                 np.testing.assert_allclose(op_grad.asnumpy(), ref_grad, rtol=0.01)
 
@@ -85,8 +85,8 @@ def test_binary_op():
         fwd_func = run_infer_type(fwd_func)
         bwd_func = run_infer_type(gradient(fwd_func))
 
-        for target, ctx in ctx_list():
-            intrp = relay.create_executor(ctx=ctx, target=target)
+        for target, device in device_list():
+            intrp = relay.create_executor(device=device, target=target)
             op_res, (op_grad0, op_grad1) = intrp.evaluate(bwd_func)(x_data, y_data)
             np.testing.assert_allclose(op_grad0.asnumpy(), ref_grad0, rtol=0.01)
             np.testing.assert_allclose(op_grad1.asnumpy(), ref_grad1, rtol=0.01)

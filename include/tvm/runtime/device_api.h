@@ -64,37 +64,37 @@ class TVM_DLL DeviceAPI {
   /*! \brief virtual destructor */
   virtual ~DeviceAPI() {}
   /*!
-   * \brief Set the environment device id to ctx
-   * \param ctx The context to be set.
+   * \brief Set the environment device id to device
+   * \param device The context to be set.
    */
-  virtual void SetDevice(TVMContext ctx) = 0;
+  virtual void SetDevice(TVMContext device) = 0;
   /*!
    * \brief Get attribute of specified device.
-   * \param ctx The device context
+   * \param device The device context
    * \param kind The result kind
    * \param rv The return value.
    * \sa DeviceAttrKind
    */
-  virtual void GetAttr(TVMContext ctx, DeviceAttrKind kind, TVMRetValue* rv) = 0;
+  virtual void GetAttr(TVMContext device, DeviceAttrKind kind, TVMRetValue* rv) = 0;
   /*!
    * \brief Allocate a data space on device.
-   * \param ctx The device context to perform operation.
+   * \param device The device context to perform operation.
    * \param nbytes The number of bytes in memory.
    * \param alignment The alignment of the memory.
    * \param type_hint The type of elements. Only needed by certain backends such
    * as OpenGL, as nbytes & alignment are sufficient for most backends.
    * \return The allocated device pointer.
    */
-  virtual void* AllocDataSpace(TVMContext ctx,
+  virtual void* AllocDataSpace(TVMContext device,
                                size_t nbytes,
                                size_t alignment,
                                TVMType type_hint) = 0;
   /*!
    * \brief Free a data space on device.
-   * \param ctx The device context to perform operation.
+   * \param device The device context to perform operation.
    * \param ptr The data space.
    */
-  virtual void FreeDataSpace(TVMContext ctx, void* ptr) = 0;
+  virtual void FreeDataSpace(TVMContext device, void* ptr) = 0;
   /*!
    * \brief copy data from one place to another
    * \param from The source array.
@@ -102,8 +102,8 @@ class TVM_DLL DeviceAPI {
    * \param to The target array.
    * \param to_offset The byte offset in the to.
    * \param num_bytes The size of the memory in bytes
-   * \param ctx_from The source context
-   * \param ctx_to The target context
+   * \param device_from The source context
+   * \param device_to The target context
    * \param type_hint The type of elements, only neded by certain backends.
    *                  can be useful for cross device endian converison.
    * \param stream Optional stream object.
@@ -113,37 +113,37 @@ class TVM_DLL DeviceAPI {
                               void* to,
                               size_t to_offset,
                               size_t num_bytes,
-                              TVMContext ctx_from,
-                              TVMContext ctx_to,
+                              TVMContext device_from,
+                              TVMContext device_to,
                               TVMType type_hint,
                               TVMStreamHandle stream) = 0;
     /*!
    * \brief Create a new stream of execution.
    *
-   * \param ctx The context of allocation.
+   * \param device The context of allocation.
    */
-  virtual TVMStreamHandle CreateStream(TVMContext ctx);
+  virtual TVMStreamHandle CreateStream(TVMContext device);
 
   /*!
    * \brief Free a stream of execution
    *
-   * \param ctx The context of the stream
+   * \param device The context of the stream
    * \param stream The pointer to be freed.
    */
-  virtual void FreeStream(TVMContext ctx, TVMStreamHandle stream);
+  virtual void FreeStream(TVMContext device, TVMStreamHandle stream);
 
   /*!
    * \brief Synchronize the stream
-   * \param ctx The context to perform operation.
+   * \param device The context to perform operation.
    * \param stream The stream to be sync.
    */
-  virtual void StreamSync(TVMContext ctx, TVMStreamHandle stream) = 0;
+  virtual void StreamSync(TVMContext device, TVMStreamHandle stream) = 0;
   /*!
    * \brief Set the stream
-   * \param ctx The context to set stream.
+   * \param device The context to set stream.
    * \param stream The stream to be set.
    */
-  virtual void SetStream(TVMContext ctx, TVMStreamHandle stream) {}
+  virtual void SetStream(TVMContext device, TVMStreamHandle stream) {}
   /*!
    * \brief Synchronize 2 streams of execution.
    *
@@ -152,11 +152,11 @@ class TVM_DLL DeviceAPI {
    * the same device ID as the context, but they must be of the same
    * device type.
    *
-   * \param ctx The context of the streams.
+   * \param device The context of the streams.
    * \param event_src The source stream to synchronize.
    * \param event_dst The destination stream to synchronize.
    */
-  virtual void SyncStreamFromTo(TVMContext ctx,
+  virtual void SyncStreamFromTo(TVMContext device,
                                         TVMStreamHandle event_src,
                                         TVMStreamHandle event_dst);
   /*!
@@ -170,29 +170,29 @@ class TVM_DLL DeviceAPI {
    *  - Repeative pattern of same allocations over different runs.
    *  - Workspace should not overlap between different threads(i.e. be threadlocal)
    *
-   * \param ctx The context of allocation.
+   * \param device The context of allocation.
    * \param nbytes The size to be allocated.
    * \param type_hint The type of elements. Only needed by certain backends such
    * as OpenGL, as nbytes is sufficient for most backends.
    */
-  virtual void* AllocWorkspace(TVMContext ctx,
+  virtual void* AllocWorkspace(TVMContext device,
                                        size_t nbytes,
                                        TVMType type_hint = {});
   /*!
    * \brief Free temporal workspace in backend execution.
    *
-   * \param ctx The context of allocation.
+   * \param device The context of allocation.
    * \param ptr The pointer to be freed.
    */
-  virtual void FreeWorkspace(TVMContext ctx, void* ptr);
+  virtual void FreeWorkspace(TVMContext device, void* ptr);
 
   /*!
    * \brief Get device API base don context.
-   * \param ctx The context
+   * \param device The context
    * \param allow_missing Whether allow missing
    * \return The corresponding device API.
    */
-  static DeviceAPI* Get(TVMContext ctx, bool allow_missing = false);
+  static DeviceAPI* Get(TVMContext device, bool allow_missing = false);
 };
 
 /*! \brief The device type bigger than this is RPC device */
@@ -222,13 +222,13 @@ inline const char* DeviceName(int type) {
 }
 
 #ifndef _LIBCPP_SGX_NO_IOSTREAMS
-inline std::ostream& operator<<(std::ostream& os, DLDevice ctx) {  // NOLINT(*)
-  int device_type = static_cast<int>(ctx.device_type);
+inline std::ostream& operator<<(std::ostream& os, DLDevice device) {  // NOLINT(*)
+  int device_type = static_cast<int>(device.device_type);
   if (device_type > kRPCSessMask) {
     os << "remote[" << (device_type / kRPCSessMask) << "]-";
     device_type = device_type % kRPCSessMask;
   }
-  os << runtime::DeviceName(device_type) << "(" << ctx.device_id << ")";
+  os << runtime::DeviceName(device_type) << "(" << device.device_id << ")";
   return os;
 }
 

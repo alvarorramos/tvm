@@ -105,7 +105,7 @@ mod tests {
     }
 
     #[test]
-    fn ctx() {
+    fn device() {
         let c = TVMContext::from_str("gpu").unwrap();
         let tvm: TVMContext = TVMRetValue::from(c).try_into().unwrap();
         assert_eq!(tvm, c);

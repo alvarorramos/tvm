@@ -62,9 +62,9 @@ def argsort(data, valid_count=None, axis=-1, is_ascend=1, dtype="float32"):
         np_data = np.random.uniform(dshape)
         s = topi.generic.schedule_argsort(out)
         f = tvm.build(s, [data, out], "llvm")
-        ctx = tvm.cpu()
-        tvm_data = tvm.nd.array(np_data, ctx)
-        tvm_out = tvm.nd.array(np.zeros(dshape, dtype=data.dtype), ctx)
+        device = tvm.cpu()
+        tvm_data = tvm.nd.array(np_data, device)
+        tvm_out = tvm.nd.array(np.zeros(dshape, dtype=data.dtype), device)
         f(tvm_data, tvm_out)
     """
     data_buf = api.decl_buffer(data.shape, data.dtype, "data_buf", data_alignment=8)

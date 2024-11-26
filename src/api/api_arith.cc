@@ -126,10 +126,10 @@ TVM_REGISTER_API("arith._CreateAnalyzer")
         return PackedFunc([self](TVMArgs args, TVMRetValue *ret) {
             // can't use make_shared due to noexcept(false) decl in destructor,
             // see https://stackoverflow.com/a/43907314
-            auto ctx = std::shared_ptr<With<ConstraintContext> >(
+            auto device = std::shared_ptr<With<ConstraintContext> >(
                 new With<ConstraintContext>(self.get(), args[0]));
-            auto fexit = [ctx](TVMArgs, TVMRetValue*) mutable {
-              ctx.reset();
+            auto fexit = [device](TVMArgs, TVMRetValue*) mutable {
+              device.reset();
             };
             *ret = PackedFunc(fexit);
         });

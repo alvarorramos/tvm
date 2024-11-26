@@ -346,9 +346,9 @@ class Interpreter :
     std::vector<NDArray> inputs(cfunc->inputs.size());
     std::vector<NDArray> outputs(cfunc->outputs.size());
 
-    DLDevice cpu_ctx;
-    cpu_ctx.device_type = kDLCPU;
-    cpu_ctx.device_id = 0;
+    DLDevice cpu_device;
+    cpu_device.device_type = kDLCPU;
+    cpu_device.device_id = 0;
 
     auto fset_input = [&](size_t i, Value val, bool need_shape) {
         const TensorValueNode* tv = val.as<TensorValueNode>();
@@ -357,9 +357,9 @@ class Interpreter :
           int64_t ndim = tv->data.Shape().size();
           NDArray shape_arr;
           if (ndim == 0) {
-            shape_arr = NDArray::Empty({}, Type2TVMType(Int(64)), cpu_ctx);
+            shape_arr = NDArray::Empty({}, Type2TVMType(Int(64)), cpu_device);
           } else {
-            shape_arr = NDArray::Empty({ndim}, Type2TVMType(Int(64)), cpu_ctx);
+            shape_arr = NDArray::Empty({ndim}, Type2TVMType(Int(64)), cpu_device);
             int64_t* data = reinterpret_cast<int64_t*>(shape_arr->data);
             for (auto j = 0; j < ndim; ++j) {
               data[j] = tv->data.Shape()[j];
@@ -368,7 +368,7 @@ class Interpreter :
           inputs[i] = shape_arr;
           setter(i, shape_arr);
         } else {
-          auto arr = tv->data.CopyTo(cpu_ctx);
+          auto arr = tv->data.CopyTo(cpu_device);
           inputs[i] = arr;
           setter(i, arr);
         }
@@ -409,7 +409,7 @@ class Interpreter :
         const TensorTypeNode* rtype = val_type.as<TensorTypeNode>();
         CHECK(rtype != nullptr);
         int64_t ndim = rtype->shape.size();
-        auto arr = NDArray::Empty({ndim}, Type2TVMType(Int(64)), cpu_ctx);
+        auto arr = NDArray::Empty({ndim}, Type2TVMType(Int(64)), cpu_device);
         outputs[i] = arr;
         setter(arg_counter + i, arr);
     };
@@ -496,11 +496,11 @@ class Interpreter :
       const TensorValueNode* tv = val.as<TensorValueNode>();
       CHECK(tv != nullptr) << "expect Tensor argument";
       setter(i, tv->data);
-      DLDevice arg_ctx = tv->data->ctx;
-      CHECK(arg_ctx.device_type ==  context_.device_type &&
-            arg_ctx.device_id == context_.device_id)
+      DLDevice arg_device = tv->data->device;
+      CHECK(arg_device.device_type ==  context_.device_type &&
+            arg_device.device_id == context_.device_id)
         << "Interpreter expect context to be "
-        << context_ << ", but get " << arg_ctx;
+        << context_ << ", but get " << arg_device;
     };
 
     int arg_counter = 0;
@@ -669,10 +669,10 @@ class Interpreter :
   Value VisitExpr_(const IfNode* op) final {
     Value v = Eval(op->cond);
     if (const TensorValueNode* bv = v.as<TensorValueNode>()) {
-      DLDevice cpu_ctx;
-      cpu_ctx.device_type = kDLCPU;
-      cpu_ctx.device_id = 0;
-      NDArray cpu_array = bv->data.CopyTo(cpu_ctx);
+      DLDevice cpu_device;
+      cpu_device.device_type = kDLCPU;
+      cpu_device.device_id = 0;
+      NDArray cpu_array = bv->data.CopyTo(cpu_device);
       CHECK_EQ(TVMType2Type(cpu_array->dtype), Bool());
       // TODO(@jroesch, @MK): Refactor code into helper from DCE.
       if (reinterpret_cast<uint8_t*>(cpu_array->data)[0]) {
@@ -795,8 +795,8 @@ CreateInterpreter(
     transform::Sequential seq({
         transform::EtaExpand(
             /* expand_constructor */ true, /* expand_global_var */ false)});
-    transform::PassContext pass_ctx = transform::PassContext::Current();
-    tvm::With<transform::PassContext> ctx(pass_ctx);
+    transform::PassContext pass_device = transform::PassContext::Current();
+    tvm::With<transform::PassContext> device(pass_device);
     mod = seq(mod);
   }
 

@@ -126,7 +126,7 @@ def progress_bar(total, prefix=''):
             if logger.level < logging.DEBUG:  # only print progress bar in non-debug mode
                 sys.stdout.write(' Done.\n')
 
-    ctx = _Context()
+    device = _Context()
     tic = time.time()
 
     if logger.level < logging.DEBUG:  # only print progress bar in non-debug mode
@@ -135,7 +135,7 @@ def progress_bar(total, prefix=''):
         sys.stdout.flush()
 
     def _callback(tuner, inputs, results):
-        ctx.ct += len(inputs)
+        device.ct += len(inputs)
 
         flops = 0
         for inp, res in zip(inputs, results):
@@ -143,12 +143,12 @@ def progress_bar(total, prefix=''):
                 flops = inp.task.flop / np.mean(res.costs)
 
         if logger.level < logging.DEBUG:  # only print progress bar in non-debug mode
-            ctx.cur_flops = flops
-            ctx.best_flops = tuner.best_flops
+            device.cur_flops = flops
+            device.best_flops = tuner.best_flops
 
             sys.stdout.write('\r%s Current/Best: %7.2f/%7.2f GFLOPS | Progress: (%d/%d) '
                              '| %.2f s' %
-                             (prefix, ctx.cur_flops/1e9, ctx.best_flops/1e9, ctx.ct, ctx.total,
+                             (prefix, device.cur_flops/1e9, device.best_flops/1e9, device.ct, device.total,
                               time.time() - tic))
             sys.stdout.flush()
 

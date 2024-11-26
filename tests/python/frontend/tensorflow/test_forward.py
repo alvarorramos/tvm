@@ -109,7 +109,7 @@ def run_tvm_graph(graph_def, input_data, input_node, num_output=1,
                                                  shape=shape_dict,
                                                  outputs=out_names)
     if mode in ['debug', 'vm']:
-        ex = relay.create_executor(mode, mod=mod, ctx=tvm.cpu(), target="llvm")
+        ex = relay.create_executor(mode, mod=mod, device=tvm.cpu(), target="llvm")
         inputs = []
         for param in mod['main'].params:
             found = False
@@ -127,9 +127,9 @@ def run_tvm_graph(graph_def, input_data, input_node, num_output=1,
         with relay.build_config(opt_level=opt_level):
             graph, lib, params = relay.build(mod, target, target_host, params)
 
-        ctx = tvm.context(target, 0)
+        device = tvm.context(target, 0)
         from tvm.contrib import graph_runtime
-        m = graph_runtime.create(graph, lib, ctx)
+        m = graph_runtime.create(graph, lib, device)
         # set inputs
         for e, i in zip(input_node, input_data):
             m.set_input(e, tvm.nd.array(i))
@@ -183,8 +183,8 @@ def compare_tf_with_tvm(in_data, in_name, out_name, init_global_variables=False,
         tf_output = run_tf_graph(sess, in_data, in_name, out_name)
 
         for device in ["llvm", "cuda"]:
-            ctx = tvm.context(device, 0)
-            if not ctx.exist:
+            device = tvm.context(device, 0)
+            if not device.exist:
                 print("Skip because %s is not enabled" % device)
                 continue
             if no_gpu and device == 'cuda':
@@ -1931,8 +1931,8 @@ def test_forward_resnetv2():
                 tf_output = run_tf_graph(
                     sess, data, 'input_tensor:0', out_node + ':0')
                 for device in ["llvm", "cuda"]:
-                    ctx = tvm.context(device, 0)
-                    if not ctx.exist:
+                    device = tvm.context(device, 0)
+                    if not device.exist:
                         print("Skip because %s is not enabled" % device)
                         continue
                     tvm_output = run_tvm_graph(graph_def, data, 'input_tensor', len(tf_output),
@@ -2011,8 +2011,8 @@ def test_forward_ptb():
                                              target,
                                              params=params)
         from tvm.contrib import graph_runtime
-        ctx = tvm.cpu(0)
-        return params, graph_runtime.create(graph, lib, ctx)
+        device = tvm.cpu(0)
+        return params, graph_runtime.create(graph, lib, device)
 
     def _do_tvm_sample(model, data, in_states, params, num_samples):
         """Sampled from the model"""

@@ -53,13 +53,13 @@ void Update(std::unordered_map<IterVar, Range>* p_state,
 
 void PassDownDomain(const Stage& stage,
                     std::unordered_map<IterVar, Range>* p_state,
-                    arith::Analyzer* actx,
+                    arith::Analyzer* adevice,
                     bool allow_missing) {
-  auto ceil_div = [actx](Expr a, Expr b) {
-    if (actx->CanProve(indexmod(a, b) == 0)) {
-      return actx->Simplify(indexdiv(a, b));
+  auto ceil_div = [adevice](Expr a, Expr b) {
+    if (adevice->CanProve(indexmod(a, b) == 0)) {
+      return adevice->Simplify(indexdiv(a, b));
     }
-    return actx->Simplify(indexdiv(a + (b - 1), b));
+    return adevice->Simplify(indexdiv(a + (b - 1), b));
   };
 
   auto& state = *p_state;
@@ -74,15 +74,15 @@ void PassDownDomain(const Stage& stage,
       const Range& range_parent = state.at(r->parent);
       if (r->factor.defined()) {
         Update(p_state, r->inner,
-               Range::make_by_min_extent(0, r->factor), actx);
+               Range::make_by_min_extent(0, r->factor), adevice);
         Update(p_state, r->outer,
                Range::make_by_min_extent(
-                   0, ceil_div(range_parent->extent, r->factor)), actx);
+                   0, ceil_div(range_parent->extent, r->factor)), adevice);
       } else {
-        Update(p_state, r->outer, Range::make_by_min_extent(0, r->nparts), actx);
+        Update(p_state, r->outer, Range::make_by_min_extent(0, r->nparts), adevice);
         Update(p_state, r->inner,
                Range::make_by_min_extent(
-                   0, ceil_div(range_parent->extent, r->nparts)), actx);
+                   0, ceil_div(range_parent->extent, r->nparts)), adevice);
       }
     } else if (const FuseNode* r = rel.as<FuseNode>()) {
       if (!state.count(r->outer) || !state.count(r->inner)) {
@@ -100,9 +100,9 @@ void PassDownDomain(const Stage& stage,
       }
       Update(p_state, r->rebased,
              Range::make_by_min_extent(
-                 0, state.at(r->parent)->extent), actx);
+                 0, state.at(r->parent)->extent), adevice);
     } else if (const SingletonNode* s = rel.as<SingletonNode>()) {
-      Update(p_state, s->iter, Range::make_by_min_extent(0, 1), actx);
+      Update(p_state, s->iter, Range::make_by_min_extent(0, 1), adevice);
     } else {
       LOG(FATAL) << "unknown relation type";
     }
@@ -111,7 +111,7 @@ void PassDownDomain(const Stage& stage,
   for (auto kv : stage->iter_var_attrs) {
     if (kv.second->bind_thread.defined()) {
       CHECK(state.count(kv.first));
-      Update(p_state, kv.second->bind_thread, state.at(kv.first), actx);
+      Update(p_state, kv.second->bind_thread, state.at(kv.first), adevice);
     }
   }
 }

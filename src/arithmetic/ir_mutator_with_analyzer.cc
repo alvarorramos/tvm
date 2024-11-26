@@ -58,11 +58,11 @@ Mutate_(const IfThenElse* op, const Stmt& s) {
   Expr condition = this->Mutate(op->condition);
   Stmt then_case, else_case;
   {
-    With<ConstraintContext> ctx(analyzer_, condition);
+    With<ConstraintContext> device(analyzer_, condition);
     then_case = this->Mutate(op->then_case);
   }
   if (op->else_case.defined()) {
-      With<ConstraintContext> ctx(analyzer_,
+      With<ConstraintContext> device(analyzer_,
                                   analyzer_->rewrite_simplify(Not::make(condition)));
       else_case = this->Mutate(op->else_case);
   }
@@ -102,7 +102,7 @@ Stmt IRMutatorWithAnalyzer::
 Mutate_(const AssertStmt* op, const Stmt& s) {
   Expr condition = this->Mutate(op->condition);
   Expr message = this->Mutate(op->message);
-  With<ConstraintContext> ctx(analyzer_, condition);
+  With<ConstraintContext> device(analyzer_, condition);
   Stmt body = this->Mutate(op->body);
 
   if (condition.same_as(op->condition) &&

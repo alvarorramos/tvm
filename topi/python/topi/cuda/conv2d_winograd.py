@@ -349,7 +349,7 @@ def _alter_conv2d_layout(attrs, inputs, tinfos, F):
     N, CI, H, W = get_const_tuple(data.shape)
     CO, _, KH, KW = get_const_tuple(kernel.shape)
 
-    dispatch_ctx = autotvm.DispatchContext.current
+    dispatch_device = autotvm.DispatchContext.current
     target = tvm.target.current_target()
 
     if groups == 1:
@@ -382,7 +382,7 @@ def _alter_conv2d_layout(attrs, inputs, tinfos, F):
                 [new_data, new_kernel, strides, padding, dilation, new_layout, out_dtype],
                 conv2d
             )
-            dispatch_ctx.update(target, new_workload, cfg)
+            dispatch_device.update(target, new_workload, cfg)
             return F.nn.conv2d(*copy_inputs, **new_attrs)
 
         if attrs.get_int_tuple("dilation") != (1, 1):
@@ -406,7 +406,7 @@ def _alter_conv2d_layout(attrs, inputs, tinfos, F):
             [new_data, new_weight, strides, padding, dilation, layout, out_dtype, tile_size],
             conv2d_winograd_without_weight_transform
         )
-        dispatch_ctx.update(target, new_workload, cfg)
+        dispatch_device.update(target, new_workload, cfg)
         return F.nn.contrib_conv2d_winograd_without_weight_transform(*copy_inputs, **new_attrs)
     if groups != CI:
         workload = autotvm.task.args_to_workload(
@@ -436,7 +436,7 @@ def _alter_conv2d_layout(attrs, inputs, tinfos, F):
                 [new_data, new_kernel, strides, padding, dilation, groups, out_dtype],
                 group_conv2d_nchw
             )
-            dispatch_ctx.update(target, new_workload, cfg)
+            dispatch_device.update(target, new_workload, cfg)
             return F.nn.conv2d(*copy_inputs, **new_attrs)
 
     # do nothing for depthwise convolution

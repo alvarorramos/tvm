@@ -41,8 +41,8 @@ loaded_json = open(temp.relpath("deploy.json")).read()
 loaded_params = bytearray(open(temp.relpath("deploy.params"), "rb").read())
 
 fcreate = tvm.get_global_func("tvm.graph_runtime.create")
-ctx = tvm.gpu(0)
-gmodule = fcreate(loaded_json, loaded_lib, ctx.device_type, ctx.device_id)
+device = tvm.gpu(0)
+gmodule = fcreate(loaded_json, loaded_lib, device.device_type, device.device_id)
 set_input, get_output, run = gmodule["set_input"], gmodule["get_output"], gmodule["run"]
 set_input("x", tvm.nd.array(x_np))
 gmodule["load_params"](loaded_params)

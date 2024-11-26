@@ -121,8 +121,8 @@ def get_sample_task(target=tvm.target.cuda(), target_host=None):
 
 def test_tuning():
     def check(target, target_host):
-        ctx = tvm.context(target, 0)
-        if not ctx.exist:
+        device = tvm.context(target, 0)
+        if not device.exist:
             logging.info("Skip test because %s is not available" % target)
             return
 

@@ -32,14 +32,14 @@ class Tensor(Object):
     arr : numpy.ndarray or tvm.nd.NDArray
         The source array.
 
-    ctx :  TVMContext, optional
+    device :  TVMContext, optional
         The device context to create the array
     """
-    def __init__(self, arr, ctx=None):
+    def __init__(self, arr, device=None):
         if isinstance(arr, _np.ndarray):
-            ctx = ctx if ctx else _nd.cpu(0)
+            device = device if device else _nd.cpu(0)
             self.__init_handle_by_constructor__(
-                _vmobj.Tensor, _nd.array(arr, ctx=ctx))
+                _vmobj.Tensor, _nd.array(arr, device=device))
         elif isinstance(arr, _nd.NDArray):
             self.__init_handle_by_constructor__(
                 _vmobj.Tensor, arr)

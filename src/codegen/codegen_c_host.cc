@@ -30,7 +30,7 @@ namespace tvm {
 namespace codegen {
 
 CodeGenCHost::CodeGenCHost() {
-  module_name_ = GetUniqueName("__tvm_module_ctx");
+  module_name_ = GetUniqueName("__tvm_module_device");
 }
 
 void CodeGenCHost::Init(bool output_ssa) {

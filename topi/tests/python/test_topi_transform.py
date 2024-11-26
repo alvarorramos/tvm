@@ -27,8 +27,8 @@ def verify_expand_dims(in_shape, out_shape, axis, num_newaxis):
     A = tvm.placeholder(shape=in_shape, name="A")
     B = topi.expand_dims(A, axis, num_newaxis)
     def check_device(device):
-        ctx = tvm.context(device, 0)
-        if not ctx.exist:
+        device = tvm.context(device, 0)
+        if not device.exist:
             print("Skip because %s is not enabled" % device)
             return
         print("Running on target: %s" % device)
@@ -37,8 +37,8 @@ def verify_expand_dims(in_shape, out_shape, axis, num_newaxis):
         foo = tvm.build(s, [A, B], device, name="expand_dims")
         data_npy = np.random.uniform(size=in_shape).astype(A.dtype)
         out_npy = data_npy.reshape(out_shape)
-        data_nd = tvm.nd.array(data_npy, ctx)
-        out_nd = tvm.nd.array(np.empty(out_shape).astype(B.dtype), ctx)
+        data_nd = tvm.nd.array(data_npy, device)
+        out_nd = tvm.nd.array(np.empty(out_shape).astype(B.dtype), device)
         foo(data_nd, out_nd)
         tvm.testing.assert_allclose(out_nd.asnumpy(), out_npy)
 
@@ -50,11 +50,11 @@ def verify_reinterpret(in_shape, in_dtype, out_dtype, generator):
     A = tvm.placeholder(shape=in_shape, name="A", dtype=in_dtype)
     B = topi.reinterpret(A, out_dtype)
     def check_device(device):
-        ctx = tvm.context(device, 0)
-        if not ctx.exist:
+        device = tvm.context(device, 0)
+        if not device.exist:
             print("Skip because %s is not enabled" % device)
             return
-        if in_dtype == "float16" and device == 'cuda' and not have_fp16(ctx.compute_version):
+        if in_dtype == "float16" and device == 'cuda' and not have_fp16(device.compute_version):
             print("Skip because %s does not have fp16 support" % device)
             return
         print("Running on target: %s" % device)
@@ -63,8 +63,8 @@ def verify_reinterpret(in_shape, in_dtype, out_dtype, generator):
         foo = tvm.build(s, [A, B], device, name="reinterpret")
         data_npy = generator(in_shape).astype(in_dtype)
         out_npy = data_npy.view(B.dtype)
-        data_nd = tvm.nd.array(data_npy, ctx)
-        out_nd = tvm.nd.array(np.empty(in_shape).astype(B.dtype), ctx)
+        data_nd = tvm.nd.array(data_npy, device)
+        out_nd = tvm.nd.array(np.empty(in_shape).astype(B.dtype), device)
         foo(data_nd, out_nd)
         np.testing.assert_equal(out_nd.asnumpy(), out_npy)
 
@@ -76,8 +76,8 @@ def verify_transpose(in_shape, axes):
     A = tvm.placeholder(shape=in_shape, name="A")
     B = topi.transpose(A, axes)
     def check_device(device):
-        ctx = tvm.context(device, 0)
-        if not ctx.exist:
+        device = tvm.context(device, 0)
+        if not device.exist:
             print("Skip because %s is not enabled" % device)
             return
         print("Running on target: %s" % device)
@@ -86,8 +86,8 @@ def verify_transpose(in_shape, axes):
         foo = tvm.build(s, [A, B], device, name="transpose")
         data_npy = np.arange(np.prod(in_shape)).reshape(in_shape).astype(A.dtype)
         out_npy = data_npy.transpose(axes)
-        data_nd = tvm.nd.array(data_npy, ctx)
-        out_nd = tvm.nd.empty(out_npy.shape, ctx=ctx, dtype=B.dtype)
+        data_nd = tvm.nd.array(data_npy, device)
+        out_nd = tvm.nd.empty(out_npy.shape, device=device, dtype=B.dtype)
         foo(data_nd, out_nd)
         tvm.testing.assert_allclose(out_nd.asnumpy(), out_npy)
 
@@ -99,8 +99,8 @@ def verify_reshape(src_shape, dst_shape):
     A = tvm.placeholder(shape=src_shape, name="A")
     B = topi.reshape(A, dst_shape)
     def check_device(device):
-        ctx = tvm.context(device, 0)
-        if not ctx.exist:
+        device = tvm.context(device, 0)
+        if not device.exist:
             print("Skip because %s is not enabled" % device)
             return
         print("Running on target: %s" % device)
@@ -109,8 +109,8 @@ def verify_reshape(src_shape, dst_shape):
         foo = tvm.build(s, [A, B], device, name="reshape")
         data_npy = np.random.normal(size=src_shape).astype(A.dtype)
         out_npy = np.reshape(data_npy, newshape=dst_shape)
-        data_nd = tvm.nd.array(data_npy, ctx)
-        out_nd = tvm.nd.empty(dst_shape, ctx=ctx, dtype=B.dtype)
+        data_nd = tvm.nd.array(data_npy, device)
+        out_nd = tvm.nd.empty(dst_shape, device=device, dtype=B.dtype)
         foo(data_nd, out_nd)
         tvm.testing.assert_allclose(out_nd.asnumpy(), out_npy)
 
@@ -122,8 +122,8 @@ def verify_squeeze(src_shape, axis):
     A = tvm.placeholder(shape=src_shape, name="A")
     B = topi.squeeze(A, axis=axis)
     def check_device(device):
-        ctx = tvm.context(device, 0)
-        if not ctx.exist:
+        device = tvm.context(device, 0)
+        if not device.exist:
             print("Skip because %s is not enabled" % device)
             return
         print("Running on target: %s" % device)
@@ -133,9 +133,9 @@ def verify_squeeze(src_shape, axis):
         foo = tvm.build(s, [A, B], device, name="squeeze")
         data_npy = np.random.normal(size=src_shape).astype(A.dtype)
         out_npy = np.squeeze(data_npy, axis=axis)
-        data_nd = tvm.nd.array(data_npy, ctx)
+        data_nd = tvm.nd.array(data_npy, device)
         out_nd_shape = out_npy.shape
-        out_nd = tvm.nd.empty(out_nd_shape, ctx=ctx, dtype=B.dtype)
+        out_nd = tvm.nd.empty(out_nd_shape, device=device, dtype=B.dtype)
         foo(data_nd, out_nd)
         tvm.testing.assert_allclose(out_nd.asnumpy(), out_npy)
 
@@ -148,8 +148,8 @@ def verify_concatenate(shapes, axis):
         tensor_l.append(tvm.placeholder(shape, name="A" + str(i)))
     out_tensor = topi.concatenate(a_tuple=tensor_l, axis=axis)
     def check_device(device):
-        ctx = tvm.context(device, 0)
-        if not ctx.exist:
+        device = tvm.context(device, 0)
+        if not device.exist:
             print("Skip because %s is not enabled" % device)
             return
         print("Running on target: %s" % device)
@@ -159,8 +159,8 @@ def verify_concatenate(shapes, axis):
         foo = tvm.build(s, tensor_l + [out_tensor], device, name="concatenate")
         data_npys = [np.random.normal(size=shape).astype(tensor_l[0].dtype) for shape in shapes]
         out_npy = np.concatenate(data_npys, axis=axis)
-        data_nds = [tvm.nd.array(data_npy, ctx) for data_npy in data_npys]
-        out_nd = tvm.nd.empty(out_npy.shape, ctx=ctx, dtype=out_tensor.dtype)
+        data_nds = [tvm.nd.array(data_npy, device) for data_npy in data_npys]
+        out_nd = tvm.nd.empty(out_npy.shape, device=device, dtype=out_tensor.dtype)
         foo(*(data_nds + [out_nd]))
         tvm.testing.assert_allclose(out_nd.asnumpy(), out_npy)
 
@@ -173,8 +173,8 @@ def verify_stack(shapes, axis):
         tensor_l.append(tvm.placeholder(shape, name="A" + str(i)))
     out_tensor = topi.stack(tensor_l, axis)
     def check_device(device):
-        ctx = tvm.context(device, 0)
-        if not ctx.exist:
+        device = tvm.context(device, 0)
+        if not device.exist:
             print("Skip because %s is not enabled" % device)
             return
         print("Running on target: %s" % device)
@@ -184,8 +184,8 @@ def verify_stack(shapes, axis):
         foo = tvm.build(s, tensor_l + [out_tensor], device, name="stack")
         data_npys = [np.random.normal(size=shape).astype(tensor_l[0].dtype) for shape in shapes]
         out_npy = np.stack(data_npys, axis=axis)
-        data_nds = [tvm.nd.array(data_npy, ctx) for data_npy in data_npys]
-        out_nd = tvm.nd.empty(out_npy.shape, ctx=ctx, dtype=out_tensor.dtype)
+        data_nds = [tvm.nd.array(data_npy, device) for data_npy in data_npys]
+        out_nd = tvm.nd.empty(out_npy.shape, device=device, dtype=out_tensor.dtype)
         foo(*(data_nds + [out_nd]))
         tvm.testing.assert_allclose(out_nd.asnumpy(), out_npy)
 
@@ -197,8 +197,8 @@ def verify_split(src_shape, indices_or_sections, axis):
     A = tvm.placeholder(shape=src_shape, name="A")
     tensor_l = topi.split(A, indices_or_sections, axis=axis)
     def check_device(device):
-        ctx = tvm.context(device, 0)
-        if not ctx.exist:
+        device = tvm.context(device, 0)
+        if not device.exist:
             print("Skip because %s is not enabled" % device)
             return
         print("Running on target: %s" % device)
@@ -208,8 +208,8 @@ def verify_split(src_shape, indices_or_sections, axis):
         foo = tvm.build(s, [A] + list(tensor_l), device, name="split")
         data_npy = np.random.normal(size=src_shape).astype(A.dtype)
         out_npys = np.split(data_npy, indices_or_sections, axis=axis)
-        data_nd = tvm.nd.array(data_npy, ctx)
-        out_nds = [tvm.nd.empty(out_npy.shape, ctx=ctx, dtype=tensor_l[0].dtype) for out_npy in out_npys]
+        data_nd = tvm.nd.array(data_npy, device)
+        out_nds = [tvm.nd.empty(out_npy.shape, device=device, dtype=tensor_l[0].dtype) for out_npy in out_npys]
         foo(*([data_nd] + out_nds))
         for out_nd, out_npy in zip(out_nds, out_npys):
             tvm.testing.assert_allclose(out_nd.asnumpy(), out_npy)
@@ -230,10 +230,10 @@ def verify_expand_like(in_shape, out_shape, axis):
             return
         print("Running on target: %s" % device)
 
-        ctx = tvm.context(device, 0)
+        device = tvm.context(device, 0)
         f = tvm.build(s, [A, B, C], device, name="expand_like")
         input = np.random.uniform(size=in_shape).astype(A.dtype)
-        tvm_input = tvm.nd.array(input, ctx)
+        tvm_input = tvm.nd.array(input, device)
 
         odim = len(out_shape)
         real_axis = [x if x >= 0 else x + odim for x in axis]
@@ -244,8 +244,8 @@ def verify_expand_like(in_shape, out_shape, axis):
             input = np.concatenate([input]*out_shape[x], axis=x).astype(A.dtype)
         assert input.shape == out_shape
 
-        tvm_shape_like = tvm.nd.array(np.zeros(out_shape).astype(B.dtype), ctx)
-        out = tvm.nd.array(np.zeros(out_shape).astype(A.dtype), ctx)
+        tvm_shape_like = tvm.nd.array(np.zeros(out_shape).astype(B.dtype), device)
+        out = tvm.nd.array(np.zeros(out_shape).astype(A.dtype), device)
         f(tvm_input, tvm_shape_like, out)
         tvm.testing.assert_allclose(out.asnumpy(), input)
 
@@ -256,8 +256,8 @@ def verify_flip(in_shape, axis):
     A = tvm.placeholder(shape=in_shape, name="A")
     B = topi.flip(A, axis) + 1
     def check_device(device):
-        ctx = tvm.context(device, 0)
-        if not ctx.exist:
+        device = tvm.context(device, 0)
+        if not device.exist:
             print("Skip because %s is not enabled" % device)
             return
         print("Running on target: %s" % device)
@@ -267,8 +267,8 @@ def verify_flip(in_shape, axis):
         foo = tvm.build(s, [A, B], device, name="reverse")
         x_np = np.random.uniform(size=in_shape).astype(A.dtype)
         out_npy = np.flip(x_np, axis) + 1
-        data_nd = tvm.nd.array(x_np, ctx)
-        out_nd = tvm.nd.empty(out_npy.shape, ctx=ctx, dtype=A.dtype)
+        data_nd = tvm.nd.array(x_np, device)
+        out_nd = tvm.nd.empty(out_npy.shape, device=device, dtype=A.dtype)
         foo(data_nd, out_nd)
         tvm.testing.assert_allclose(out_nd.asnumpy(), out_npy)
 
@@ -287,8 +287,8 @@ def verify_take(src_shape, indices_src, axis=None, mode="clip"):
         out_tensor = topi.take(a=A, indices=indices, axis=axis, mode=mode)
 
     def check_device(device):
-        ctx = tvm.context(device, 0)
-        if not ctx.exist:
+        device = tvm.context(device, 0)
+        if not device.exist:
             print("Skip because %s is not enabled" % device)
             return
         print("Running on target: %s" % device)
@@ -307,9 +307,9 @@ def verify_take(src_shape, indices_src, axis=None, mode="clip"):
         else:
             np_mode = "raise" if mode == "fast" else mode
             out_npys = np.take(data_npy, indices_src, axis=axis, mode=np_mode)
-        data_nd = tvm.nd.array(data_npy, ctx)
-        indices_nd = tvm.nd.array(indices_src, ctx)
-        out_nd = tvm.nd.empty(out_npys.shape, ctx=ctx, dtype=src_dtype)
+        data_nd = tvm.nd.array(data_npy, device)
+        indices_nd = tvm.nd.array(indices_src, device)
+        out_nd = tvm.nd.empty(out_npys.shape, device=device, dtype=src_dtype)
         foo(data_nd, indices_nd, out_nd)
         tvm.testing.assert_allclose(out_nd.asnumpy(), out_npys)
 
@@ -322,8 +322,8 @@ def verify_strided_slice(in_shape, begin, end, strides=None):
     B = topi.strided_slice(A, begin, end, strides) + 1
 
     def check_device(device):
-        ctx = tvm.context(device, 0)
-        if not ctx.exist:
+        device = tvm.context(device, 0)
+        if not device.exist:
             print("Skip because %s is not enabled" % device)
             return
         print("Running on target: %s" % device)
@@ -334,8 +334,8 @@ def verify_strided_slice(in_shape, begin, end, strides=None):
         x_np = np.random.uniform(size=in_shape).astype(A.dtype)
         out_npy = topi.testing.strided_slice_python(
             x_np, begin, end, strides) + 1
-        data_nd = tvm.nd.array(x_np, ctx)
-        out_nd = tvm.nd.empty(out_npy.shape, ctx=ctx, dtype=A.dtype)
+        data_nd = tvm.nd.array(x_np, device)
+        out_nd = tvm.nd.empty(out_npy.shape, device=device, dtype=A.dtype)
         foo(data_nd, out_nd)
         tvm.testing.assert_allclose(out_nd.asnumpy(), out_npy)
 
@@ -350,8 +350,8 @@ def verify_gather_nd(src_shape, indices_src, indices_dtype):
     out_tensor = topi.gather_nd(a=A, indices=indices)
 
     def check_device(device):
-        ctx = tvm.context(device, 0)
-        if not ctx.exist:
+        device = tvm.context(device, 0)
+        if not device.exist:
             print("Skip because %s is not enabled" % device)
             return
         print("Running on target: %s" % device)
@@ -365,9 +365,9 @@ def verify_gather_nd(src_shape, indices_src, indices_dtype):
         data_npy = np.arange(shape_size, dtype=src_dtype).reshape((src_shape))
         out_npys = topi.testing.gather_nd_python(data_npy, indices_src)
 
-        data_nd = tvm.nd.array(data_npy, ctx)
-        indices_nd = tvm.nd.array(indices_src, ctx)
-        out_nd = tvm.nd.empty(out_npys.shape, ctx=ctx, dtype=src_dtype)
+        data_nd = tvm.nd.array(data_npy, device)
+        indices_nd = tvm.nd.array(indices_src, device)
+        out_nd = tvm.nd.empty(out_npys.shape, device=device, dtype=src_dtype)
         func(data_nd, indices_nd, out_nd)
         tvm.testing.assert_allclose(out_nd.asnumpy(), out_npys)
 
@@ -389,15 +389,15 @@ def verify_arange(start, stop, step):
         a_np = np.arange(start, stop, step)
 
     def check_device(device):
-        ctx = tvm.context(device, 0)
-        if not ctx.exist:
+        device = tvm.context(device, 0)
+        if not device.exist:
             print("Skip because %s is not enabled" % device)
             return
         print("Running on target: %s" % device)
         with tvm.target.create(device):
             s = topi.generic.schedule_injective(A)
         f = tvm.build(s, [A], device, name="arange")
-        a_nd = tvm.nd.empty(a_np.shape, dtype='float32', ctx=ctx)
+        a_nd = tvm.nd.empty(a_np.shape, dtype='float32', device=device)
         f(a_nd)
         tvm.testing.assert_allclose(a_nd.asnumpy(), a_np)
 
@@ -408,8 +408,8 @@ def verify_repeat(in_shape, repeats, axis):
     A = tvm.placeholder(shape=in_shape, name="A")
     B = topi.repeat(A, repeats, axis)
     def check_device(device):
-        ctx = tvm.context(device, 0)
-        if not ctx.exist:
+        device = tvm.context(device, 0)
+        if not device.exist:
             print("Skip because %s is not enabled" % device)
             return
         print("Running on target: %s" % device)
@@ -418,8 +418,8 @@ def verify_repeat(in_shape, repeats, axis):
         foo = tvm.build(s, [A, B], device, name="repeat")
         data_npy = np.random.uniform(size=in_shape).astype(A.dtype)
         out_npy = np.repeat(data_npy, repeats, axis)
-        data_nd = tvm.nd.array(data_npy, ctx)
-        out_nd = tvm.nd.array(np.empty(out_npy.shape).astype(B.dtype), ctx)
+        data_nd = tvm.nd.array(data_npy, device)
+        out_nd = tvm.nd.array(np.empty(out_npy.shape).astype(B.dtype), device)
         foo(data_nd, out_nd)
         tvm.testing.assert_allclose(out_nd.asnumpy(), out_npy)
 
@@ -430,8 +430,8 @@ def verify_tile(in_shape, reps):
     A = tvm.placeholder(shape=in_shape, name="A")
     B = topi.tile(A, reps)
     def check_device(device):
-        ctx = tvm.context(device, 0)
-        if not ctx.exist:
+        device = tvm.context(device, 0)
+        if not device.exist:
             print("Skip because %s is not enabled" % device)
             return
         print("Running on target: %s" % device)
@@ -440,8 +440,8 @@ def verify_tile(in_shape, reps):
         foo = tvm.build(s, [A, B], device, name="tile")
         data_npy = np.random.uniform(size=in_shape).astype(A.dtype)
         out_npy = np.tile(data_npy, reps)
-        data_nd = tvm.nd.array(data_npy, ctx)
-        out_nd = tvm.nd.array(np.empty(out_npy.shape).astype(B.dtype), ctx)
+        data_nd = tvm.nd.array(data_npy, device)
+        out_nd = tvm.nd.array(np.empty(out_npy.shape).astype(B.dtype), device)
         foo(data_nd, out_nd)
         tvm.testing.assert_allclose(out_nd.asnumpy(), out_npy)
 
@@ -455,8 +455,8 @@ def verify_where(in_shape):
     B = tvm.placeholder(shape=in_shape, name="B")
     C = topi.where(Cond, A, B)
     def check_device(device):
-        ctx = tvm.context(device, 0)
-        if not ctx.exist:
+        device = tvm.context(device, 0)
+        if not device.exist:
             print("Skip because %s is not enabled" % device)
             return
         print("Running on target: %s" % device)
@@ -467,10 +467,10 @@ def verify_where(in_shape):
         x_npy = np.random.uniform(size=in_shape).astype(dtype)
         y_npy = np.random.uniform(size=in_shape).astype(dtype)
         out_npy = np.where(cond_npy, x_npy, y_npy)
-        cond_nd = tvm.nd.array(cond_npy, ctx)
-        x_nd = tvm.nd.array(x_npy, ctx)
-        y_nd = tvm.nd.array(y_npy, ctx)
-        out_nd = tvm.nd.array(np.empty(out_npy.shape).astype(C.dtype), ctx)
+        cond_nd = tvm.nd.array(cond_npy, device)
+        x_nd = tvm.nd.array(x_npy, device)
+        y_nd = tvm.nd.array(y_npy, device)
+        out_nd = tvm.nd.array(np.empty(out_npy.shape).astype(C.dtype), device)
         f(cond_nd, x_nd, y_nd, out_nd)
         tvm.testing.assert_allclose(out_nd.asnumpy(), out_npy)
 
@@ -483,8 +483,8 @@ def verify_one_hot(indices_shape, depth, on_value, off_value, axis, dtype):
     off_value_const = tvm.const(off_value, dtype)
     one_hot_result = topi.transform.one_hot(indices, on_value_const, off_value_const, depth, axis, dtype)
     def check_device(device):
-        ctx = tvm.context(device, 0)
-        if not ctx.exist:
+        device = tvm.context(device, 0)
+        if not device.exist:
             print("Skip because %s is not enabled" % device)
             return
         print("Running on target: %s" % device)
@@ -493,8 +493,8 @@ def verify_one_hot(indices_shape, depth, on_value, off_value, axis, dtype):
         fn = tvm.build(s, [indices, one_hot_result], device, name="one_hot")
         indices_npy = np.random.randint(0, depth, size=indices_shape).astype(indices.dtype)
         out_npy = topi.testing.one_hot(indices_npy, on_value, off_value, depth, axis, dtype)
-        indices_nd = tvm.nd.array(indices_npy, ctx)
-        out_nd = tvm.nd.array(np.empty(out_npy.shape).astype(one_hot_result.dtype), ctx)
+        indices_nd = tvm.nd.array(indices_npy, device)
+        out_nd = tvm.nd.array(np.empty(out_npy.shape).astype(one_hot_result.dtype), device)
         fn(indices_nd, out_nd)
         out_topi = out_nd.asnumpy()
         tvm.testing.assert_allclose(out_topi, out_npy)
@@ -556,13 +556,13 @@ def test_squeeze():
     E = topi.squeeze(A)
     C = tvm.compute((1,), lambda i: E[(2 * A[0] - 1).astype('int32')])
     for device in ['cuda', 'opencl']:
-        ctx = tvm.context(device, 0)
-        if ctx.exist:
+        device = tvm.context(device, 0)
+        if device.exist:
             with tvm.target.create(device):
                 s = topi.generic.schedule_injective(C)
                 func = tvm.build(s, [A, C])
-            a = tvm.nd.array(np.array((1, 2)).astype('float32'), ctx=ctx)
-            c = tvm.nd.empty((1,), dtype='float32', ctx=ctx)
+            a = tvm.nd.array(np.array((1, 2)).astype('float32'), device=device)
+            c = tvm.nd.empty((1,), dtype='float32', device=device)
             func(a, c)
             assert c.asnumpy()[0] == 2
 
@@ -673,12 +673,12 @@ def test_layout_transform():
     output = np.transpose(output, axes=(0, 3, 1, 2, 4))
 
     def check_device(device):
-        ctx = tvm.context(device, 0)
-        if not ctx.exist:
+        device = tvm.context(device, 0)
+        if not device.exist:
             print("Skip because %s is not enabled" % device)
             return
-        tvm_input = tvm.nd.array(input, ctx)
-        tvm_output = tvm.nd.empty(output.shape, ctx=ctx, dtype=B.dtype)
+        tvm_input = tvm.nd.array(input, device)
+        tvm_output = tvm.nd.empty(output.shape, device=device, dtype=B.dtype)
         print("Running on target: %s" % device)
         with tvm.target.create(device):
             s = topi.generic.schedule_injective(B)
@@ -700,12 +700,12 @@ def test_shape():
     output = np.asarray(in_shape).astype(dtype)
 
     def check_device(device):
-        ctx = tvm.context(device, 0)
-        if not ctx.exist:
+        device = tvm.context(device, 0)
+        if not device.exist:
             print("Skip because %s is not enabled" % device)
             return
-        tvm_input = tvm.nd.array(input, ctx)
-        tvm_output = tvm.nd.empty(output.shape, ctx=ctx, dtype=dtype)
+        tvm_input = tvm.nd.array(input, device)
+        tvm_output = tvm.nd.empty(output.shape, device=device, dtype=dtype)
         print("Running on target: %s" % device)
         with tvm.target.create(device):
             s = topi.generic.schedule_injective(B)
@@ -731,13 +731,13 @@ def test_sequence_mask():
                 C_gt_data = topi.testing.sequence_mask(A_data, B_data, mask_value, axis)
 
                 def check_device(device):
-                    ctx = tvm.context(device, 0)
-                    if not ctx.exist:
+                    device = tvm.context(device, 0)
+                    if not device.exist:
                         print("Skip because %s is not enabled" % device)
                         return
-                    tvm_A = tvm.nd.array(A_data, ctx)
-                    tvm_B = tvm.nd.array(B_data, ctx)
-                    tvm_C = tvm.nd.empty(in_shape, ctx=ctx, dtype="float32")
+                    tvm_A = tvm.nd.array(A_data, device)
+                    tvm_B = tvm.nd.array(B_data, device)
+                    tvm_C = tvm.nd.empty(in_shape, device=device, dtype="float32")
                     print("Running on target: %s" % device)
                     with tvm.target.create(device):
                         s = topi.generic.schedule_injective(C)
@@ -757,12 +757,12 @@ def test_ndarray_size():
     output = np.asarray(np.size(input)).astype(dtype)
 
     def check_device(device):
-        ctx = tvm.context(device, 0)
-        if not ctx.exist:
+        device = tvm.context(device, 0)
+        if not device.exist:
             print("Skip because %s is not enabled" % device)
             return
-        tvm_input = tvm.nd.array(input, ctx=ctx)
-        tvm_output = tvm.nd.empty((1,), ctx=ctx, dtype=B.dtype)
+        tvm_input = tvm.nd.array(input, device=device)
+        tvm_output = tvm.nd.empty((1,), device=device, dtype=B.dtype)
         print("Running on target: %s" % device)
         with tvm.target.create(device):
             s = topi.generic.schedule_injective(B)
@@ -778,8 +778,8 @@ def test_where_fusion():
     """integration test that where and zeros should be properly inlined"""
     def check_device(device):
         with tvm.target.create(device):
-            ctx = tvm.context(device, 0)
-            if not ctx.exist:
+            device = tvm.context(device, 0)
+            if not device.exist:
                 print("Skip because %s is not enabled" % device)
                 return
             print("Running on target: %s" % device)

@@ -20,7 +20,7 @@ nnvm.testing
 
 .. automodule:: nnvm.testing
 
-.. autofunction:: nnvm.testing.ctx_list
+.. autofunction:: nnvm.testing.device_list
 
 nnvm.testing.check_computation
 ------------------------------

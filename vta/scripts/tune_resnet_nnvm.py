@@ -240,16 +240,16 @@ if __name__ == '__main__':
         rlib = remote.load_module(filename)
 
         # Upload parameters to device
-        ctx = remote.context(str(target), 0)
-        rparams = {k: tvm.nd.array(v, ctx) for k, v in params.items()}
+        device = remote.context(str(target), 0)
+        rparams = {k: tvm.nd.array(v, device) for k, v in params.items()}
         data_tvm = tvm.nd.array((np.random.uniform(size=input_shape)).astype(dtype))
-        module = graph_runtime.create(graph, rlib, ctx)
+        module = graph_runtime.create(graph, rlib, device)
         module.set_input('data', data_tvm)
         module.set_input(**rparams)
 
         # Evaluate
         print("Evaluate inference time cost...")
-        ftimer = module.module.time_evaluator("run", ctx, number=3, repeat=3)
+        ftimer = module.module.time_evaluator("run", device, number=3, repeat=3)
         prof_res = np.array(ftimer().results) * 1000  # convert to millisecond
         print("Mean inference time (std dev): %.2f ms (%.2f ms)" %
               (np.mean(prof_res), np.std(prof_res)))

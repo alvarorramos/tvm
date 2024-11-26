@@ -39,7 +39,7 @@ def create_exec(f, target="llvm", params=None):
         return executable
 
 
-def veval(vm, *args, ctx=tvm.cpu()):
+def veval(vm, *args, device=tvm.cpu()):
     assert isinstance(vm, _vm.VirtualMachine), "expected VirtualMachine"
     ret = vm.run(*args)
     return ret
@@ -49,28 +49,28 @@ def run_network(mod,
                 params,
                 data_shape=(1, 3, 224, 224),
                 dtype='float32'):
-    def get_vm_output(mod, data, params, target, ctx, dtype='float32'):
-        ex = relay.create_executor('vm', mod=mod, ctx=ctx)
+    def get_vm_output(mod, data, params, target, device, dtype='float32'):
+        ex = relay.create_executor('vm', mod=mod, device=device)
         result = ex.evaluate()(data, **params)
         return result.asnumpy().astype(dtype)
 
-    def get_serialized_output(mod, data, params, target, ctx, dtype='float32'):
+    def get_serialized_output(mod, data, params, target, device, dtype='float32'):
         exe = create_exec(mod, target, params=params)
         code, lib = exe.save()
         des_exec = _vm.Executable.load_exec(code, lib)
         des_vm = _vm.VirtualMachine(des_exec)
-        des_vm.init(ctx)
+        des_vm.init(device)
         result = des_vm.run(data)
         return result.asnumpy().astype(dtype)
 
     data = np.random.uniform(size=data_shape).astype(dtype)
     target = "llvm"
-    ctx = tvm.cpu(0)
+    device = tvm.cpu(0)
 
     tvm_out = get_vm_output(mod, tvm.nd.array(data.astype(dtype)), params,
-                            target, ctx, dtype)
+                            target, device, dtype)
     vm_out = get_serialized_output(mod, tvm.nd.array(data.astype(dtype)), params,
-                                   target, ctx, dtype)
+                                   target, device, dtype)
     tvm.testing.assert_allclose(vm_out, tvm_out, rtol=1e-5, atol=1e-5)
 
 

@@ -275,10 +275,10 @@ class ExampleJsonModule : public ModuleNode {
         entry.output = id;
         graph_[curr_subgraph].push_back(entry);
       }
-      DLDevice ctx;
-      ctx.device_type = static_cast<DLDeviceType>(1);
-      ctx.device_id = 0;
-      data_entry_[id] = NDArray::Empty(shape, DLDataType{kDLFloat, 32, 1}, ctx);
+      DLDevice device;
+      device.device_type = static_cast<DLDeviceType>(1);
+      device.device_id = 0;
+      data_entry_[id] = NDArray::Empty(shape, DLDataType{kDLFloat, 32, 1}, device);
     }
   }
 

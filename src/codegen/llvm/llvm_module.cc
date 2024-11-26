@@ -189,17 +189,17 @@ class LLVMModuleNode final : public runtime::ModuleNode {
     tm_ = GetLLVMTargetMachine(target);
     bool system_lib = (target.find("-system-lib") != std::string::npos);
     CHECK_NE(funcs.size(), 0U);
-    ctx_ = std::make_shared<llvm::LLVMContext>();
+    device_ = std::make_shared<llvm::LLVMContext>();
     std::unique_ptr<CodeGenLLVM> cg = CodeGenLLVM::Create(tm_.get());
     entry_func_ = funcs[0]->name;
-    cg->Init(funcs[0]->name, tm_.get(), ctx_.get(), system_lib, system_lib);
+    cg->Init(funcs[0]->name, tm_.get(), device_.get(), system_lib, system_lib);
     for (LoweredFunc f :  funcs) {
       cg->AddFunction(f);
     }
     cg->AddMainFunction(funcs[0]->name);
     module_ = cg->Finish();
 
-    module_->addModuleFlag(llvm::Module::Warning, "tvm_target", llvm::MDString::get(*ctx_, target));
+    module_->addModuleFlag(llvm::Module::Warning, "tvm_target", llvm::MDString::get(*device_, target));
     module_->addModuleFlag(llvm::Module::Override, "Debug Info Version",
                            llvm::DEBUG_METADATA_VERSION);
 
@@ -218,9 +218,9 @@ class LLVMModuleNode final : public runtime::ModuleNode {
 
   void LoadIR(const std::string& file_name) {
     InitializeLLVM();
-    ctx_ = std::make_shared<llvm::LLVMContext>();
+    device_ = std::make_shared<llvm::LLVMContext>();
     llvm::SMDiagnostic err;
-    module_ = llvm::parseIRFile(file_name, err, *ctx_);
+    module_ = llvm::parseIRFile(file_name, err, *device_);
     if (module_.get() == nullptr) {
       std::string msg = err.getMessage();
       LOG(FATAL) << "Fail to load ir file " << file_name << "\n"
@@ -281,9 +281,9 @@ class LLVMModuleNode final : public runtime::ModuleNode {
     // setup context address.
     entry_func_ =
         reinterpret_cast<const char*>(GetGlobalAddr(runtime::symbol::tvm_module_main));
-    if (void** ctx_addr = reinterpret_cast<void**>(
-            GetGlobalAddr(runtime::symbol::tvm_module_ctx))) {
-      *ctx_addr = this;
+    if (void** device_addr = reinterpret_cast<void**>(
+            GetGlobalAddr(runtime::symbol::tvm_module_device))) {
+      *device_addr = this;
     }
     runtime::InitContextFunctions([this](const char *name) {
         return GetGlobalAddr(name);
@@ -322,7 +322,7 @@ class LLVMModuleNode final : public runtime::ModuleNode {
   // The module, can be moved to ee if JIT is enabled.
   std::unique_ptr<llvm::Module> module_;
   // the context.
-  std::shared_ptr<llvm::LLVMContext> ctx_;
+  std::shared_ptr<llvm::LLVMContext> device_;
 };
 
 unsigned LookupLLVMIntrinsic(const std::string& name) {

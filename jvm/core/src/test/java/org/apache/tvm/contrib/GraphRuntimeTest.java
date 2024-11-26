@@ -51,14 +51,14 @@ public class GraphRuntimeTest {
         loadingDir + File.separator + "graph_addone.json"))
         .useDelimiter("\\Z").next();
 
-    TVMContext ctx = TVMContext.cpu();
-    GraphModule graph = GraphRuntime.create(graphJson, libmod, ctx);
+    TVMContext device = TVMContext.cpu();
+    GraphModule graph = GraphRuntime.create(graphJson, libmod, device);
 
     long[] shape = new long[]{4};
-    NDArray arr = NDArray.empty(shape, ctx);
+    NDArray arr = NDArray.empty(shape, device);
     arr.copyFrom(new float[]{1f, 2f, 3f, 4f});
 
-    NDArray out = NDArray.empty(shape, ctx);
+    NDArray out = NDArray.empty(shape, device);
 
     graph.setInput("x", arr).run();
     graph.getOutput(0, out);
@@ -87,18 +87,18 @@ public class GraphRuntimeTest {
     try {
       server = TestUtils.startServer(port);
       RPCSession remote = Client.connect("localhost", port.value);
-      TVMContext ctx = remote.cpu();
+      TVMContext device = remote.cpu();
 
       remote.upload(new File(libPath));
       Module mlib = remote.loadModule("graph_addone_lib.so");
 
-      GraphModule graph = GraphRuntime.create(graphJson, mlib, ctx);
+      GraphModule graph = GraphRuntime.create(graphJson, mlib, device);
 
       long[] shape = new long[]{4};
-      NDArray arr = NDArray.empty(shape, ctx);
+      NDArray arr = NDArray.empty(shape, device);
       arr.copyFrom(new float[]{1f, 2f, 3f, 4f});
 
-      NDArray out = NDArray.empty(shape, ctx);
+      NDArray out = NDArray.empty(shape, device);
 
       graph.setInput("x", arr).run();
       graph.getOutput(0, out);

@@ -67,9 +67,9 @@ class DSOModuleNode final : public ModuleNode {
 
   void Init(const std::string& name) {
     Load(name);
-    if (auto *ctx_addr =
-        reinterpret_cast<void**>(GetSymbol(runtime::symbol::tvm_module_ctx))) {
-      *ctx_addr = this;
+    if (auto *device_addr =
+        reinterpret_cast<void**>(GetSymbol(runtime::symbol::tvm_module_device))) {
+      *device_addr = this;
     }
     InitContextFunctions([this](const char* fname) {
         return GetSymbol(fname);

@@ -56,16 +56,16 @@ def test_ewise():
         b_np = f_numpy(a_np)
 
         def check_device(device):
-            ctx = tvm.context(device, 0)
-            if not ctx.exist:
+            device = tvm.context(device, 0)
+            if not device.exist:
                 print("Skip because %s is not enabled" % device)
                 return
             print("Running on target: %s" % device)
             with tvm.target.create(device):
                 s = topi.generic.schedule_injective(B)
             foo = tvm.build(s, [A, B], device, name=name)
-            a = tvm.nd.array(a_np, ctx)
-            b = tvm.nd.array(np.zeros_like(b_np), ctx)
+            a = tvm.nd.array(a_np, device)
+            b = tvm.nd.array(np.zeros_like(b_np), device)
             foo(a, b)
             tvm.testing.assert_allclose(b.asnumpy(), b_np, rtol=1e-5, atol=1e-5)
 
@@ -104,16 +104,16 @@ def test_ewise():
         b_np = np.isnan(a_np)
 
         def check_device(device):
-            ctx = tvm.context(device, 0)
-            if not ctx.exist:
+            device = tvm.context(device, 0)
+            if not device.exist:
                 print("Skip because %s is not enabled" % device)
                 return
             print("Running on target: %s" % device)
             with tvm.target.create(device):
                 s = topi.generic.schedule_injective(B)
             foo = tvm.build(s, [A, B], device, name="isnan")
-            a = tvm.nd.array(a_np, ctx)
-            b = tvm.nd.array(np.zeros_like(b_np), ctx)
+            a = tvm.nd.array(a_np, device)
+            b = tvm.nd.array(np.zeros_like(b_np), device)
             foo(a, b)
             tvm.testing.assert_allclose(b.asnumpy(), b_np, rtol=1e-5, atol=1e-5)
 
@@ -162,16 +162,16 @@ def test_cast():
         b_np = a_np.astype(to_dtype)
 
         for device in get_all_backend():
-            ctx = tvm.context(device, 0)
-            if not ctx.exist:
+            device = tvm.context(device, 0)
+            if not device.exist:
                 print("Skip because %s is not enabled" % device)
                 continue
             print("Running on target: %s" % device)
             with tvm.target.create(device):
                 s = topi.generic.schedule_injective(B)
             foo = tvm.build(s, [A, B], device)
-            a = tvm.nd.array(a_np, ctx)
-            b = tvm.nd.empty(shape=shape, dtype=to_dtype, ctx=ctx)
+            a = tvm.nd.array(a_np, device)
+            b = tvm.nd.empty(shape=shape, dtype=to_dtype, device=device)
             foo(a, b)
             tvm.testing.assert_allclose(b.asnumpy(), b_np)
 

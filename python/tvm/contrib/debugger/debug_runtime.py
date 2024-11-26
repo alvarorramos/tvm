@@ -30,7 +30,7 @@ _DUMP_ROOT_PREFIX = "tvmdbg_"
 _DUMP_PATH_PREFIX = "_tvmdbg_"
 
 
-def create(graph_json_str, libmod, ctx, dump_root=None):
+def create(graph_json_str, libmod, device, dump_root=None):
     """Create a runtime executor module given a graph and module.
 
     Parameters
@@ -43,7 +43,7 @@ def create(graph_json_str, libmod, ctx, dump_root=None):
     libmod : tvm.Module
         The module of the corresponding function.
 
-    ctx : TVMContext
+    device : TVMContext
         The context to deploy the module, can be local or remote.
 
     dump_root : str
@@ -67,11 +67,11 @@ def create(graph_json_str, libmod, ctx, dump_root=None):
             "config.cmake and rebuild TVM to enable debug mode"
         )
 
-    ctx, num_rpc_ctx, device_type_id = graph_runtime.get_device_ctx(libmod, ctx)
-    if num_rpc_ctx == len(ctx):
+    device, num_rpc_device, device_type_id = graph_runtime.get_device_device(libmod, device)
+    if num_rpc_device == len(device):
         libmod = rpc_base._ModuleHandle(libmod)
         try:
-            fcreate = ctx[0]._rpc_sess.get_function(
+            fcreate = device[0]._rpc_sess.get_function(
                 "tvm.graph_runtime_debug.remote_create"
             )
         except ValueError:
@@ -80,7 +80,7 @@ def create(graph_json_str, libmod, ctx, dump_root=None):
                 "config.cmake and rebuild TVM to enable debug mode"
             )
     func_obj = fcreate(graph_json_str, libmod, *device_type_id)
-    return GraphModuleDebug(func_obj, ctx, graph_json_str, dump_root)
+    return GraphModuleDebug(func_obj, device, graph_json_str, dump_root)
 
 
 class GraphModuleDebug(graph_runtime.GraphModule):
@@ -96,7 +96,7 @@ class GraphModuleDebug(graph_runtime.GraphModule):
     module : Module
         The interal tvm module that holds the actual graph functions.
 
-    ctx : TVMContext
+    device : TVMContext
         The context this module is under.
 
     graph_json_str : str or graph class
@@ -107,16 +107,16 @@ class GraphModuleDebug(graph_runtime.GraphModule):
         None will make a temp folder in /tmp/tvmdbg<rand_string> and does the dumping
     """
 
-    def __init__(self, module, ctx, graph_json_str, dump_root):
+    def __init__(self, module, device, graph_json_str, dump_root):
         self._dump_root = dump_root
         self._dump_path = None
         self._get_output_by_layer = module["get_output_by_layer"]
         self._run_individual = module["run_individual"]
         graph_runtime.GraphModule.__init__(self, module)
-        self._create_debug_env(graph_json_str, ctx)
+        self._create_debug_env(graph_json_str, device)
 
-    def _format_context(self, ctx):
-        return str(ctx[0]).upper().replace("(", ":").replace(")", "")
+    def _format_context(self, device):
+        return str(device[0]).upper().replace("(", ":").replace(")", "")
 
     def _ensure_dir(self, directory):
         """Create a directory if not exists
@@ -130,12 +130,12 @@ class GraphModuleDebug(graph_runtime.GraphModule):
         if not os.path.exists(directory):
             os.makedirs(directory, 0o700)
 
-    def _get_dump_path(self, ctx):
+    def _get_dump_path(self, device):
         """Make the graph and tensor dump folder and return the path.
 
         Parameters
         ----------
-        ctx : TVMContext
+        device : TVMContext
             The context this module is under.
 
         Returns
@@ -144,8 +144,8 @@ class GraphModuleDebug(graph_runtime.GraphModule):
             Directory path where the graph and node outputs will be stored.
         """
         # save to file
-        folder_name = _DUMP_PATH_PREFIX + "ctx_"
-        folder_name = folder_name + ctx.replace(":", "_")
+        folder_name = _DUMP_PATH_PREFIX + "device_"
+        folder_name = folder_name + device.replace(":", "_")
         path = os.path.join(self._dump_root, folder_name)
         self._ensure_dir(path)
         return path
@@ -154,7 +154,7 @@ class GraphModuleDebug(graph_runtime.GraphModule):
         if os.path.isdir(self._dump_root):
             shutil.rmtree(self._dump_root)
 
-    def _create_debug_env(self, graph_json, ctx):
+    def _create_debug_env(self, graph_json, device):
         """Create UI wrapper framework to handle multiple UI frontends for tvmdbg
 
         Parameters
@@ -165,7 +165,7 @@ class GraphModuleDebug(graph_runtime.GraphModule):
         nodes_list : list
             List of all the nodes presented in the graph
 
-        ctx : TVMContext
+        device : TVMContext
             The context this module is under.
         """
         # make the dump folder if not given
@@ -173,10 +173,10 @@ class GraphModuleDebug(graph_runtime.GraphModule):
             self._dump_root = tempfile.mkdtemp(prefix=_DUMP_ROOT_PREFIX)
 
         # format the context
-        ctx = self._format_context(ctx)
+        device = self._format_context(device)
 
         # updates the dumping directories
-        self._dump_path = self._get_dump_path(ctx)
+        self._dump_path = self._get_dump_path(device)
 
         # init the debug dumping environment
         self.debug_datum = debug_result.DebugResult(graph_json, self._dump_path)

@@ -626,7 +626,7 @@ void CodeGenSPIRV::VisitStmt_(const AttrStmt* op) {
 }
 
 void CodeGenSPIRV::VisitStmt_(const AssertStmt* op) {
-  With<arith::ConstraintContext> cctx(analyzer_.get(), op->condition);
+  With<arith::ConstraintContext> cdevice(analyzer_.get(), op->condition);
   this->VisitStmt(op->body);
 }
 

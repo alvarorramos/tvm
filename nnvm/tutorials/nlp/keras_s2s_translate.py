@@ -155,7 +155,7 @@ decoder_model = Model(
 # Creates NNVM graph definition from keras model file.
 from tvm.contrib import graph_runtime
 target = 'llvm'
-ctx = tvm.cpu(0)
+device = tvm.cpu(0)
 
 # Parse Encoder model
 sym, params = nnvm.frontend.from_keras(encoder_model)
@@ -168,7 +168,7 @@ with nnvm.compiler.build_config(opt_level=2):
 print("Encoder build ok.")
 
 # Create graph runtime for encoder model
-tvm_enc = graph_runtime.create(enc_graph, enc_lib, ctx)
+tvm_enc = graph_runtime.create(enc_graph, enc_lib, device)
 tvm_enc.set_input(**enc_params)
 
 # Parse Decoder model
@@ -184,7 +184,7 @@ with nnvm.compiler.build_config(opt_level=2):
 print("Decoder build ok.")
 
 # Create graph runtime for decoder model
-tvm_dec = graph_runtime.create(dec_graph, dec_lib, ctx)
+tvm_dec = graph_runtime.create(dec_graph, dec_lib, device)
 tvm_dec.set_input(**dec_params)
 
 # Decodes an input sequence.

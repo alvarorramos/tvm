@@ -56,10 +56,10 @@ def test_out_of_bounds_llvm(index_a, index_b):
     stmt = tvm.lower (s, [A, B, C], simple_mode=True)
     print (stmt)
     fadd = tvm.build (s, [A, B, C], tgt, target_host=tgt_host, name="myadd")
-    ctx = tvm.context(tgt, 0)
-    a = tvm.nd.array(np.random.uniform(size=1024).astype(A.dtype), ctx)
-    b = tvm.nd.array(np.random.uniform(size=1024).astype(B.dtype), ctx)
-    c = tvm.nd.array(np.zeros(1024, dtype=C.dtype), ctx)
+    device = tvm.context(tgt, 0)
+    a = tvm.nd.array(np.random.uniform(size=1024).astype(A.dtype), device)
+    b = tvm.nd.array(np.random.uniform(size=1024).astype(B.dtype), device)
+    c = tvm.nd.array(np.zeros(1024, dtype=C.dtype), device)
     fadd (a, b, c)
 
 def test_in_bounds_llvm():
@@ -73,10 +73,10 @@ def test_in_bounds_llvm():
     stmt = tvm.lower (s, [A, B, C], simple_mode=True)
     print (stmt)
     fadd = tvm.build (s, [A, B, C], tgt, target_host=tgt_host, name="myadd")
-    ctx = tvm.context(tgt, 0)
-    a = tvm.nd.array(np.random.uniform(size=1024).astype(A.dtype), ctx)
-    b = tvm.nd.array(np.random.uniform(size=1024).astype(B.dtype), ctx)
-    c = tvm.nd.array(np.zeros(1024, dtype=C.dtype), ctx)
+    device = tvm.context(tgt, 0)
+    a = tvm.nd.array(np.random.uniform(size=1024).astype(A.dtype), device)
+    b = tvm.nd.array(np.random.uniform(size=1024).astype(B.dtype), device)
+    c = tvm.nd.array(np.zeros(1024, dtype=C.dtype), device)
     fadd (a, b, c)
 
 @pytest.mark.xfail
@@ -94,11 +94,11 @@ def test_out_of_bounds_vectorize_llvm(nn, index_a, index_b):
     stmt = tvm.lower (s, [a, b, c], simple_mode=True)
     print (stmt)
     f = tvm.build(s, [a, b, c], tgt, target_host=tgt_host, name="myaddvec")
-    ctx = tvm.cpu(0)
+    device = tvm.cpu(0)
     n = nn
-    a = tvm.nd.array(np.random.uniform(size=(n)).astype(a.dtype), ctx)
-    b = tvm.nd.array(np.random.uniform(size=(n)).astype(a.dtype), ctx)
-    c = tvm.nd.array(np.zeros(n, dtype=c.dtype), ctx)
+    a = tvm.nd.array(np.random.uniform(size=(n)).astype(a.dtype), device)
+    b = tvm.nd.array(np.random.uniform(size=(n)).astype(a.dtype), device)
+    c = tvm.nd.array(np.zeros(n, dtype=c.dtype), device)
     f(a, b, c)
 
 def test_in_bounds_vectorize_llvm():
@@ -119,11 +119,11 @@ def test_in_bounds_vectorize_llvm():
     lowered_func = tvm.lower (s, [A, C], "llvm", simple_mode=False)
     print (lowered_func.body)
     f = tvm.build(s, [A, C], "llvm")
-    ctx = tvm.cpu(0)
+    device = tvm.cpu(0)
     # launch the kernel.
     a = tvm.nd.empty((n,), A.dtype).copyfrom(
         np.random.uniform(size=(n, lanes)))
-    c = tvm.nd.empty((n,), C.dtype, ctx)
+    c = tvm.nd.empty((n,), C.dtype, device)
     f(a, c)
     tvm.testing.assert_allclose(c.asnumpy(), a.asnumpy() + 1)
 
@@ -137,12 +137,12 @@ def test_in_bounds_loop_partition_basic_llvm():
     xo, xi = s[T].split(T.op.axis[0], factor=4)
     lowered_func = tvm.lower (s, [A, B, T], "llvm", simple_mode=False)
     print (lowered_func.body)
-    ctx = tvm.cpu(0)
+    device = tvm.cpu(0)
 
     f = tvm.build(s, [A, B, T], "llvm")
-    a = tvm.nd.array(np.random.uniform(size=(32,)).astype(A.dtype), ctx)
-    b = tvm.nd.array(np.random.uniform(size=(32,)).astype(B.dtype), ctx)
-    t = tvm.nd.empty((32,), T.dtype, ctx)
+    a = tvm.nd.array(np.random.uniform(size=(32,)).astype(A.dtype), device)
+    b = tvm.nd.array(np.random.uniform(size=(32,)).astype(B.dtype), device)
+    t = tvm.nd.empty((32,), T.dtype, device)
     f(a, b, t)
 
 @pytest.mark.xfail
@@ -156,12 +156,12 @@ def test_out_of_bounds_loop_partition_basic_llvm(index_a, index_b):
     xo, xi = s[T].split(T.op.axis[0], factor=4)
     lowered_func = tvm.lower (s, [A, B, T], "llvm", simple_mode=False)
     print (lowered_func.body)
-    ctx = tvm.cpu(0)
+    device = tvm.cpu(0)
 
     f = tvm.build(s, [A, B, T], "llvm")
-    a = tvm.nd.array(np.random.uniform(size=(32,)).astype(A.dtype), ctx)
-    b = tvm.nd.array(np.random.uniform(size=(32,)).astype(B.dtype), ctx)
-    t = tvm.nd.empty((32,), T.dtype, ctx)
+    a = tvm.nd.array(np.random.uniform(size=(32,)).astype(A.dtype), device)
+    b = tvm.nd.array(np.random.uniform(size=(32,)).astype(B.dtype), device)
+    t = tvm.nd.empty((32,), T.dtype, device)
     f(a, b, t)
 
 def test_in_bounds_const_loop_partition_ir():
@@ -222,12 +222,12 @@ def test_in_bounds_const_loop_partition_llvm():
         xo, xi = s[T].split(T.op.axis[0], factor=4)
         lowered_func = tvm.lower (s, [A, B, T], "llvm", simple_mode=False)
         print (lowered_func.body)
-        ctx = tvm.cpu(0)
+        device = tvm.cpu(0)
 
         f = tvm.build(s, [A, B, T], "llvm")
-        a = tvm.nd.array(np.random.uniform(size=(n,)).astype(A.dtype), ctx)
-        b = tvm.nd.array(np.random.uniform(size=(n,)).astype(B.dtype), ctx)
-        t = tvm.nd.empty((n,), T.dtype, ctx)
+        a = tvm.nd.array(np.random.uniform(size=(n,)).astype(A.dtype), device)
+        b = tvm.nd.array(np.random.uniform(size=(n,)).astype(B.dtype), device)
+        t = tvm.nd.empty((n,), T.dtype, device)
         f(a, b, t)
 
 @pytest.mark.xfail
@@ -242,12 +242,12 @@ def test_out_of_bounds_const_loop_partition_llvm(index_a, index_b):
         xo, xi = s[T].split(T.op.axis[0], factor=4)
         lowered_func = tvm.lower (s, [A, B, T], "llvm", simple_mode=False)
         print (lowered_func.body)
-        ctx = tvm.cpu(0)
+        device = tvm.cpu(0)
 
         f = tvm.build(s, [A, B, T], "llvm")
-        a = tvm.nd.array(np.random.uniform(size=(n,)).astype(A.dtype), ctx)
-        b = tvm.nd.array(np.random.uniform(size=(n,)).astype(B.dtype), ctx)
-        t = tvm.nd.empty((n,), T.dtype, ctx)
+        a = tvm.nd.array(np.random.uniform(size=(n,)).astype(A.dtype), device)
+        b = tvm.nd.array(np.random.uniform(size=(n,)).astype(B.dtype), device)
+        t = tvm.nd.empty((n,), T.dtype, device)
         f(a, b, t)
 
 def test_in_bounds_conv_llvm(loop_tiling=False):
@@ -276,14 +276,14 @@ def test_in_bounds_conv_llvm(loop_tiling=False):
         oho, owo, ohi, owi = s[conv].tile(oh, ow, 16, 16)
     lowered_func = tvm.lower(s, [data, kernel, conv], simple_mode=True)
     print (lowered_func.body)
-    ctx = tvm.cpu (0)
+    device = tvm.cpu (0)
 
     f = tvm.build(s, [data, kernel, conv], "llvm")
     data_input = tvm.nd.array(np.random.uniform(
-          size=(batch_size, in_channel, in_height, in_width)).astype(tvm.float32), ctx)
+          size=(batch_size, in_channel, in_height, in_width)).astype(tvm.float32), device)
     kernel_input = tvm.nd.array(np.random.uniform(
-          size=(kernel_height, kernel_width, in_channel, out_channel)).astype(tvm.float32), ctx)
-    conv_out = tvm.nd.empty ((batch_size, out_channel, out_height, out_width), tvm.float32, ctx)
+          size=(kernel_height, kernel_width, in_channel, out_channel)).astype(tvm.float32), device)
+    conv_out = tvm.nd.empty ((batch_size, out_channel, out_height, out_width), tvm.float32, device)
     f(data_input, kernel_input, conv_out)
 
 @pytest.mark.xfail
@@ -320,14 +320,14 @@ def test_out_of_bounds_conv_llvm(data_offsets, kernel_offsets, loop_tiling=False
         oho, owo, ohi, owi = s[conv].tile(oh, ow, 16, 16)
     lowered_func = tvm.lower(s, [data, kernel, conv], simple_mode=True)
     print (lowered_func.body)
-    ctx = tvm.cpu (0)
+    device = tvm.cpu (0)
 
     f = tvm.build(s, [data, kernel, conv], "llvm")
     data_input = tvm.nd.array(np.random.uniform(
-          size=(batch_size, in_channel, in_height, in_width)).astype(tvm.float32), ctx)
+          size=(batch_size, in_channel, in_height, in_width)).astype(tvm.float32), device)
     kernel_input = tvm.nd.array(np.random.uniform(
-          size=(kernel_height, kernel_width, in_channel, out_channel)).astype(tvm.float32), ctx)
-    conv_out = tvm.nd.empty ((batch_size, out_channel, out_height, out_width), tvm.float32, ctx)
+          size=(kernel_height, kernel_width, in_channel, out_channel)).astype(tvm.float32), device)
+    conv_out = tvm.nd.empty ((batch_size, out_channel, out_height, out_width), tvm.float32, device)
     f(data_input, kernel_input, conv_out)
 
 def test_in_bounds_tensors_with_same_shapes1D_llvm():
@@ -341,12 +341,12 @@ def test_in_bounds_tensors_with_same_shapes1D_llvm():
     s = tvm.create_schedule(T.op)
     lowered_func = tvm.lower (s, [A, B, T], "llvm", simple_mode=False)
     print (lowered_func.body)
-    ctx = tvm.cpu(0)
+    device = tvm.cpu(0)
 
     f = tvm.build(s, [A, B, T], "llvm")
-    a = tvm.nd.array(np.random.uniform(size=(32, )).astype(A.dtype), ctx)
-    b = tvm.nd.array(np.random.uniform(size=(32,)).astype(B.dtype), ctx)
-    t = tvm.nd.empty((32,), T.dtype, ctx)
+    a = tvm.nd.array(np.random.uniform(size=(32, )).astype(A.dtype), device)
+    b = tvm.nd.array(np.random.uniform(size=(32,)).astype(B.dtype), device)
+    t = tvm.nd.empty((32,), T.dtype, device)
     f(a, b, t)
 
 @pytest.mark.xfail
@@ -361,12 +361,12 @@ def test_out_of_bounds_tensors_with_diff_shapes1D_llvm(a_shape, b_shape, c_shape
     s = tvm.create_schedule(T.op)
     lowered_func = tvm.lower (s, [A, B, T], "llvm", simple_mode=False)
     print (lowered_func.body)
-    ctx = tvm.cpu(0)
+    device = tvm.cpu(0)
 
     f = tvm.build(s, [A, B, T], "llvm")
-    a = tvm.nd.array(np.random.uniform(size=(a_shape,)).astype(A.dtype), ctx)
-    b = tvm.nd.array(np.random.uniform(size=(b_shape,)).astype(B.dtype), ctx)
-    t = tvm.nd.empty((c_shape,), T.dtype, ctx)
+    a = tvm.nd.array(np.random.uniform(size=(a_shape,)).astype(A.dtype), device)
+    b = tvm.nd.array(np.random.uniform(size=(b_shape,)).astype(B.dtype), device)
+    t = tvm.nd.empty((c_shape,), T.dtype, device)
     f(a, b, t)
 
 def test_in_bounds_tensors_with_same_shapes2D_llvm():
@@ -380,12 +380,12 @@ def test_in_bounds_tensors_with_same_shapes2D_llvm():
     s = tvm.create_schedule(T.op)
     lowered_func = tvm.lower (s, [A, B, T], "llvm", simple_mode=False)
     print (lowered_func.body)
-    ctx = tvm.cpu(0)
+    device = tvm.cpu(0)
 
     f = tvm.build(s, [A, B, T], "llvm")
-    a = tvm.nd.array(np.random.uniform(size=(32, 32)).astype(A.dtype), ctx)
-    b = tvm.nd.array(np.random.uniform(size=(32, 32)).astype(B.dtype), ctx)
-    t = tvm.nd.empty((32, 32), T.dtype, ctx)
+    a = tvm.nd.array(np.random.uniform(size=(32, 32)).astype(A.dtype), device)
+    b = tvm.nd.array(np.random.uniform(size=(32, 32)).astype(B.dtype), device)
+    t = tvm.nd.empty((32, 32), T.dtype, device)
     f(a, b, t)
 
 @pytest.mark.xfail
@@ -400,12 +400,12 @@ def test_out_of_bounds_tensors_with_diff_shapes2D_llvm(a_shape, b_shape, c_shape
     s = tvm.create_schedule(T.op)
     lowered_func = tvm.lower (s, [A, B, T], "llvm", simple_mode=False)
     print (lowered_func.body)
-    ctx = tvm.cpu(0)
+    device = tvm.cpu(0)
 
     f = tvm.build(s, [A, B, T], "llvm")
-    a = tvm.nd.array(np.random.uniform(size=(a_shape[0],a_shape[1])).astype(A.dtype), ctx)
-    b = tvm.nd.array(np.random.uniform(size=(b_shape[0],b_shape[1])).astype(B.dtype), ctx)
-    t = tvm.nd.empty((c_shape[0],c_shape[1]), T.dtype, ctx)
+    a = tvm.nd.array(np.random.uniform(size=(a_shape[0],a_shape[1])).astype(A.dtype), device)
+    b = tvm.nd.array(np.random.uniform(size=(b_shape[0],b_shape[1])).astype(B.dtype), device)
+    t = tvm.nd.empty((c_shape[0],c_shape[1]), T.dtype, device)
     f(a, b, t)
 
 def test_in_bounds_tensors_with_same_shapes3D_llvm():
@@ -419,12 +419,12 @@ def test_in_bounds_tensors_with_same_shapes3D_llvm():
     s = tvm.create_schedule(T.op)
     lowered_func = tvm.lower (s, [A, B, T], "llvm", simple_mode=False)
     print (lowered_func.body)
-    ctx = tvm.cpu(0)
+    device = tvm.cpu(0)
 
     f = tvm.build(s, [A, B, T], "llvm")
-    a = tvm.nd.array(np.random.uniform(size=(32,32,32)).astype(A.dtype), ctx)
-    b = tvm.nd.array(np.random.uniform(size=(32,32,32)).astype(B.dtype), ctx)
-    t = tvm.nd.empty((32, 32, 32), T.dtype, ctx)
+    a = tvm.nd.array(np.random.uniform(size=(32,32,32)).astype(A.dtype), device)
+    b = tvm.nd.array(np.random.uniform(size=(32,32,32)).astype(B.dtype), device)
+    t = tvm.nd.empty((32, 32, 32), T.dtype, device)
     f(a, b, t)
 
 @pytest.mark.xfail
@@ -439,12 +439,12 @@ def test_out_of_bounds_tensors_with_diff_shapes3D_llvm(a_shape, b_shape, c_shape
     s = tvm.create_schedule(T.op)
     lowered_func = tvm.lower (s, [A, B, T], "llvm", simple_mode=False)
     print (lowered_func.body)
-    ctx = tvm.cpu(0)
+    device = tvm.cpu(0)
 
     f = tvm.build(s, [A, B, T], "llvm")
-    a = tvm.nd.array(np.random.uniform(size=(a_shape[0],a_shape[1], c_shape[2])).astype(A.dtype), ctx)
-    b = tvm.nd.array(np.random.uniform(size=(b_shape[0],b_shape[1], b_shape[2])).astype(B.dtype), ctx)
-    t = tvm.nd.empty((c_shape[0],c_shape[1],c_shape[2]), T.dtype, ctx)
+    a = tvm.nd.array(np.random.uniform(size=(a_shape[0],a_shape[1], c_shape[2])).astype(A.dtype), device)
+    b = tvm.nd.array(np.random.uniform(size=(b_shape[0],b_shape[1], b_shape[2])).astype(B.dtype), device)
+    t = tvm.nd.empty((c_shape[0],c_shape[1],c_shape[2]), T.dtype, device)
     f(a, b, t)
 
 @pytest.mark.xfail
@@ -462,12 +462,12 @@ def test_out_of_bounds_tensors_with_zero_shape_op_with_not_zero_shape_llvm():
     print (stmt)
     # build and invoke the kernel.
     f = tvm.build(s, [A, scale, D], "llvm")
-    ctx = tvm.cpu(0)
+    device = tvm.cpu(0)
     # launch the kernel.
-    a = tvm.nd.array(np.random.randint(0, 2, size=(n,)).astype(A.dtype), ctx)
+    a = tvm.nd.array(np.random.randint(0, 2, size=(n,)).astype(A.dtype), device)
     sc = tvm.nd.array(
-        np.random.randint(0, 2, size=()).astype(scale.dtype), ctx)
-    d = tvm.nd.empty((), D.dtype, ctx)
+        np.random.randint(0, 2, size=()).astype(scale.dtype), device)
+    d = tvm.nd.empty((), D.dtype, device)
     f(a, sc, d)
     d_np = np.sum(a.asnumpy()) * sc.asnumpy() + 1
     tvm.testing.assert_allclose(d.asnumpy(), d_np)

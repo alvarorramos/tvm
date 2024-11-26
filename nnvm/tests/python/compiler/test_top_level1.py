@@ -20,7 +20,7 @@ from tvm.contrib import graph_runtime
 import topi.testing
 import nnvm.symbol as sym
 import nnvm.compiler
-from nnvm.testing.config import ctx_list
+from nnvm.testing.config import device_list
 from nnvm.testing.check_computation import check_function
 
 def test_check_function():

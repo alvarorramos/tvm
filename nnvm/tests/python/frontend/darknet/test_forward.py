@@ -59,8 +59,8 @@ def _get_tvm_output(net, data, build_dtype='float32'):
     graph, library, params = nnvm.compiler.build(sym, target, shape_dict,
                                                  build_dtype, params=params)
     # Execute on TVM
-    ctx = tvm.cpu(0)
-    m = graph_runtime.create(graph, library, ctx)
+    device = tvm.cpu(0)
+    m = graph_runtime.create(graph, library, device)
     # set inputs
     m.set_input('data', tvm.nd.array(data.astype(dtype)))
     m.set_input(**params)

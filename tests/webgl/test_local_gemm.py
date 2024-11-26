@@ -42,13 +42,13 @@ def test_local_gemm():
     print("------opengl code------")
     print(f.imported_modules[0].get_source(fmt="gl"))
 
-    ctx = tvm.opengl()
+    device = tvm.opengl()
     n, m, l = nn, nn, nn
     a_np = np.random.uniform(low=0, high=10, size=(n, l)).astype(A.dtype)
     b_np = np.random.uniform(low=0, high=10, size=(m, l)).astype(B.dtype)
-    a = tvm.nd.array(a_np, ctx)
-    b = tvm.nd.array(b_np, ctx)
-    c = tvm.nd.array(np.zeros((n, m), dtype=C.dtype), ctx)
+    a = tvm.nd.array(a_np, device)
+    b = tvm.nd.array(b_np, device)
+    c = tvm.nd.array(np.zeros((n, m), dtype=C.dtype), device)
     f(a, b, c)
 
     tvm.testing.assert_allclose(c.asnumpy(), np.dot(a_np, b_np.T))

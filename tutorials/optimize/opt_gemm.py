@@ -73,11 +73,11 @@ dtype = "float32"
 # To get the best performance, please change the following line
 # to llvm -mcpu=core-avx2, or specific type of CPU you use
 target = 'llvm'
-ctx = tvm.context(target, 0)
+device = tvm.context(target, 0)
 
 # Random generated tensor for testing
-a = tvm.nd.array(numpy.random.rand(M, K).astype(dtype), ctx)
-b = tvm.nd.array(numpy.random.rand(K, N).astype(dtype), ctx)
+a = tvm.nd.array(numpy.random.rand(M, K).astype(dtype), device)
+b = tvm.nd.array(numpy.random.rand(K, N).astype(dtype), device)
 
 np_repeat = 100
 np_runing_time = timeit.timeit(setup='import numpy\n'
@@ -107,11 +107,11 @@ s = tvm.create_schedule(C.op)
 func = tvm.build(s, [A, B, C], target=target, name='mmult')
 assert func
 
-c = tvm.nd.array(numpy.zeros((M, N), dtype=dtype), ctx)
+c = tvm.nd.array(numpy.zeros((M, N), dtype=dtype), device)
 func(a, b, c)
 tvm.testing.assert_allclose(c.asnumpy(), answer, rtol=1e-5)
 
-evaluator = func.time_evaluator(func.entry_name, ctx, number=1)
+evaluator = func.time_evaluator(func.entry_name, device, number=1)
 print('Baseline: %f' % evaluator(a, b, c).mean)
 
 ################################################################################################
@@ -142,13 +142,13 @@ s[C].reorder(xo, yo, ko, ki, xi, yi)
 func = tvm.build(s, [A, B, C], target=target, name='mmult')
 assert func
 
-c = tvm.nd.array(numpy.zeros((M, N), dtype = dtype), ctx)
+c = tvm.nd.array(numpy.zeros((M, N), dtype = dtype), device)
 func(a, b, c)
 tvm.testing.assert_allclose(c.asnumpy(), answer, rtol=1e-5)
 
 # By simply tiling the loop 32x32, and hoisting ko, ki outside the blocking loops,
 # we can see big speedup compared with the baseline.
-evaluator = func.time_evaluator(func.entry_name, ctx, number=10)
+evaluator = func.time_evaluator(func.entry_name, device, number=10)
 print('Opt1: %f' % evaluator(a, b, c).mean)
 
 ################################################################################################
@@ -178,11 +178,11 @@ s[C].vectorize(yi)
 func = tvm.build(s, [A, B, C], target=target, name='mmult')
 assert func
 
-c = tvm.nd.array(numpy.zeros((M, N), dtype = dtype), ctx)
+c = tvm.nd.array(numpy.zeros((M, N), dtype = dtype), device)
 func(a, b, c)
 tvm.testing.assert_allclose(c.asnumpy(), answer, rtol=1e-5)
 
-evaluator = func.time_evaluator(func.entry_name, ctx, number=10)
+evaluator = func.time_evaluator(func.entry_name, device, number=10)
 print('Opt2: %f' % evaluator(a, b, c).mean)
 
 ################################################################################################
@@ -211,11 +211,11 @@ s[C].vectorize(yi)
 func = tvm.build(s, [A, B, C], target=target, name='mmult')
 assert func
 
-c = tvm.nd.array(numpy.zeros((M, N), dtype = dtype), ctx)
+c = tvm.nd.array(numpy.zeros((M, N), dtype = dtype), device)
 func(a, b, c)
 tvm.testing.assert_allclose(c.asnumpy(), answer, rtol=1e-5)
 
-evaluator = func.time_evaluator(func.entry_name, ctx, number=10)
+evaluator = func.time_evaluator(func.entry_name, device, number=10)
 print('Opt3: %f' % evaluator(a, b, c).mean)
 
 ################################################################################################
@@ -266,11 +266,11 @@ s[packedB].parallel(x)
 func = tvm.build(s, [A, B, C], target=target, name='mmult')
 assert func
 
-c = tvm.nd.array(numpy.zeros((M, N), dtype = dtype), ctx)
+c = tvm.nd.array(numpy.zeros((M, N), dtype = dtype), device)
 func(a, b, c)
 tvm.testing.assert_allclose(c.asnumpy(), answer, rtol=1e-5)
 
-evaluator = func.time_evaluator(func.entry_name, ctx, number=10)
+evaluator = func.time_evaluator(func.entry_name, device, number=10)
 print('Opt4: %f' % evaluator(a, b, c).mean)
 
 ################################################################################################
@@ -312,11 +312,11 @@ s[packedB].parallel(x)
 func = tvm.build(s, [A, B, C], target=target, name='mmult')
 assert func
 
-c = tvm.nd.array(numpy.zeros((M, N), dtype = dtype), ctx)
+c = tvm.nd.array(numpy.zeros((M, N), dtype = dtype), device)
 func(a, b, c)
 tvm.testing.assert_allclose(c.asnumpy(), answer, rtol=1e-5)
 
-evaluator = func.time_evaluator(func.entry_name, ctx, number=10)
+evaluator = func.time_evaluator(func.entry_name, device, number=10)
 print('Opt5: %f' % evaluator(a, b, c).mean)
 
 ################################################################################################
@@ -355,11 +355,11 @@ s[packedB].parallel(x)
 func = tvm.build(s, [A, B, C], target=target, name = 'mmult')
 assert func
 
-c = tvm.nd.array(numpy.zeros((M, N), dtype = dtype), ctx)
+c = tvm.nd.array(numpy.zeros((M, N), dtype = dtype), device)
 func(a, b, c)
 tvm.testing.assert_allclose(c.asnumpy(), answer, rtol=1e-5)
 
-evaluator = func.time_evaluator(func.entry_name, ctx, number=50)
+evaluator = func.time_evaluator(func.entry_name, device, number=50)
 opt6_time = evaluator(a, b, c).mean
 print('Opt6: %f' % opt6_time)
 

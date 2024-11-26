@@ -27,8 +27,8 @@ def verify_broadcast_to_ele(in_shape, out_shape, fbcast):
     B = fbcast(A, out_shape)
 
     def check_device(device):
-        ctx = tvm.context(device, 0)
-        if not ctx.exist:
+        device = tvm.context(device, 0)
+        if not device.exist:
             print("Skip because %s is not enabled" % device)
             return
         print("Running on target: %s" % device)
@@ -37,8 +37,8 @@ def verify_broadcast_to_ele(in_shape, out_shape, fbcast):
         foo = tvm.build(s, [A, B], device, name="broadcast_to")
         data_npy = np.random.uniform(size=in_shape).astype(A.dtype)
         out_npy = np.broadcast_to(data_npy, out_shape)
-        data_nd = tvm.nd.array(data_npy, ctx)
-        out_nd = tvm.nd.array(np.empty(out_shape).astype(B.dtype), ctx)
+        data_nd = tvm.nd.array(data_npy, device)
+        out_nd = tvm.nd.array(np.empty(out_shape).astype(B.dtype), device)
         foo(data_nd, out_nd)
         tvm.testing.assert_allclose(out_nd.asnumpy(), out_npy)
 
@@ -62,7 +62,7 @@ def verify_broadcast_binary_ele(lhs_shape, rhs_shape,
         assert(isinstance(C, tvm.expr.Expr))
         return
 
-    def gen_operand(shape, low, high, ctx):
+    def gen_operand(shape, low, high, device):
         if shape is None:
             npy = float(np.random.uniform(low=low, high=high))
             if dtype.startswith('int'):
@@ -71,12 +71,12 @@ def verify_broadcast_binary_ele(lhs_shape, rhs_shape,
         else:
             npy = np.random.uniform(low=low, high=high,
                                     size=shape).astype(dtype)
-            nd = tvm.nd.array(npy, ctx)
+            nd = tvm.nd.array(npy, device)
         return npy, nd
 
     def check_device(device):
-        ctx = tvm.context(device, 0)
-        if not ctx.exist:
+        device = tvm.context(device, 0)
+        if not device.exist:
             print("Skip because %s is not enabled" % device)
             return
         print("Running on target: %s" % device)
@@ -84,8 +84,8 @@ def verify_broadcast_binary_ele(lhs_shape, rhs_shape,
             s = topi.generic.schedule_broadcast(C)
         foo = tvm.build(s, [A, B, C], device, name="broadcast_binary" + "_" + ftopi.__name__)
 
-        lhs_npy, lhs_nd = gen_operand(lhs_shape, lhs_min, lhs_max, ctx)
-        rhs_npy, rhs_nd = gen_operand(rhs_shape, rhs_min, rhs_max, ctx)
+        lhs_npy, lhs_nd = gen_operand(lhs_shape, lhs_min, lhs_max, device)
+        rhs_npy, rhs_nd = gen_operand(rhs_shape, rhs_min, rhs_max, device)
         out_npy = fnumpy(lhs_npy, rhs_npy)
 
         if fnumpy == np.floor_divide:
@@ -98,10 +98,10 @@ def verify_broadcast_binary_ele(lhs_shape, rhs_shape,
             if mask.any():
                 lhs_npy = lhs_npy + mask * 1e-3  * rhs_npy
                 lhs_npy = lhs_npy.astype(dtype)
-                lhs_nd = tvm.nd.array(lhs_npy, ctx) if lhs_shape is not None else lhs_npy.item()
+                lhs_nd = tvm.nd.array(lhs_npy, device) if lhs_shape is not None else lhs_npy.item()
                 out_npy = fnumpy(lhs_npy, rhs_npy)
 
-        out_nd = tvm.nd.array(np.empty(out_npy.shape).astype(C.dtype), ctx)
+        out_nd = tvm.nd.array(np.empty(out_npy.shape).astype(C.dtype), device)
         foo(lhs_nd, rhs_nd, out_nd)
         tvm.testing.assert_allclose(out_nd.asnumpy(), out_npy, rtol=1E-4, atol=1E-4)
 
@@ -246,8 +246,8 @@ def test_logical_single_ele():
             return
 
         def check_device(device):
-            ctx = tvm.context(device, 0)
-            if not ctx.exist:
+            device = tvm.context(device, 0)
+            if not device.exist:
                 print("Skip because %s is not enabled" % device)
                 return
             print("Running on target: %s" % device)
@@ -256,10 +256,10 @@ def test_logical_single_ele():
             foo = tvm.build(s, [A, B], device, name=name)
 
             data_npy = indata.astype(A.dtype)
-            data_nd = tvm.nd.array(data_npy, ctx)
+            data_nd = tvm.nd.array(data_npy, device)
 
             out_npy = f_numpy(indata)
-            out_nd = tvm.nd.array(np.empty(data_npy.shape).astype(B.dtype), ctx)
+            out_nd = tvm.nd.array(np.empty(data_npy.shape).astype(B.dtype), device)
             foo(data_nd, out_nd)
             tvm.testing.assert_allclose(out_nd.asnumpy(), out_npy)
 
@@ -288,8 +288,8 @@ def test_logical_binary_ele():
             return
 
         def check_device(device):
-            ctx = tvm.context(device, 0)
-            if not ctx.exist:
+            device = tvm.context(device, 0)
+            if not device.exist:
                 print("Skip because %s is not enabled" % device)
                 return
             print("Running on target: %s" % device)
@@ -297,11 +297,11 @@ def test_logical_binary_ele():
                 s = topi.generic.schedule_broadcast(C)
             foo = tvm.build(s, [A, B, C], device, name=name)
 
-            lhs_nd = tvm.nd.array(lhs, ctx)
-            rhs_nd = tvm.nd.array(rhs, ctx)
+            lhs_nd = tvm.nd.array(lhs, device)
+            rhs_nd = tvm.nd.array(rhs, device)
 
             out_npy = f_numpy(lhs, rhs)
-            out_nd = tvm.nd.array(np.empty(out_npy.shape).astype(C.dtype), ctx)
+            out_nd = tvm.nd.array(np.empty(out_npy.shape).astype(C.dtype), device)
             foo(lhs_nd, rhs_nd, out_nd)
             tvm.testing.assert_allclose(out_nd.asnumpy(), out_npy, rtol=1E-4, atol=1E-4)
 

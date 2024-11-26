@@ -35,17 +35,17 @@ namespace runtime {
 
 class ROCMDeviceAPI final : public DeviceAPI {
  public:
-  void SetDevice(TVMContext ctx) final {
-    ROCM_CALL(hipSetDevice(ctx.device_id));
+  void SetDevice(TVMContext device) final {
+    ROCM_CALL(hipSetDevice(device.device_id));
   }
-  void GetAttr(TVMContext ctx, DeviceAttrKind kind, TVMRetValue* rv) final {
+  void GetAttr(TVMContext device, DeviceAttrKind kind, TVMRetValue* rv) final {
     int value = 0;
     switch (kind) {
       case kExist: {
         if (hsa_init() == HSA_STATUS_SUCCESS) {
           int dev;
           ROCM_CALL(hipGetDeviceCount(&dev));
-          value = dev > ctx.device_id ? 1 : 0;
+          value = dev > device.device_id ? 1 : 0;
           hsa_shut_down();
         } else {
           value = 0;
@@ -54,26 +54,26 @@ class ROCMDeviceAPI final : public DeviceAPI {
       }
       case kMaxThreadsPerBlock: {
         ROCM_CALL(hipDeviceGetAttribute(
-            &value, hipDeviceAttributeMaxThreadsPerBlock, ctx.device_id));
+            &value, hipDeviceAttributeMaxThreadsPerBlock, device.device_id));
         break;
       }
       case kWarpSize: {
         ROCM_CALL(hipDeviceGetAttribute(&value, hipDeviceAttributeWarpSize,
-                                        ctx.device_id));
+                                        device.device_id));
         break;
       }
       case kMaxSharedMemoryPerBlock: {
         ROCM_CALL(hipDeviceGetAttribute(
-            &value, hipDeviceAttributeMaxSharedMemoryPerBlock, ctx.device_id));
+            &value, hipDeviceAttributeMaxSharedMemoryPerBlock, device.device_id));
         break;
       }
       case kComputeVersion: {
         std::ostringstream os;
         ROCM_CALL(hipDeviceGetAttribute(
-            &value, hipDeviceAttributeComputeCapabilityMajor, ctx.device_id));
+            &value, hipDeviceAttributeComputeCapabilityMajor, device.device_id));
         os << value << ".";
         ROCM_CALL(hipDeviceGetAttribute(
-            &value, hipDeviceAttributeComputeCapabilityMinor, ctx.device_id));
+            &value, hipDeviceAttributeComputeCapabilityMinor, device.device_id));
         os << value;
         *rv = os.str();
         return;
@@ -82,22 +82,22 @@ class ROCMDeviceAPI final : public DeviceAPI {
         return;
       case kMaxClockRate: {
         ROCM_CALL(hipDeviceGetAttribute(&value, hipDeviceAttributeClockRate,
-                                        ctx.device_id));
+                                        device.device_id));
         break;
       }
       case kMultiProcessorCount: {
         ROCM_CALL(hipDeviceGetAttribute(
-            &value, hipDeviceAttributeMultiprocessorCount, ctx.device_id));
+            &value, hipDeviceAttributeMultiprocessorCount, device.device_id));
         break;
       }
       case kMaxThreadDimensions: {
         int dims[3];
         ROCM_CALL(hipDeviceGetAttribute(
-            &dims[0], hipDeviceAttributeMaxBlockDimX, ctx.device_id));
+            &dims[0], hipDeviceAttributeMaxBlockDimX, device.device_id));
         ROCM_CALL(hipDeviceGetAttribute(
-            &dims[1], hipDeviceAttributeMaxBlockDimY, ctx.device_id));
+            &dims[1], hipDeviceAttributeMaxBlockDimY, device.device_id));
         ROCM_CALL(hipDeviceGetAttribute(
-            &dims[2], hipDeviceAttributeMaxBlockDimZ, ctx.device_id));
+            &dims[2], hipDeviceAttributeMaxBlockDimZ, device.device_id));
 
         std::stringstream ss;
         ss << "[" << dims[0] << ", " << dims[1] << ", " << dims[2] << "]";
@@ -106,70 +106,70 @@ class ROCMDeviceAPI final : public DeviceAPI {
       }
       case kGcnArch: {
         hipDeviceProp_t prop;
-        ROCM_CALL(hipGetDeviceProperties(&prop, ctx.device_id));
+        ROCM_CALL(hipGetDeviceProperties(&prop, device.device_id));
         *rv = prop.gcnArch;
         return;
       }
     }
     *rv = value;
   }
-  void* AllocDataSpace(TVMContext ctx, size_t nbytes, size_t alignment,
+  void* AllocDataSpace(TVMContext device, size_t nbytes, size_t alignment,
                        TVMType type_hint) final {
-    ROCM_CALL(hipSetDevice(ctx.device_id));
+    ROCM_CALL(hipSetDevice(device.device_id));
     CHECK_EQ(256 % alignment, 0U) << "ROCM space is aligned at 256 bytes";
     void* ret;
     ROCM_CALL(hipMalloc(&ret, nbytes));
     return ret;
   }
 
-  void FreeDataSpace(TVMContext ctx, void* ptr) final {
-    ROCM_CALL(hipSetDevice(ctx.device_id));
+  void FreeDataSpace(TVMContext device, void* ptr) final {
+    ROCM_CALL(hipSetDevice(device.device_id));
     ROCM_CALL(hipFree(ptr));
   }
 
   void CopyDataFromTo(const void* from, size_t from_offset, void* to,
-                      size_t to_offset, size_t size, TVMContext ctx_from,
-                      TVMContext ctx_to, TVMType type_hint,
+                      size_t to_offset, size_t size, TVMContext device_from,
+                      TVMContext device_to, TVMType type_hint,
                       TVMStreamHandle stream) final {
     hipStream_t hip_stream = static_cast<hipStream_t>(stream);
     from = static_cast<const char*>(from) + from_offset;
     to = static_cast<char*>(to) + to_offset;
-    if (ctx_from.device_type == kDLROCM && ctx_to.device_type == kDLROCM) {
-      ROCM_CALL(hipSetDevice(ctx_from.device_id));
-      if (ctx_from.device_id == ctx_to.device_id) {
+    if (device_from.device_type == kDLROCM && device_to.device_type == kDLROCM) {
+      ROCM_CALL(hipSetDevice(device_from.device_id));
+      if (device_from.device_id == device_to.device_id) {
         GPUCopy(from, to, size, hipMemcpyDeviceToDevice, hip_stream);
       } else {
-        hipMemcpyPeerAsync(to, ctx_to.device_id, from, ctx_from.device_id, size,
+        hipMemcpyPeerAsync(to, device_to.device_id, from, device_from.device_id, size,
                            hip_stream);
       }
-    } else if (ctx_from.device_type == kDLROCM &&
-               ctx_to.device_type == kDLCPU) {
-      ROCM_CALL(hipSetDevice(ctx_from.device_id));
+    } else if (device_from.device_type == kDLROCM &&
+               device_to.device_type == kDLCPU) {
+      ROCM_CALL(hipSetDevice(device_from.device_id));
       GPUCopy(from, to, size, hipMemcpyDeviceToHost, hip_stream);
-    } else if (ctx_from.device_type == kDLCPU &&
-               ctx_to.device_type == kDLROCM) {
-      ROCM_CALL(hipSetDevice(ctx_to.device_id));
+    } else if (device_from.device_type == kDLCPU &&
+               device_to.device_type == kDLROCM) {
+      ROCM_CALL(hipSetDevice(device_to.device_id));
       GPUCopy(from, to, size, hipMemcpyHostToDevice, hip_stream);
     } else {
       LOG(FATAL) << "expect copy from/to GPU or between GPU";
     }
   }
 
-  void StreamSync(TVMContext ctx, TVMStreamHandle stream) final {
-    ROCM_CALL(hipSetDevice(ctx.device_id));
+  void StreamSync(TVMContext device, TVMStreamHandle stream) final {
+    ROCM_CALL(hipSetDevice(device.device_id));
     ROCM_CALL(hipStreamSynchronize(static_cast<hipStream_t>(stream)));
   }
 
-  void SetStream(TVMContext ctx, TVMStreamHandle stream) final {
+  void SetStream(TVMContext device, TVMStreamHandle stream) final {
     ROCMThreadEntry::ThreadLocal()->stream = static_cast<hipStream_t>(stream);
   }
 
-  void* AllocWorkspace(TVMContext ctx, size_t size, TVMType type_hint) final {
-    return ROCMThreadEntry::ThreadLocal()->pool.AllocWorkspace(ctx, size);
+  void* AllocWorkspace(TVMContext device, size_t size, TVMType type_hint) final {
+    return ROCMThreadEntry::ThreadLocal()->pool.AllocWorkspace(device, size);
   }
 
-  void FreeWorkspace(TVMContext ctx, void* data) final {
-    ROCMThreadEntry::ThreadLocal()->pool.FreeWorkspace(ctx, data);
+  void FreeWorkspace(TVMContext device, void* data) final {
+    ROCMThreadEntry::ThreadLocal()->pool.FreeWorkspace(device, data);
   }
 
   static const std::shared_ptr<ROCMDeviceAPI>& Global() {

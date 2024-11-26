@@ -57,7 +57,7 @@ def try_remote_save_load():
     remote = rpc.connect(proxy_host, proxy_port, key="js")
 
     temp = util.tempdir()
-    ctx = remote.opengl(0)
+    device = remote.opengl(0)
     path_obj = temp.relpath("myadd.bc")
     path_dso = temp.relpath("myadd.js")
     path_gl = temp.relpath("myadd.gl")
@@ -85,9 +85,9 @@ def try_remote_save_load():
     fhost.import_module(fdev)
 
     print('running...')
-    a = tvm.nd.array(np.random.uniform(size=16).astype(A.dtype), ctx)
-    b = tvm.nd.array(np.zeros(16, dtype=A.dtype), ctx)
-    c = tvm.nd.array(np.zeros(16, dtype=C.dtype), ctx)
+    a = tvm.nd.array(np.random.uniform(size=16).astype(A.dtype), device)
+    b = tvm.nd.array(np.zeros(16, dtype=A.dtype), device)
+    c = tvm.nd.array(np.zeros(16, dtype=C.dtype), device)
     fhost(a, b, c)
     tvm.testing.assert_allclose(c.asnumpy(), a.asnumpy() + b.asnumpy())
 

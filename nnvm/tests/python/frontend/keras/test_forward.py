@@ -18,7 +18,7 @@ import numpy as np
 import nnvm
 import tvm
 from tvm.contrib import graph_runtime
-from nnvm.testing.config import ctx_list
+from nnvm.testing.config import device_list
 import keras
 
 # prevent keras from using up all gpu memory
@@ -40,12 +40,12 @@ def verify_keras_frontend(keras_model, need_transpose=True):
     def get_keras_output(xs, dtype='float32'):
         return keras_model.predict(xs)
 
-    def get_tvm_output(xs, target, ctx, dtype='float32'):
+    def get_tvm_output(xs, target, device, dtype='float32'):
         sym, params = nnvm.frontend.from_keras(keras_model)
         shape_dict = {name: x.shape for (name, x) in zip(keras_model.input_names, xs)}
         with nnvm.compiler.build_config(opt_level=2):
             graph, lib, params = nnvm.compiler.build(sym, target, shape_dict, params=params)
-        m = graph_runtime.create(graph, lib, ctx)
+        m = graph_runtime.create(graph, lib, device)
         for name, x in zip(keras_model.input_names, xs):
             m.set_input(name, tvm.nd.array(x.astype(dtype)))
         m.set_input(**params)
@@ -63,8 +63,8 @@ def verify_keras_frontend(keras_model, need_transpose=True):
     keras_out = get_keras_output(xs)
 
     keras_out = keras_out if isinstance(keras_out, list) else [keras_out]
-    for target, ctx in ctx_list():
-        tvm_out = get_tvm_output([to_channels_first(x) for x in xs] if need_transpose else xs, target, ctx)
+    for target, device in device_list():
+        tvm_out = get_tvm_output([to_channels_first(x) for x in xs] if need_transpose else xs, target, device)
         for kout, tout in zip(keras_out, tvm_out):
             if need_transpose:
                 tout = to_channels_last(tout)

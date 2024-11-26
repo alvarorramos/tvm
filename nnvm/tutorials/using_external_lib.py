@@ -66,9 +66,9 @@ target = "cuda"
 graph, lib, params = nnvm.compiler.build(
     net, target, shape={"data": data_shape}, params=params)
 
-ctx = tvm.context(target, 0)
+device = tvm.context(target, 0)
 data = np.random.uniform(-1, 1, size=data_shape).astype("float32")
-module = runtime.create(graph, lib, ctx)
+module = runtime.create(graph, lib, device)
 module.set_input(**params)
 module.set_input("data", data)
 module.run()
@@ -175,9 +175,9 @@ target = "cuda -libs=cudnn" # use cudnn for convolution
 graph, lib, params = nnvm.compiler.build(
     net, target, shape={"data": data_shape}, params=params)
 
-ctx = tvm.context(target, 0)
+device = tvm.context(target, 0)
 data = np.random.uniform(-1, 1, size=data_shape).astype("float32")
-module = runtime.create(graph, lib, ctx)
+module = runtime.create(graph, lib, device)
 module.set_input(**params)
 module.set_input("data", data)
 module.run()

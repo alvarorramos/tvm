@@ -46,9 +46,9 @@ class StackVM {
   /*!
    * \brief Invoke the StackVM program.
    * \param args The arguments to the StackVM.
-   * \param mod_ctx The module context used in running.
+   * \param mod_device The module context used in running.
    */
-  void Run(const TVMArgs& args, runtime::ModuleNode* mod_ctx) const;
+  void Run(const TVMArgs& args, runtime::ModuleNode* mod_device) const;
   /*!
    * \brief The opcode of stack vm
    * \note Notation
@@ -299,7 +299,7 @@ class StackVM {
     /*! \brief program counter */
     int64_t pc{0};
     /*! \brief The current module context of stackvm */
-    runtime::ModuleNode* mod_ctx{nullptr};
+    runtime::ModuleNode* mod_device{nullptr};
   };
   /*! \brief Initialize local cache*/
   void InitCache();

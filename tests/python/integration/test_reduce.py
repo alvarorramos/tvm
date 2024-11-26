@@ -38,10 +38,10 @@ def test_reduce_prims():
 
         # one line to build the function.
         def check_device(device, host="llvm"):
-            ctx = tvm.context(device, 0)
+            device = tvm.context(device, 0)
             if not tvm.module.enabled(host):
                 return
-            if not ctx.exist:
+            if not device.exist:
                 print("skip because %s is not enabled.." % device)
                 return
             freduce = tvm.build(s,
@@ -51,8 +51,8 @@ def test_reduce_prims():
             # launch the kernel.
             n = 1028
             m = 129
-            x = tvm.nd.array(np.random.uniform(size=(n, m)).astype(A.dtype), ctx)
-            y = tvm.nd.array(np.zeros(n, dtype=B.dtype), ctx)
+            x = tvm.nd.array(np.random.uniform(size=(n, m)).astype(A.dtype), device)
+            y = tvm.nd.array(np.zeros(n, dtype=B.dtype), device)
             freduce(x, y)
             npy = y.asnumpy()
             npy[:2] = 0
@@ -83,15 +83,15 @@ def test_rfactor():
     def check_target(target="llvm"):
         if not tvm.module.enabled(target):
             return
-        ctx = tvm.cpu(0)
+        device = tvm.cpu(0)
         fapi = tvm.lower(s, args=[A, B])
         fsum = tvm.build(fapi,
                          target=target,
                          name="mysum")
         # launch the kernel.
         n = 1027
-        a = tvm.nd.array(np.random.uniform(size=(n,)).astype(A.dtype), ctx)
-        b  = tvm.nd.array(np.zeros(1, dtype=B.dtype), ctx)
+        a = tvm.nd.array(np.random.uniform(size=(n,)).astype(A.dtype), device)
+        b  = tvm.nd.array(np.zeros(1, dtype=B.dtype), device)
         fsum(a, b)
         res = np.sum(a.asnumpy(), axis=0)
         tvm.testing.assert_allclose(
@@ -113,15 +113,15 @@ def test_rfactor_factor_axis():
     def check_target(target="llvm"):
         if not tvm.module.enabled(target):
             return
-        ctx = tvm.cpu(0)
+        device = tvm.cpu(0)
         fapi = tvm.lower(s, args=[A, B])
         fsum = tvm.build(fapi,
                          target=target,
                          name="mysum")
         # launch the kernel.
         n = 1027
-        a = tvm.nd.array(np.random.uniform(size=(n,)).astype(A.dtype), ctx)
-        b  = tvm.nd.array(np.zeros(1, dtype=B.dtype), ctx)
+        a = tvm.nd.array(np.random.uniform(size=(n,)).astype(A.dtype), device)
+        b  = tvm.nd.array(np.zeros(1, dtype=B.dtype), device)
         fsum(a, b)
         res = np.sum(a.asnumpy(), axis=0)
         tvm.testing.assert_allclose(
@@ -154,8 +154,8 @@ def test_rfactor_threads():
 
     # one line to build the function.
     def check_target(device, host="stackvm"):
-        ctx = tvm.context(device, 0)
-        if not ctx.exist:
+        device = tvm.context(device, 0)
+        if not device.exist:
             print("skip because %s is not enabled.." % device)
             return
 
@@ -166,8 +166,8 @@ def test_rfactor_threads():
         # launch the kernel.
         n = nn
         m = mm
-        a = tvm.nd.array(np.random.uniform(size=(m, n)).astype(A.dtype), ctx)
-        b  = tvm.nd.array(np.zeros(m, dtype=B.dtype), ctx)
+        a = tvm.nd.array(np.random.uniform(size=(m, n)).astype(A.dtype), device)
+        b  = tvm.nd.array(np.zeros(m, dtype=B.dtype), device)
         fsum(a, b)
         res = np.sum(a.asnumpy(), axis=1)
         res[:2] = 0
@@ -209,8 +209,8 @@ def test_rfactor_elemwise_threads():
 
     # one line to build the function.
     def check_target(device, host="stackvm"):
-        ctx = tvm.context(device, 0)
-        if not ctx.exist:
+        device = tvm.context(device, 0)
+        if not device.exist:
             print("skip because %s is not enabled.." % device)
             return
         fapi = tvm.lower(s, args=[A, C])
@@ -218,8 +218,8 @@ def test_rfactor_elemwise_threads():
                          target=device,
                          name="mysum")
         # launch the kernel.
-        a = tvm.nd.array(np.random.uniform(size=(m, n)).astype(A.dtype), ctx)
-        b  = tvm.nd.array(np.zeros(m, dtype=B.dtype), ctx)
+        a = tvm.nd.array(np.random.uniform(size=(m, n)).astype(A.dtype), device)
+        b  = tvm.nd.array(np.zeros(m, dtype=B.dtype), device)
         fsum(a, b)
         res = np.sum(a.asnumpy(), axis=1) + 2
         tvm.testing.assert_allclose(
@@ -255,7 +255,7 @@ def test_argmax():
         if not tvm.module.enabled(device):
             print("skip because %s is not enabled.." % device)
             return
-        ctx = tvm.context(device, 0)
+        device = tvm.context(device, 0)
         fapi = tvm.lower(s, args=[idx, val, T0, T1])
         fargmax = tvm.build(fapi,
                             target='llvm',
@@ -267,10 +267,10 @@ def test_argmax():
         np_val = np.random.uniform(size=(mm, nn)).astype('float32')
         np_res = np.argmax(np_val, axis=1)
 
-        nd_idx  = tvm.nd.array(np_idx, ctx)
-        nd_val  = tvm.nd.array(np_val, ctx)
-        nd_res0 = tvm.nd.array(np.zeros(mm, dtype='int32'), ctx)
-        nd_res1 = tvm.nd.array(np.zeros(mm, dtype='float32'), ctx)
+        nd_idx  = tvm.nd.array(np_idx, device)
+        nd_val  = tvm.nd.array(np_val, device)
+        nd_res0 = tvm.nd.array(np.zeros(mm, dtype='int32'), device)
+        nd_res1 = tvm.nd.array(np.zeros(mm, dtype='float32'), device)
         fargmax(nd_idx, nd_val, nd_res0, nd_res1)
         tvm.testing.assert_allclose(np_res, nd_res0.asnumpy())
 
@@ -314,8 +314,8 @@ def test_rfactor_argmax():
     s[B0].set_store_predicate(thread_x.var.equal(0))
 
     def check_target(device):
-        ctx = tvm.context(device, 0)
-        if not ctx.exist:
+        device = tvm.context(device, 0)
+        if not device.exist:
             print("skip because %s is not enabled.." % device)
             return
         fapi = tvm.lower(s, args=[A0, A1, B0, B1])
@@ -327,10 +327,10 @@ def test_rfactor_argmax():
         np_val = np.random.uniform(size=(mm, nn)).astype('float32')
         np_res = np.argmax(np_val, axis=1)
 
-        nd_idx  = tvm.nd.array(np_idx, ctx)
-        nd_val  = tvm.nd.array(np_val, ctx)
-        nd_res0 = tvm.nd.array(np.zeros(mm, dtype='int32'), ctx)
-        nd_res1 = tvm.nd.array(np.zeros(mm, dtype='float32'), ctx)
+        nd_idx  = tvm.nd.array(np_idx, device)
+        nd_val  = tvm.nd.array(np_val, device)
+        nd_res0 = tvm.nd.array(np.zeros(mm, dtype='int32'), device)
+        nd_res1 = tvm.nd.array(np.zeros(mm, dtype='float32'), device)
         fargmax(nd_idx, nd_val, nd_res0, nd_res1)
         tvm.testing.assert_allclose(np_res, nd_res0.asnumpy())
 

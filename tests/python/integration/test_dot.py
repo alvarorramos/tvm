@@ -57,10 +57,10 @@ def test_dot():
             return
         f = tvm.codegen.build_module(fapi, target)
         # verify
-        ctx = tvm.cpu(0)
-        a = tvm.nd.array(np.random.uniform(size=(nn,)).astype(A.dtype), ctx)
-        b = tvm.nd.array(np.random.uniform(size=(nn,)).astype(B.dtype), ctx)
-        c  = tvm.nd.array(np.zeros((1,), dtype=C.dtype), ctx)
+        device = tvm.cpu(0)
+        a = tvm.nd.array(np.random.uniform(size=(nn,)).astype(A.dtype), device)
+        b = tvm.nd.array(np.random.uniform(size=(nn,)).astype(B.dtype), device)
+        c  = tvm.nd.array(np.zeros((1,), dtype=C.dtype), device)
         f(a, b, c)
         tvm.testing.assert_allclose(
             c.asnumpy(), np.dot(a.asnumpy(), b.asnumpy()), rtol=1e-4)

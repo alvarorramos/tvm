@@ -92,7 +92,7 @@ Expr RequantizeLower(const Expr& input_tensor, const RequantizeAttrs* param,
  * \brief Forward rewrite the requantize op.
  * \param ref_call The original call that will be lowered.
  * \param new_args The new mutated args to the call node.
- * \param ctx The node context.
+ * \param device The node context.
  * \return The sequence of Relay ops for requantize op.
  * \note Lowering of the requantize operation. The requantize operator converts
  *       one quantized tensor to another quantized tensor. For the output

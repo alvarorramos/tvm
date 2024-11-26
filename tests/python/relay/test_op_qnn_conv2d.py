@@ -183,7 +183,7 @@ def verify(ref_func, qnn_func, data_shape, data_dtype, kernel_shape,
             golden_data, golden_weight = golden_inputs
             params = {'kernel': golden_weight}
             graph, lib, params = relay.build(func, "llvm", params=params)
-            mod = graph_runtime.create(graph, lib, ctx=tvm.cpu(0))
+            mod = graph_runtime.create(graph, lib, device=tvm.cpu(0))
             mod.set_input("data", golden_data)
             mod.set_input(**params)
             mod.run()
@@ -606,7 +606,7 @@ def test_tflite_large_irregular():
         with relay.build_config(opt_level=2):
             params = {'kernel': golden_weight}
             graph, lib, params = relay.build(qnn_func, "llvm", params=params)
-            mod = graph_runtime.create(graph, lib, ctx=tvm.cpu(0))
+            mod = graph_runtime.create(graph, lib, device=tvm.cpu(0))
             mod.set_input("data", golden_data)
             mod.set_input(**params)
             mod.run()
@@ -649,7 +649,7 @@ def test_tflite_output_multiplier_greater_than_one():
         with relay.build_config(opt_level=2):
             params = {'kernel': golden_weight}
             graph, lib, params = relay.build(qnn_func, "llvm", params=params)
-            mod = graph_runtime.create(graph, lib, ctx=tvm.cpu(0))
+            mod = graph_runtime.create(graph, lib, device=tvm.cpu(0))
             mod.set_input("data", golden_data)
             mod.set_input(**params)
             mod.run()
@@ -695,7 +695,7 @@ def test_tflite_anistropic_strides():
         with relay.build_config(opt_level=2):
             params = {'kernel': golden_weight}
             graph, lib, params = relay.build(qnn_func, "llvm", params=params)
-            mod = graph_runtime.create(graph, lib, ctx=tvm.cpu(0))
+            mod = graph_runtime.create(graph, lib, device=tvm.cpu(0))
             mod.set_input("data", golden_data)
             mod.set_input(**params)
             mod.run()

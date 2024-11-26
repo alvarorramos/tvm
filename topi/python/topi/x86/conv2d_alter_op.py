@@ -73,7 +73,7 @@ def _alter_conv2d_layout(attrs, inputs, tinfo, F):
         return None
 
     # Set workload. Config update.
-    dispatch_ctx = autotvm.task.DispatchContext.current
+    dispatch_device = autotvm.task.DispatchContext.current
     target = tvm.target.current_target()
 
     if is_depthwise:
@@ -85,7 +85,7 @@ def _alter_conv2d_layout(attrs, inputs, tinfo, F):
             [data_tensor, kernel_tensor, strides, padding, dilation, data_layout, out_dtype],
             conv2d)
 
-    cfg = dispatch_ctx.query(target, workload)
+    cfg = dispatch_device.query(target, workload)
     if cfg.is_fallback:
         if _is_int8_hw_support(data_dtype, kernel_dtype):
             _get_default_config_int8(cfg, data_tensor, kernel_tensor, strides, padding, out_dtype,
@@ -108,7 +108,7 @@ def _alter_conv2d_layout(attrs, inputs, tinfo, F):
         new_workload = autotvm.task.args_to_workload(
             [new_data, new_kernel, strides, padding, dilation, new_attrs[layout_name],
              new_attrs['out_layout'], out_dtype], depthwise_conv2d_NCHWc)
-        dispatch_ctx.update(target, new_workload, cfg)
+        dispatch_device.update(target, new_workload, cfg)
         if F.__name__ == 'nnvm.symbol':
             logging.warning("Use native layout for depthwise convolution on NNVM.")
             return None
@@ -152,7 +152,7 @@ def _alter_conv2d_layout(attrs, inputs, tinfo, F):
                                                       new_attrs['out_layout'],
                                                       out_dtype],
                                                      conv2d_NCHWc_int8)
-        dispatch_ctx.update(target, new_workload, cfg)
+        dispatch_device.update(target, new_workload, cfg)
         if F.__name__ == 'nnvm.symbol':
             logging.warning("Use native layout for int8 convolution on NNVM.")
             return None
@@ -166,7 +166,7 @@ def _alter_conv2d_layout(attrs, inputs, tinfo, F):
     new_workload = autotvm.task.args_to_workload(
         [new_data, new_kernel, strides, padding, dilation, new_attrs[layout_name],
          new_attrs['out_layout'], out_dtype], conv2d_NCHWc)
-    dispatch_ctx.update(target, new_workload, cfg)
+    dispatch_device.update(target, new_workload, cfg)
 
     if F.__name__ == 'nnvm.symbol':
         return F.contrib.conv2d_NCHWc(*copy_inputs, **new_attrs)

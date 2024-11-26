@@ -52,7 +52,7 @@ class DispatchContext(object):
     current = None
 
     def __init__(self):
-        self._old_ctx = DispatchContext.current
+        self._old_device = DispatchContext.current
 
     def query(self, target, workload):
         """
@@ -74,7 +74,7 @@ class DispatchContext(object):
         """
         ret = self._query_inside(target, workload)
         if ret is None:
-            ret = self._old_ctx.query(target, workload)
+            ret = self._old_device.query(target, workload)
         return ret
 
     def update(self, target, workload, cfg):
@@ -105,9 +105,9 @@ class DispatchContext(object):
             @conv2d_alter_layout.register("cpu")
             def _alter_conv2d_layout(attrs, inputs, tinfo):
                 workload = get_conv2d_workload(...)
-                dispatch_ctx = autotvm.task.DispatchContext.current
+                dispatch_device = autotvm.task.DispatchContext.current
                 target = tvm.target.current_target()
-                config = dispatch_ctx.query(target, workload)
+                config = dispatch_device.query(target, workload)
 
                 # Get conv2d_NCHWc workload from config
                 # new_workload = ...
@@ -115,7 +115,7 @@ class DispatchContext(object):
                 # new_attrs = ...
 
                 # Store altered operator's config
-                dispatch_ctx.update(target, new_workload, config)
+                dispatch_device.update(target, new_workload, config)
                 return sym.contrib.conv2d_NCHWc(*new_inputs, **new_attrs)
 
         We directly store `config` back because `conv2d_NCHW` and `conv2d_NCHWc`
@@ -144,12 +144,12 @@ class DispatchContext(object):
         raise NotImplementedError()
 
     def __enter__(self):
-        self._old_ctx = DispatchContext.current
+        self._old_device = DispatchContext.current
         DispatchContext.current = self
         return self
 
     def __exit__(self, ptype, value, trace):
-        DispatchContext.current = self._old_ctx
+        DispatchContext.current = self._old_device
 
 
 def dispatcher(fworkload):
@@ -430,7 +430,7 @@ def clear_fallback_cache(target, workload):
     """
     context = DispatchContext.current
     while not isinstance(context, FallbackContext):
-        context = context._old_ctx
+        context = context._old_device
     context.clear_cache(target, workload)
 
 

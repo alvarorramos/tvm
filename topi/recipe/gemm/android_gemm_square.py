@@ -35,14 +35,14 @@ def ngflops(N):
     return 2.0 * float(N * N * N) / (10**9)
 
 dtype = 'float32'
-def evaluate(func, ctx, N, times):
+def evaluate(func, device, N, times):
     a_np = np.random.uniform(size=(N, N)).astype(dtype)
     b_np = np.random.uniform(size=(N, N)).astype(dtype)
-    a = tvm.nd.array(a_np, ctx)
-    b = tvm.nd.array(b_np, ctx)
-    c = tvm.nd.array(np.zeros((N, N), dtype=dtype), ctx)
+    a = tvm.nd.array(a_np, device)
+    b = tvm.nd.array(b_np, device)
+    c = tvm.nd.array(np.zeros((N, N), dtype=dtype), device)
 
-    time_f = func.time_evaluator(func.entry_name, ctx, number=times)
+    time_f = func.time_evaluator(func.entry_name, device, number=times)
     cost = time_f(a, b, c).mean
     gf = ngflops(N) / cost
     print('%g secs/op, %g GFLOPS' % (cost, gf))
@@ -123,11 +123,11 @@ def test_gemm_gpu(N, times, bn, num_block, num_thread):
 
     # connect to the proxy
     remote = rpc.connect(proxy_host, proxy_port, key=key)
-    ctx = remote.cl(0)
+    device = remote.cl(0)
     remote.upload(path_dso)
     f = remote.load_module("gemm_gpu.so")
 
-    evaluate(f, ctx, N, times)
+    evaluate(f, device, N, times)
 
 if __name__ == "__main__":
     test_gemm_gpu(1024, times=5, bn=8, num_block=2, num_thread=8)

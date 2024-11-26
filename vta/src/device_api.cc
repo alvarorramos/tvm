@@ -34,22 +34,22 @@ namespace runtime {
 
 class VTADeviceAPI final : public DeviceAPI {
  public:
-  void SetDevice(TVMContext ctx) final {}
+  void SetDevice(TVMContext device) final {}
 
-  void GetAttr(TVMContext ctx, DeviceAttrKind kind, TVMRetValue* rv) final {
+  void GetAttr(TVMContext device, DeviceAttrKind kind, TVMRetValue* rv) final {
     if (kind == kExist) {
       *rv = 1;
     }
   }
 
-  void* AllocDataSpace(TVMContext ctx,
+  void* AllocDataSpace(TVMContext device,
                        size_t size,
                        size_t alignment,
                        TVMType type_hint) final {
     return VTABufferAlloc(size);
   }
 
-  void FreeDataSpace(TVMContext ctx, void* ptr) final {
+  void FreeDataSpace(TVMContext device, void* ptr) final {
     VTABufferFree(ptr);
   }
 
@@ -58,15 +58,15 @@ class VTADeviceAPI final : public DeviceAPI {
                       void* to,
                       size_t to_offset,
                       size_t size,
-                      TVMContext ctx_from,
-                      TVMContext ctx_to,
+                      TVMContext device_from,
+                      TVMContext device_to,
                       TVMType type_hint,
                       TVMStreamHandle stream) final {
     int kind_mask = 0;
-    if (ctx_from.device_type != kDLCPU) {
+    if (device_from.device_type != kDLCPU) {
       kind_mask |= 2;
     }
-    if (ctx_to.device_type != kDLCPU) {
+    if (device_to.device_type != kDLCPU) {
       kind_mask |= 1;
     }
     VTABufferCopy(from, from_offset,
@@ -74,12 +74,12 @@ class VTADeviceAPI final : public DeviceAPI {
                   size, kind_mask);
   }
 
-  void StreamSync(TVMContext ctx, TVMStreamHandle stream) final {
+  void StreamSync(TVMContext device, TVMStreamHandle stream) final {
   }
 
-  void* AllocWorkspace(TVMContext ctx, size_t size, TVMType type_hint) final;
+  void* AllocWorkspace(TVMContext device, size_t size, TVMType type_hint) final;
 
-  void FreeWorkspace(TVMContext ctx, void* data) final;
+  void FreeWorkspace(TVMContext device, void* data) final;
 
   static const std::shared_ptr<VTADeviceAPI>& Global() {
     static std::shared_ptr<VTADeviceAPI> inst =
@@ -93,13 +93,13 @@ struct VTAWorkspacePool : public WorkspacePool {
       WorkspacePool(kDLExtDev, VTADeviceAPI::Global()) {}
 };
 
-void* VTADeviceAPI::AllocWorkspace(TVMContext ctx, size_t size, TVMType type_hint) {
+void* VTADeviceAPI::AllocWorkspace(TVMContext device, size_t size, TVMType type_hint) {
   return dmlc::ThreadLocalStore<VTAWorkspacePool>::Get()
-      ->AllocWorkspace(ctx, size);
+      ->AllocWorkspace(device, size);
 }
 
-void VTADeviceAPI::FreeWorkspace(TVMContext ctx, void* data) {
-  dmlc::ThreadLocalStore<VTAWorkspacePool>::Get()->FreeWorkspace(ctx, data);
+void VTADeviceAPI::FreeWorkspace(TVMContext device, void* data) {
+  dmlc::ThreadLocalStore<VTAWorkspacePool>::Get()->FreeWorkspace(device, data);
 }
 
 // Register device api with override.

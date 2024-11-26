@@ -90,14 +90,14 @@ void VirtualMachineDebug::InvokePacked(Index packed_index,
                                        Index output_size,
                                        const std::vector<ObjectRef>& args) {
   CHECK(exec_);
-  auto ctx = this->GetParamsContext();
+  auto device = this->GetParamsContext();
   // warmup
   VirtualMachine::InvokePacked(packed_index, func, arg_count, output_size, args);
-  TVMSynchronize(ctx.device_type, ctx.device_id, nullptr);
+  TVMSynchronize(device.device_type, device.device_id, nullptr);
 
   auto op_begin = std::chrono::high_resolution_clock::now();
   VirtualMachine::InvokePacked(packed_index, func, arg_count, output_size, args);
-  TVMSynchronize(ctx.device_type, ctx.device_id, nullptr);
+  TVMSynchronize(device.device_type, device.device_id, nullptr);
   auto op_end = std::chrono::high_resolution_clock::now();
   double op_duration =
       std::chrono::duration_cast<std::chrono::duration<double> >(op_end -

@@ -60,17 +60,17 @@ class With {
    */
   template<typename ...Args>
   explicit With(Args&& ...args)
-      : ctx_(std::forward<Args>(args)...) {
-    ctx_.EnterWithScope();
+      : device_(std::forward<Args>(args)...) {
+    device_.EnterWithScope();
   }
   /*! \brief destructor, leaves the scope of the context. */
   ~With() DMLC_THROW_EXCEPTION {
-    ctx_.ExitWithScope();
+    device_.ExitWithScope();
   }
 
  private:
   /*! \brief internal context type. */
-  ContextType ctx_;
+  ContextType device_;
 };
 
 #define TVM_STRINGIZE_DETAIL(x) #x

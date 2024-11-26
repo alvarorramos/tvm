@@ -48,8 +48,8 @@ def depthwise_conv2d_with_workload_nchw(batch, in_channel, in_height, channel_mu
     dtype = 'float32'
 
     def check_device(device):
-        ctx = tvm.context(device, 0)
-        if not ctx.exist:
+        device = tvm.context(device, 0)
+        if not device.exist:
             print("Skip because %s is not enabled" % device)
             return
         print("Running on target: %s" % device)
@@ -96,21 +96,21 @@ def depthwise_conv2d_with_workload_nchw(batch, in_channel, in_height, channel_mu
         (input_np, filter_np, scale_np, shift_np,
          depthwise_conv2d_scipy, scale_shift_scipy, relu_scipy) = get_ref_data()
 
-        input_tvm = tvm.nd.array(input_np, ctx)
-        filter_tvm = tvm.nd.array(filter_np, ctx)
-        scale_tvm = tvm.nd.array(scale_np, ctx)
-        shift_tvm = tvm.nd.array(shift_np, ctx)
-        depthwise_conv2d_tvm = tvm.nd.array(np.zeros(shape=get_const_tuple(DepthwiseConv2d.shape), dtype=DepthwiseConv2d.dtype), ctx)
-        scale_shift_tvm = tvm.nd.array(np.zeros(shape=get_const_tuple(ScaleShift.shape), dtype=ScaleShift.dtype), ctx)
-        relu_tvm = tvm.nd.array(np.zeros(shape=get_const_tuple(Relu.shape), dtype=Relu.dtype), ctx)
+        input_tvm = tvm.nd.array(input_np, device)
+        filter_tvm = tvm.nd.array(filter_np, device)
+        scale_tvm = tvm.nd.array(scale_np, device)
+        shift_tvm = tvm.nd.array(shift_np, device)
+        depthwise_conv2d_tvm = tvm.nd.array(np.zeros(shape=get_const_tuple(DepthwiseConv2d.shape), dtype=DepthwiseConv2d.dtype), device)
+        scale_shift_tvm = tvm.nd.array(np.zeros(shape=get_const_tuple(ScaleShift.shape), dtype=ScaleShift.dtype), device)
+        relu_tvm = tvm.nd.array(np.zeros(shape=get_const_tuple(Relu.shape), dtype=Relu.dtype), device)
         # launch kernel 1 (depthwise_conv2d)
-        timer_1 = f1.time_evaluator(f1.entry_name, ctx, number=1)
+        timer_1 = f1.time_evaluator(f1.entry_name, device, number=1)
         tcost_1 = timer_1(input_tvm, filter_tvm, depthwise_conv2d_tvm).mean
         # launch kernel 2 (depthwise_conv2d + scale_shift)
-        timer_2 = f2.time_evaluator(f2.entry_name, ctx, number=1)
+        timer_2 = f2.time_evaluator(f2.entry_name, device, number=1)
         tcost_2 = timer_2(input_tvm, filter_tvm, scale_tvm, shift_tvm, scale_shift_tvm).mean
         # launch kernel 3 (depthwise_conv2d + scale_shift + relu)
-        timer_3 = f3.time_evaluator(f3.entry_name, ctx, number=1)
+        timer_3 = f3.time_evaluator(f3.entry_name, device, number=1)
         tcost_3 = timer_3(input_tvm, filter_tvm, scale_tvm, shift_tvm, relu_tvm).mean
         tvm.testing.assert_allclose(depthwise_conv2d_tvm.asnumpy(), depthwise_conv2d_scipy, rtol=1e-5)
         tvm.testing.assert_allclose(scale_shift_tvm.asnumpy(), scale_shift_scipy, rtol=1e-5)
@@ -144,8 +144,8 @@ def depthwise_conv2d_with_workload_nhwc(batch, in_channel, in_height, channel_mu
     dtype = 'float32'
 
     def check_device(device):
-        ctx = tvm.context(device, 0)
-        if not ctx.exist:
+        device = tvm.context(device, 0)
+        if not device.exist:
             print("Skip because %s is not enabled" % device)
             return
         print("Running on target: %s" % device)
@@ -194,21 +194,21 @@ def depthwise_conv2d_with_workload_nhwc(batch, in_channel, in_height, channel_mu
          depthwise_conv2d_scipy, scale_shift_scipy, relu_scipy) = get_ref_data()
 
         # prepare data
-        input_tvm = tvm.nd.array(input_np, ctx)
-        filter_tvm = tvm.nd.array(filter_np, ctx)
-        scale_tvm = tvm.nd.array(scale_np, ctx)
-        shift_tvm = tvm.nd.array(shift_np, ctx)
-        depthwise_conv2d_tvm = tvm.nd.array(np.zeros(shape=get_const_tuple(DepthwiseConv2d.shape), dtype=DepthwiseConv2d.dtype), ctx)
-        scale_shift_tvm = tvm.nd.array(np.zeros(shape=get_const_tuple(ScaleShift.shape), dtype=ScaleShift.dtype), ctx)
-        relu_tvm = tvm.nd.array(np.zeros(shape=get_const_tuple(Relu.shape), dtype=Relu.dtype), ctx)
+        input_tvm = tvm.nd.array(input_np, device)
+        filter_tvm = tvm.nd.array(filter_np, device)
+        scale_tvm = tvm.nd.array(scale_np, device)
+        shift_tvm = tvm.nd.array(shift_np, device)
+        depthwise_conv2d_tvm = tvm.nd.array(np.zeros(shape=get_const_tuple(DepthwiseConv2d.shape), dtype=DepthwiseConv2d.dtype), device)
+        scale_shift_tvm = tvm.nd.array(np.zeros(shape=get_const_tuple(ScaleShift.shape), dtype=ScaleShift.dtype), device)
+        relu_tvm = tvm.nd.array(np.zeros(shape=get_const_tuple(Relu.shape), dtype=Relu.dtype), device)
         # launch kernel 1 (depthwise_conv2d)
-        timer_1 = f1.time_evaluator(f1.entry_name, ctx, number=1)
+        timer_1 = f1.time_evaluator(f1.entry_name, device, number=1)
         tcost_1 = timer_1(input_tvm, filter_tvm, depthwise_conv2d_tvm).mean
         # launch kernel 2 (depthwise_conv2d + scale_shift)
-        timer_2 = f2.time_evaluator(f2.entry_name, ctx, number=1)
+        timer_2 = f2.time_evaluator(f2.entry_name, device, number=1)
         tcost_2 = timer_2(input_tvm, filter_tvm, scale_tvm, shift_tvm, scale_shift_tvm).mean
         # launch kernel 3 (depthwise_conv2d + scale_shift + relu)
-        timer_3 = f3.time_evaluator(f3.entry_name, ctx, number=1)
+        timer_3 = f3.time_evaluator(f3.entry_name, device, number=1)
         tcost_3 = timer_3(input_tvm, filter_tvm, scale_tvm, shift_tvm, relu_tvm).mean
         relu_scipy = np.maximum(scale_shift_scipy, 0)
         tvm.testing.assert_allclose(depthwise_conv2d_tvm.asnumpy(), depthwise_conv2d_scipy, rtol=1e-5)
@@ -269,8 +269,8 @@ def depthwise_conv2d_with_workload_NCHWc(batch, in_channel, in_height, channel_m
     dtype = 'float32'
 
     def check_device(device):
-        ctx = tvm.context(device, 0)
-        if not ctx.exist:
+        device = tvm.context(device, 0)
+        if not device.exist:
             print("Skip because %s is not enabled" % device)
             return
         print("Running on target: %s" % device)
@@ -312,12 +312,12 @@ def depthwise_conv2d_with_workload_NCHWc(batch, in_channel, in_height, channel_m
         # Get the test data
         (input_np, filter_np, depthwise_conv2d_scipy, relu_scipy) = get_ref_data()
 
-        input_tvm = tvm.nd.array(input_np, ctx)
-        filter_tvm = tvm.nd.array(filter_np, ctx)
+        input_tvm = tvm.nd.array(input_np, device)
+        filter_tvm = tvm.nd.array(filter_np, device)
 
         depthwise_conv2d_tvm = tvm.nd.array(np.zeros(shape=get_const_tuple(DepthwiseConv2d.shape),
-                                                     dtype=DepthwiseConv2d.dtype), ctx)
-        relu_tvm = tvm.nd.array(np.zeros(shape=get_const_tuple(Relu.shape), dtype=Relu.dtype), ctx)
+                                                     dtype=DepthwiseConv2d.dtype), device)
+        relu_tvm = tvm.nd.array(np.zeros(shape=get_const_tuple(Relu.shape), dtype=Relu.dtype), device)
         # launch kernel 1 (depthwise_conv2d)
         print(filter_tvm.shape)
         f1(input_tvm, filter_tvm, depthwise_conv2d_tvm)

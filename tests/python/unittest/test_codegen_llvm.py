@@ -65,10 +65,10 @@ def test_llvm_import():
             s[B].pragma(s[B].op.axis[0], "import_llvm", ll_code)
         # BUILD and invoke the kernel.
         f = tvm.build(s, [A, B], "llvm")
-        ctx = tvm.cpu(0)
+        device = tvm.cpu(0)
         # launch the kernel.
-        a = tvm.nd.array(np.random.uniform(size=n).astype(A.dtype), ctx)
-        b = tvm.nd.array(np.random.uniform(size=n).astype(B.dtype), ctx)
+        a = tvm.nd.array(np.random.uniform(size=n).astype(A.dtype), device)
+        b = tvm.nd.array(np.random.uniform(size=n).astype(B.dtype), device)
         f(a, b)
         tvm.testing.assert_allclose(
             b.asnumpy(), a.asnumpy() + 1.0)
@@ -118,12 +118,12 @@ def test_llvm_add_pipeline():
         binds = {A : Ab}
         # BUILD and invoke the kernel.
         f = tvm.build(s, [A, B, C], "llvm", binds=binds)
-        ctx = tvm.cpu(0)
+        device = tvm.cpu(0)
         # launch the kernel.
         n = nn
-        a = tvm.nd.array(np.random.uniform(size=n).astype(A.dtype), ctx)
-        b = tvm.nd.array(np.random.uniform(size=n).astype(B.dtype), ctx)
-        c = tvm.nd.array(np.zeros(n, dtype=C.dtype), ctx)
+        a = tvm.nd.array(np.random.uniform(size=n).astype(A.dtype), device)
+        b = tvm.nd.array(np.random.uniform(size=n).astype(B.dtype), device)
+        c = tvm.nd.array(np.zeros(n, dtype=C.dtype), device)
         f(a, b, c)
         tvm.testing.assert_allclose(
             c.asnumpy(), a.asnumpy() + b.asnumpy())
@@ -152,10 +152,10 @@ def test_llvm_persist_parallel():
             return
         # BUILD and invoke the kernel.
         f = tvm.build(s, [A, C], "llvm")
-        ctx = tvm.cpu(0)
+        device = tvm.cpu(0)
         # launch the kernel.
-        a = tvm.nd.array(np.random.uniform(size=n).astype(A.dtype), ctx)
-        c = tvm.nd.array(np.zeros(n, dtype=C.dtype), ctx)
+        a = tvm.nd.array(np.random.uniform(size=n).astype(A.dtype), device)
+        c = tvm.nd.array(np.zeros(n, dtype=C.dtype), device)
         f(a, c)
         tvm.testing.assert_allclose(c.asnumpy(),
                                    np.sqrt(a.asnumpy() + 1) * 2 + 2,
@@ -177,11 +177,11 @@ def test_llvm_flip_pipeline():
         s[C].vectorize(xi)
         # build and invoke the kernel.
         f = tvm.build(s, [A, C], "llvm")
-        ctx = tvm.cpu(0)
+        device = tvm.cpu(0)
         # launch the kernel.
         n = nn
-        a = tvm.nd.array(np.random.uniform(size=(n + base)).astype(A.dtype), ctx)
-        c = tvm.nd.array(np.zeros(n, dtype=C.dtype), ctx)
+        a = tvm.nd.array(np.random.uniform(size=(n + base)).astype(A.dtype), device)
+        c = tvm.nd.array(np.zeros(n, dtype=C.dtype), device)
         f(a, c)
         tvm.testing.assert_allclose(
             c.asnumpy(), a.asnumpy()[::-1][:n])
@@ -208,11 +208,11 @@ def test_llvm_vadd_pipeline():
         s[B].vectorize(xi)
         # build and invoke the kernel.
         f = tvm.build(s, [A, C], "llvm")
-        ctx = tvm.cpu(0)
+        device = tvm.cpu(0)
         # launch the kernel.
         a = tvm.nd.empty((n,), A.dtype).copyfrom(
             np.random.uniform(size=(n, lanes)))
-        c = tvm.nd.empty((n,), C.dtype, ctx)
+        c = tvm.nd.empty((n,), C.dtype, device)
         f(a, c)
         tvm.testing.assert_allclose(
             c.asnumpy(), a.asnumpy() + 1)
@@ -233,11 +233,11 @@ def test_llvm_madd_pipeline():
         s[C].vectorize(xi)
         # build and invoke the kernel.
         f = tvm.build(s, [A, C], "llvm")
-        ctx = tvm.cpu(0)
+        device = tvm.cpu(0)
         # launch the kernel.
         n = nn
-        a = tvm.nd.array(np.random.uniform(size=(n + base, stride)).astype(A.dtype), ctx)
-        c = tvm.nd.array(np.zeros((n, stride), dtype=C.dtype), ctx)
+        a = tvm.nd.array(np.random.uniform(size=(n + base, stride)).astype(A.dtype), device)
+        c = tvm.nd.array(np.zeros((n, stride), dtype=C.dtype), device)
         f(a, c)
         tvm.testing.assert_allclose(
             c.asnumpy(), a.asnumpy()[base:] + 1)
@@ -260,11 +260,11 @@ def test_llvm_temp_space():
             return
         # build and invoke the kernel.
         f = tvm.build(s, [A, C], "llvm")
-        ctx = tvm.cpu(0)
+        device = tvm.cpu(0)
         # launch the kernel.
         n = nn
-        a = tvm.nd.array(np.random.uniform(size=n).astype(A.dtype), ctx)
-        c = tvm.nd.array(np.zeros(n, dtype=C.dtype), ctx)
+        a = tvm.nd.array(np.random.uniform(size=n).astype(A.dtype), device)
+        c = tvm.nd.array(np.zeros(n, dtype=C.dtype), device)
         f(a, c)
         tvm.testing.assert_allclose(
             c.asnumpy(), a.asnumpy() + 1 + 1)
@@ -289,12 +289,12 @@ def test_multiple_func():
         m = tvm.build([f1, f2], "llvm")
         fadd1 = m['fadd1']
         fadd2 = m['fadd2']
-        ctx = tvm.cpu(0)
+        device = tvm.cpu(0)
         # launch the kernel.
         n = nn
-        a = tvm.nd.array(np.random.uniform(size=n).astype(A.dtype), ctx)
-        b = tvm.nd.array(np.random.uniform(size=n).astype(B.dtype), ctx)
-        c = tvm.nd.array(np.zeros(n, dtype=C.dtype), ctx)
+        a = tvm.nd.array(np.random.uniform(size=n).astype(A.dtype), device)
+        b = tvm.nd.array(np.random.uniform(size=n).astype(B.dtype), device)
+        c = tvm.nd.array(np.zeros(n, dtype=C.dtype), device)
         fadd1(a, b, c)
         tvm.testing.assert_allclose(
             c.asnumpy(), a.asnumpy() + b.asnumpy())
@@ -314,10 +314,10 @@ def test_llvm_condition():
         s = tvm.create_schedule(C.op)
         # build and invoke the kernel.
         f = tvm.build(s, [A, C], "llvm")
-        ctx = tvm.cpu(0)
+        device = tvm.cpu(0)
         # launch the kernel.
-        a = tvm.nd.array(np.random.uniform(size=(n,)).astype(A.dtype), ctx)
-        c = tvm.nd.empty((n,), A.dtype, ctx)
+        a = tvm.nd.array(np.random.uniform(size=(n,)).astype(A.dtype), device)
+        c = tvm.nd.empty((n,), A.dtype, device)
         f(a, c)
         c_np = a.asnumpy()
         c_np[:offset] = 0
@@ -334,10 +334,10 @@ def test_llvm_bool():
         s = tvm.create_schedule(C.op)
         # build and invoke the kernel.
         f = tvm.build(s, [A, C], "llvm")
-        ctx = tvm.cpu(0)
+        device = tvm.cpu(0)
         # launch the kernel.
-        a = tvm.nd.array(np.random.randint(0, 2, size=(n,)).astype(A.dtype), ctx)
-        c = tvm.nd.empty((n,), C.dtype, ctx)
+        a = tvm.nd.array(np.random.randint(0, 2, size=(n,)).astype(A.dtype), device)
+        c = tvm.nd.empty((n,), C.dtype, device)
         f(a, c)
         c_np = a.asnumpy() == 1
         tvm.testing.assert_allclose(c.asnumpy(), c_np)
@@ -356,12 +356,12 @@ def test_rank_zero():
         s = tvm.create_schedule(D.op)
         # build and invoke the kernel.
         f = tvm.build(s, [A, scale, D], "llvm")
-        ctx = tvm.cpu(0)
+        device = tvm.cpu(0)
         # launch the kernel.
-        a = tvm.nd.array(np.random.randint(0, 2, size=(n,)).astype(A.dtype), ctx)
+        a = tvm.nd.array(np.random.randint(0, 2, size=(n,)).astype(A.dtype), device)
         sc = tvm.nd.array(
-            np.random.randint(0, 2, size=()).astype(scale.dtype), ctx)
-        d = tvm.nd.empty((), D.dtype, ctx)
+            np.random.randint(0, 2, size=()).astype(scale.dtype), device)
+        d = tvm.nd.empty((), D.dtype, device)
         f(a, sc, d)
         d_np = np.sum(a.asnumpy()) * sc.asnumpy() + 1
         tvm.testing.assert_allclose(d.asnumpy(), d_np)
@@ -380,12 +380,12 @@ def test_rank_zero_bound_checkers():
             s = tvm.create_schedule(D.op)
             # build and invoke the kernel.
             f = tvm.build(s, [A, scale, D], "llvm")
-            ctx = tvm.cpu(0)
+            device = tvm.cpu(0)
             # launch the kernel.
-            a = tvm.nd.array(np.random.randint(0, 2, size=(n,)).astype(A.dtype), ctx)
+            a = tvm.nd.array(np.random.randint(0, 2, size=(n,)).astype(A.dtype), device)
             sc = tvm.nd.array(
-                np.random.randint(0, 2, size=()).astype(scale.dtype), ctx)
-            d = tvm.nd.empty((), D.dtype, ctx)
+                np.random.randint(0, 2, size=()).astype(scale.dtype), device)
+            d = tvm.nd.empty((), D.dtype, device)
             f(a, sc, d)
             d_np = np.sum(a.asnumpy()) * sc.asnumpy() + 1
             tvm.testing.assert_allclose(d.asnumpy(), d_np)

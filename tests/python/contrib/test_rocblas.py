@@ -34,11 +34,11 @@ def test_matmul_add():
         if not tvm.get_global_func("tvm.contrib.rocblas.matmul", True):
             print("skip because extern function is not available")
             return
-        ctx = tvm.rocm(0)
+        device = tvm.rocm(0)
         f = tvm.build(s, [A, B, C], target)
-        a = tvm.nd.array(np.random.uniform(size=(n, l)).astype(A.dtype), ctx)
-        b = tvm.nd.array(np.random.uniform(size=(l, m)).astype(B.dtype), ctx)
-        c = tvm.nd.array(np.zeros((n, m), dtype=C.dtype), ctx)
+        a = tvm.nd.array(np.random.uniform(size=(n, l)).astype(A.dtype), device)
+        b = tvm.nd.array(np.random.uniform(size=(l, m)).astype(B.dtype), device)
+        c = tvm.nd.array(np.zeros((n, m), dtype=C.dtype), device)
         f(a, b, c)
         tvm.testing.assert_allclose(
             c.asnumpy(), np.dot(a.asnumpy(), b.asnumpy()), rtol=1e-5)

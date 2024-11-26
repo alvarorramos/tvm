@@ -179,23 +179,23 @@ class OpenGLWorkspace final : public DeviceAPI {
   ~OpenGLWorkspace() final;
 
   // override device API
-  void SetDevice(TVMContext ctx) final;
-  void GetAttr(TVMContext ctx, DeviceAttrKind kind, TVMRetValue* rv) final;
-  void* AllocDataSpace(TVMContext ctx,
+  void SetDevice(TVMContext device) final;
+  void GetAttr(TVMContext device, DeviceAttrKind kind, TVMRetValue* rv) final;
+  void* AllocDataSpace(TVMContext device,
                        size_t nbytes,
                        size_t alignment,
                        TVMType type_hint) final;
-  void FreeDataSpace(TVMContext ctx, void* ptr) final;
+  void FreeDataSpace(TVMContext device, void* ptr) final;
   void CopyDataFromTo(const void* from,
                       size_t from_offset,
                       void* to,
                       size_t to_offset,
                       size_t size,
-                      TVMContext ctx_from,
-                      TVMContext ctx_to,
+                      TVMContext device_from,
+                      TVMContext device_to,
                       TVMType type_hint,
                       TVMStreamHandle stream) final;
-  void StreamSync(TVMContext ctx, TVMStreamHandle stream) final;
+  void StreamSync(TVMContext device, TVMStreamHandle stream) final;
 
   /*!
    * \brief Get the global OpenGL workspace.

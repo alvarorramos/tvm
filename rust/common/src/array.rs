@@ -95,10 +95,10 @@ pub struct TVMContext {
 }
 
 impl<'a> From<&'a TVMContext> for DLDevice {
-    fn from(ctx: &'a TVMContext) -> Self {
+    fn from(device: &'a TVMContext) -> Self {
         Self {
-            device_type: ctx.device_type as _,
-            device_id: ctx.device_id as i32,
+            device_type: device.device_type as _,
+            device_id: device.device_id as i32,
         }
     }
 }
@@ -120,7 +120,7 @@ macro_rules! impl_dltensor_from_ndarray {
             fn from(arr: &'a mut ndarray::Array<$type, D>) -> Self {
                 DLTensor {
                     data: arr.as_mut_ptr() as *mut c_void,
-                    ctx: DLDevice {
+                    device: DLDevice {
                         device_type: DLDeviceType_kDLCPU,
                         device_id: 0,
                     },

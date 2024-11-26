@@ -34,18 +34,18 @@ public class GraphRuntime {
    * Create a runtime executor module given a graph and module.
    * @param graphJson The graph deployed in json format output by nnvm graph.
    * @param libmod The module of the corresponding function.
-   * @param ctx The local or remote context to deploy the module.
+   * @param device The local or remote context to deploy the module.
    * @return Runtime graph module that can be used to execute the graph.
    */
-  public static GraphModule create(String graphJson, Module libmod, TVMContext ctx) {
+  public static GraphModule create(String graphJson, Module libmod, TVMContext device) {
     Module graphModule = null;
-    if (ctx.deviceType >= RPC.RPC_SESS_MASK) {
-      if (!(ctx instanceof  TVMRemoteContext)) {
+    if (device.deviceType >= RPC.RPC_SESS_MASK) {
+      if (!(device instanceof  TVMRemoteContext)) {
         throw new IllegalArgumentException(
             "Looks like you are using remote context with no RPCSession bind."
             + "Use session.context instead.");
       }
-      RPCSession rpcSession = ((TVMRemoteContext) ctx).rpcSession;
+      RPCSession rpcSession = ((TVMRemoteContext) device).rpcSession;
       // check arguments
       if (!"rpc".equals(libmod.typeKey())) {
         throw new IllegalArgumentException("libmod.typeKey != rpc");
@@ -74,7 +74,7 @@ public class GraphRuntime {
 
       TVMValue hmod = rpcModuleHandle.pushArg(libmod).invoke();
       graphModule = fcreate.call(graphJson, hmod,
-          ctx.deviceType % RPC.RPC_SESS_MASK, ctx.deviceId).asModule();
+          device.deviceType % RPC.RPC_SESS_MASK, device.deviceId).asModule();
     } else {
       Function fcreate = Function.getFunction("tvm.graph_runtime.create");
       if (fcreate == null) {
@@ -82,11 +82,11 @@ public class GraphRuntime {
             + "Did you compile tvm_runtime with correct version?");
       }
       graphModule = fcreate.pushArg(graphJson)
-          .pushArg(libmod).pushArg(ctx.deviceType).pushArg(ctx.deviceId)
+          .pushArg(libmod).pushArg(device.deviceType).pushArg(device.deviceId)
           .invoke().asModule();
     }
 
-    return new GraphModule(graphModule, ctx);
+    return new GraphModule(graphModule, device);
   }
 
   private static Object reflectionGetField(Object obj, String fieldName) {

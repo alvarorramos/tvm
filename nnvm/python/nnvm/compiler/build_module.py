@@ -366,11 +366,11 @@ def _run_graph(graph, params):
     shape = {k : v.shape for k, v in params.items()}
     dtype = {k : v.dtype for k, v in params.items()}
     target = "llvm"
-    ctx = tvm.cpu(0)
+    device = tvm.cpu(0)
     _, oshape = graph_util.infer_shape(graph, **shape)
     _, odtype = graph_util.infer_dtype(graph, **dtype)
     graph, libmod, _ = build(graph, target, shape, dtype)
-    m = graph_runtime.create(graph, libmod, ctx)
+    m = graph_runtime.create(graph, libmod, device)
     set_input, run, get_output = m["set_input"], m["run"], m["get_output"]
     kset = set(graph.symbol.list_input_names())
     for k, v in params.items():
@@ -380,7 +380,7 @@ def _run_graph(graph, params):
     out_data = []
     for i, kv in enumerate(zip(oshape, odtype)):
         shape, dtype = kv
-        arr = tvm.nd.empty(shape, dtype, ctx)
+        arr = tvm.nd.empty(shape, dtype, device)
         get_output(i, arr)
         out_data.append(arr)
     return out_data
@@ -454,7 +454,7 @@ def initialize_variables(ishape, idtype):
         params = {}
         for name, shape in ishape.items():
             dtype = idtype if isinstance(idtype, str) else idtype[name]
-            params[name] = tvm.nd.empty(shape, dtype, ctx=tvm.cpu())
+            params[name] = tvm.nd.empty(shape, dtype, device=tvm.cpu())
         init_group_sym = sym.Group(symbol_init_dict.values())
         graph = _graph.create(init_group_sym)
         with tvm.build_config(auto_unroll_max_step=0):

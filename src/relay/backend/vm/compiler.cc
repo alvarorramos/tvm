@@ -927,12 +927,12 @@ Module VMCompiler::OptimizeModule(const Module& mod, const TargetsMap& targets) 
   pass_seqs.push_back(transform::ManifestAlloc(this->target_host_));
 
   transform::Sequential seq(pass_seqs);
-  transform::PassContext pass_ctx = PassContext::Current();
+  transform::PassContext pass_device = PassContext::Current();
   // TODO(wweic): Support heterogenous execution
-  tvm::With<relay::transform::PassContext> ctx(pass_ctx);
+  tvm::With<relay::transform::PassContext> device(pass_device);
   if (targets.size() == 1) {
     const auto& it = targets.begin();
-    With<Target> tctx((*it).second);
+    With<Target> tdevice((*it).second);
     return seq(mod);
   }
   return seq(mod);

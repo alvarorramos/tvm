@@ -37,16 +37,16 @@ def verify_clip(N, a_min, a_max, dtype):
     a_np, b_np = get_ref_data()
 
     def check_device(device):
-        ctx = tvm.context(device, 0)
-        if not ctx.exist:
+        device = tvm.context(device, 0)
+        if not device.exist:
             print("Skip because %s is not enabled" % device)
             return
         print("Running on target: %s" % device)
         with tvm.target.create(device):
             s = topi.generic.schedule_injective(B)
 
-        a = tvm.nd.array(a_np, ctx)
-        b = tvm.nd.array(np.zeros(get_const_tuple(B.shape), dtype=dtype), ctx)
+        a = tvm.nd.array(a_np, device)
+        b = tvm.nd.array(np.zeros(get_const_tuple(B.shape), dtype=dtype), device)
         f = tvm.build(s, [A, B], device, name="clip")
         f(a, b)
         tvm.testing.assert_allclose(b.asnumpy(), b_np, rtol=1e-5)

@@ -50,8 +50,8 @@ def verify_conv2d_hwcn(batch, in_channel, in_size, num_filter, kernel, stride, p
     a_np, w_np, b_np, c1_np, c2_np, c3_np = get_ref_data()
 
     def check_device(device):
-        ctx = tvm.context(device, 0)
-        if not ctx.exist:
+        device = tvm.context(device, 0)
+        if not device.exist:
             print("Skip because %s is not enabled" % device)
             return
         print("Running on target: %s" % device)
@@ -62,16 +62,16 @@ def verify_conv2d_hwcn(batch, in_channel, in_size, num_filter, kernel, stride, p
             s1 = topi.generic.schedule_conv2d_hwcn([t_conv])
             s2 = topi.generic.schedule_conv2d_hwcn([t_bias])
             s3 = topi.generic.schedule_conv2d_hwcn([t_relu])
-        a = tvm.nd.array(a_np, ctx)
-        w = tvm.nd.array(w_np, ctx)
-        b = tvm.nd.array(b_np, ctx)
+        a = tvm.nd.array(a_np, device)
+        w = tvm.nd.array(w_np, device)
+        b = tvm.nd.array(b_np, device)
 
         conv_out = tvm.nd.array(
-            np.zeros(get_const_tuple(t_conv.shape), dtype=t_conv.dtype), ctx)
+            np.zeros(get_const_tuple(t_conv.shape), dtype=t_conv.dtype), device)
         bias_out = tvm.nd.array(
-            np.zeros(get_const_tuple(t_bias.shape), dtype=t_bias.dtype), ctx)
+            np.zeros(get_const_tuple(t_bias.shape), dtype=t_bias.dtype), device)
         relu_out = tvm.nd.array(
-            np.zeros(get_const_tuple(t_relu.shape), dtype=t_relu.dtype), ctx)
+            np.zeros(get_const_tuple(t_relu.shape), dtype=t_relu.dtype), device)
         func1 = tvm.build(s1, [A, W, t_conv], device)
         func2 = tvm.build(s2, [A, W, B, t_bias], device)
         func3 = tvm.build(s3, [A, W, B, t_relu], device)

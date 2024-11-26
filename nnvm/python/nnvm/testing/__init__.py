@@ -18,7 +18,7 @@
 """Utilities for testing and benchmarks"""
 from __future__ import absolute_import as _abs
 
-from .config import ctx_list
+from .config import device_list
 from .utils import create_workload
 from . import mobilenet
 from . import mobilenet_v2

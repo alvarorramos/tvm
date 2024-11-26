@@ -218,13 +218,13 @@ Call CallAlter(const Call& ref_call,
 
 Expr AlterOpLayoutRewrite(const Call &ref_call,
                           const Array<Expr> &new_args,
-                          const NodeRef& ctx) {
+                          const NodeRef& device) {
   std::vector<LayoutAlternatedExpr> inputs;
   std::vector<Expr> normal_new_args;
   Array<Array<IndexExpr> > input_shapes;
 
   // NOTE: discard the "const" qualifier
-  TransformMemorizer memorizer = Downcast<TransformMemorizer>(ctx);
+  TransformMemorizer memorizer = Downcast<TransformMemorizer>(device);
 
   // fill incomplete state and flatten tuple
   auto push_back_one_arg = [&inputs, memorizer](Expr arg) {

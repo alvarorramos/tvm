@@ -21,7 +21,7 @@ import topi.testing
 from tvm.contrib import graph_runtime
 from nnvm import symbol as sym
 from nnvm.compiler import graph_util, graph_attr
-from nnvm.testing import ctx_list, utils
+from nnvm.testing import device_list, utils
 
 def test_ewise_injective():
     x = sym.Variable("x")
@@ -31,10 +31,10 @@ def test_ewise_injective():
     shape_dict = {"x": dshape}
     dtype = "float32"
     target = "llvm"
-    for target, ctx in ctx_list():
+    for target, device in device_list():
         graph, lib, _ = nnvm.compiler.build(y, target, shape_dict)
         assert graph.index.num_nodes == 2
-        m = graph_runtime.create(graph, lib, ctx)
+        m = graph_runtime.create(graph, lib, device)
         x_np = np.random.uniform(size=dshape).astype(dtype)
         m.run(x=x_np)
         out = m.get_output(0, tvm.nd.empty((10, 6)))
@@ -54,9 +54,9 @@ def test_conv_ewise_injective():
     oshape = (1, 32* 18 * 18)
     shape_dict = {"x": dshape}
 
-    for target, ctx in ctx_list():
+    for target, device in device_list():
         graph, lib, _ = nnvm.compiler.build(y, target, shape_dict)
-        m = graph_runtime.create(graph, lib, ctx)
+        m = graph_runtime.create(graph, lib, device)
         # print(graph.ir(join_entry_attrs=["shape"]))
         assert graph.index.num_nodes == 5
         # set input
@@ -81,9 +81,9 @@ def test_injective_reduce_injective():
     dshape = (32, 1, 18, 18)
     shape_dict = {"x": dshape}
 
-    for target, ctx in ctx_list():
+    for target, device in device_list():
         graph, lib, _ = nnvm.compiler.build(y, target, shape_dict)
-        m = graph_runtime.create(graph, lib, ctx)
+        m = graph_runtime.create(graph, lib, device)
         assert graph.index.num_nodes == 2
         data = np.random.uniform(size=dshape).astype(dtype)
         m.run(x=data)
@@ -108,14 +108,14 @@ def test_injective_conv2d():
     oshape = dshape
     shape_dict = {"data": dshape}
 
-    for target, ctx in ctx_list():
+    for target, device in device_list():
         graph, lib, _ = nnvm.compiler.build(net, target, shape_dict)
         # data, global_avg_pool, conv weight, conv op, fused elemwise add
         assert graph.index.num_nodes == 5
 
         data = tvm.nd.array(np.random.uniform(size=dshape).astype(dtype))
         kernel = tvm.nd.array(np.random.uniform(size=kshape).astype(dtype))
-        m = graph_runtime.create(graph, lib, ctx)
+        m = graph_runtime.create(graph, lib, device)
         m.run(data=data, conv_weight=kernel)
         # get output
         out = m.get_output(0, tvm.nd.empty(oshape, dtype))
@@ -140,14 +140,14 @@ def test_concatenate_conv2d():
     oshape = (1, ch*2, size, size)
     shape_dict = {"data": dshape}
 
-    for target, ctx in ctx_list():
+    for target, device in device_list():
         graph, lib, _ = nnvm.compiler.build(net, target, shape_dict)
         # data, conv weight, conv op, concat
         assert graph.index.num_nodes == 4
 
         data = tvm.nd.array(np.random.uniform(size=dshape).astype(dtype))
         kernel = tvm.nd.array(np.random.uniform(size=kshape).astype(dtype))
-        m = graph_runtime.create(graph, lib, ctx)
+        m = graph_runtime.create(graph, lib, device)
         m.run(data=data, conv_weight=kernel)
         # get output
         out = m.get_output(0, tvm.nd.empty(oshape, dtype))
@@ -177,7 +177,7 @@ def test_residual_block_layout_transform():
     shape_dict = {"data": dshape}
 
     target = "llvm" # only test on llvm since it involves NCHW8c layout
-    ctx = tvm.context(target, 0)
+    device = tvm.context(target, 0)
     graph, lib, _ = nnvm.compiler.build(out, target, shape_dict)
     # data, conv1 weight, conv1, layout transform + elemwise add + relu, conv2 weight, conv2 op
     assert graph.index.num_nodes == 6
@@ -185,7 +185,7 @@ def test_residual_block_layout_transform():
     data = tvm.nd.array(np.random.uniform(size=dshape).astype(dtype))
     kernel1 = tvm.nd.array(np.random.uniform(size=kshape).astype(dtype))
     kernel2 = tvm.nd.array(np.random.uniform(size=kshape).astype(dtype))
-    m = graph_runtime.create(graph, lib, ctx)
+    m = graph_runtime.create(graph, lib, device)
     m.run(data=data, conv1_weight=kernel1, conv2_weight=kernel2)
     out = m.get_output(0, tvm.nd.empty(oshape, dtype))
 
@@ -197,10 +197,10 @@ def test_residual_block_layout_transform():
     tvm.testing.assert_allclose(out.asnumpy(), ref, rtol=1e-5)
 
 
-def build_and_run(sym, params, data, out_shape, target, ctx, opt_level=2):
+def build_and_run(sym, params, data, out_shape, target, device, opt_level=2):
     with nnvm.compiler.build_config(opt_level=opt_level):
         graph, lib, params = nnvm.compiler.build(sym, target, shape={"data":data.shape}, params=params)
-    module = graph_runtime.create(graph, lib, ctx)
+    module = graph_runtime.create(graph, lib, device)
     module.set_input(**params)
     module.set_input("data", data)
     module.run()
@@ -227,13 +227,13 @@ def test_fuse_conv2d_elu():
     oshape = (1, out_channel, size, size)
     data = np.random.uniform(-1, 1, dshape).astype(np.float32)
 
-    for target, ctx in ctx_list():
+    for target, device in device_list():
         sym1 = get_sym(out_channel)
         sym2 = get_sym(out_channel)
         _, params1 = utils.create_workload(sym1, 1, dshape[1:], seed=0)
         _, params2 = utils.create_workload(sym2, 1, dshape[1:], seed=0)
-        output1, g1 = build_and_run(sym1, params1, data, oshape, target, ctx, opt_level=2)
-        output2, g2 = build_and_run(sym2, params2, data, oshape, target, ctx, opt_level=0)
+        output1, g1 = build_and_run(sym1, params1, data, oshape, target, device, opt_level=2)
+        output2, g2 = build_and_run(sym2, params2, data, oshape, target, device, opt_level=0)
         tvm.testing.assert_allclose(output1, output2, rtol=1e-5, atol=1e-5)
         # data, conv weight, bias, batch norm gamma, batch norm beta, conv op
         assert g1.index.num_nodes == 6

@@ -48,17 +48,17 @@ def verify_dynamic_csrmv(batch, in_dim, out_dim, use_bias=True):
     a_np, b_np, c_np, d_np = get_ref_data()
 
     def check_device(device):
-        ctx = tvm.context(device, 0)
-        if not ctx.exist:
+        device = tvm.context(device, 0)
+        if not device.exist:
             print("Skip because %s is not enabled" % device)
             return
         print("Running on target: %s" % device)
-        a = tvmsp.array(a_np, ctx)
+        a = tvmsp.array(a_np, device)
         _nr, _nc, _n = a.shape[0], a.shape[1], a.data.shape[0]
         assert a.shape[0] == a.indptr.shape[0]-1
-        b = tvm.nd.array(b_np, ctx)
-        c = tvm.nd.array(c_np, ctx)
-        d = tvm.nd.array(np.zeros((_nr, 1), dtype=dtype), ctx)
+        b = tvm.nd.array(b_np, device)
+        c = tvm.nd.array(c_np, device)
+        d = tvm.nd.array(np.zeros((_nr, 1), dtype=dtype), device)
         assert a.data.dtype == A.data.dtype
         assert a.indices.dtype == A.indices.dtype
         assert a.indptr.dtype == A.indptr.dtype
@@ -92,17 +92,17 @@ def verify_dynamic_csrmm(batch, in_dim, out_dim, use_bias=True):
     a_np, b_np, c_np, d_np = get_ref_data()
 
     def check_device(device):
-        ctx = tvm.context(device, 0)
-        if not ctx.exist:
+        device = tvm.context(device, 0)
+        if not device.exist:
             print("Skip because %s is not enabled" % device)
             return
         print("Running on target: %s" % device)
-        a = tvmsp.array(a_np, ctx)
+        a = tvmsp.array(a_np, device)
         _nr, _nc, _n = a.shape[0], a.shape[1], a.data.shape[0]
         assert a.shape[0] == a.indptr.shape[0]-1
-        b = tvm.nd.array(b_np, ctx)
-        c = tvm.nd.array(c_np, ctx)
-        d = tvm.nd.array(np.zeros((_nr, out_dim), dtype=dtype), ctx)
+        b = tvm.nd.array(b_np, device)
+        c = tvm.nd.array(c_np, device)
+        d = tvm.nd.array(np.zeros((_nr, out_dim), dtype=dtype), device)
         f = tvm.build(s, [nr, A.data, A.indices, A.indptr, B, C, D], device, name="csrmm")
 
         f(_nr, a.data, a.indices, a.indptr, b, c, d)
@@ -133,15 +133,15 @@ def verify_dense_si(batch, in_dim, out_dim, use_bias=True, dtype='float32'):
     a_np, b_np, c_np, d_np = get_ref_data()
 
     def check_device(device):
-        ctx = tvm.context(device, 0)
-        if not ctx.exist:
+        device = tvm.context(device, 0)
+        if not device.exist:
             print("Skip because %s is not enabled" % device)
             return
         print("Running on target: %s" % device)
-        a = tvmsp.array(a_np, ctx)
-        b = tvm.nd.array(b_np, ctx)
-        c = tvm.nd.array(c_np, ctx)
-        d = tvm.nd.array(np.zeros(get_const_tuple(D.shape), dtype=dtype), ctx)
+        a = tvmsp.array(a_np, device)
+        b = tvm.nd.array(b_np, device)
+        c = tvm.nd.array(c_np, device)
+        d = tvm.nd.array(np.zeros(get_const_tuple(D.shape), dtype=dtype), device)
         f = tvm.build(s, [A.data, A.indices, A.indptr, B, C, D], device, name="dense")
         f(a.data, a.indices, a.indptr, b, c, d)
         tvm.testing.assert_allclose(d.asnumpy(), d_np, rtol=1e-4, atol=1e-4)
@@ -170,15 +170,15 @@ def verify_dense_sw(batch, in_dim, out_dim, use_bias=True, dtype='float32'):
     a_np, b_np, c_np, d_np = get_ref_data()
 
     def check_device(device):
-        ctx = tvm.context(device, 0)
-        if not ctx.exist:
+        device = tvm.context(device, 0)
+        if not device.exist:
             print("Skip because %s is not enabled" % device)
             return
         print("Running on target: %s" % device)
-        a = tvm.nd.array(a_np, ctx)
-        b = tvmsp.array(b_np, ctx)
-        c = tvm.nd.array(c_np, ctx)
-        d = tvm.nd.array(np.zeros(get_const_tuple(D.shape), dtype=dtype), ctx)
+        a = tvm.nd.array(a_np, device)
+        b = tvmsp.array(b_np, device)
+        c = tvm.nd.array(c_np, device)
+        d = tvm.nd.array(np.zeros(get_const_tuple(D.shape), dtype=dtype), device)
         f = tvm.build(s, [A, B.data, B.indices, B.indptr, C, D], device, name="dense")
         f(a, b.data, b.indices, b.indptr, c, d)
         tvm.testing.assert_allclose(d.asnumpy(), d_np, rtol=1e-4, atol=1e-4)

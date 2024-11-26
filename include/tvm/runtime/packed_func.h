@@ -506,7 +506,7 @@ class TVMPODValue_ {
   }
   operator TVMContext() const {
     TVM_CHECK_TYPE_CODE(type_code_, kTVMContext);
-    return value_.v_ctx;
+    return value_.v_device;
   }
   template<typename TNDArray,
            typename = typename std::enable_if<
@@ -737,7 +737,7 @@ class TVMRetValue : public TVMPODValue_ {
   }
   TVMRetValue& operator=(TVMContext value) {
     this->SwitchToPOD(kTVMContext);
-    value_.v_ctx = value;
+    value_.v_device = value;
     return *this;
   }
   TVMRetValue& operator=(TVMType t) {
@@ -1133,7 +1133,7 @@ class TVMArgsSetter {
     type_codes_[i] = kArrayHandle;
   }
   void operator()(size_t i, TVMContext value) const {
-    values_[i].v_ctx = value;
+    values_[i].v_device = value;
     type_codes_[i] = kTVMContext;
   }
   void operator()(size_t i, TVMType value) const {

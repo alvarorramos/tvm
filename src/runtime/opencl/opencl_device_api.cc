@@ -37,14 +37,14 @@ const std::shared_ptr<OpenCLWorkspace>& OpenCLWorkspace::Global() {
   return inst;
 }
 
-void OpenCLWorkspace::SetDevice(TVMContext ctx) {
-  GetThreadEntry()->context.device_id = ctx.device_id;
+void OpenCLWorkspace::SetDevice(TVMContext device) {
+  GetThreadEntry()->context.device_id = device.device_id;
 }
 
 void OpenCLWorkspace::GetAttr(
-    TVMContext ctx, DeviceAttrKind kind, TVMRetValue* rv) {
+    TVMContext device, DeviceAttrKind kind, TVMRetValue* rv) {
   this->Init();
-  size_t index = static_cast<size_t>(ctx.device_id);
+  size_t index = static_cast<size_t>(device.device_id);
   if (kind == kExist) {
     *rv = static_cast<int>(index< devices.size());
     return;
@@ -118,7 +118,7 @@ void OpenCLWorkspace::GetAttr(
 }
 
 void* OpenCLWorkspace::AllocDataSpace(
-    TVMContext ctx, size_t size, size_t alignment, TVMType type_hint) {
+    TVMContext device, size_t size, size_t alignment, TVMType type_hint) {
   this->Init();
   CHECK(context != nullptr) << "No OpenCL device";
   cl_int err_code;
@@ -128,10 +128,10 @@ void* OpenCLWorkspace::AllocDataSpace(
   return mptr;
 }
 
-void OpenCLWorkspace::FreeDataSpace(TVMContext ctx, void* ptr) {
+void OpenCLWorkspace::FreeDataSpace(TVMContext device, void* ptr) {
   // We have to make sure that the memory object is not in the command queue
   // for some OpenCL platforms.
-  OPENCL_CALL(clFinish(this->GetQueue(ctx)));
+  OPENCL_CALL(clFinish(this->GetQueue(device)));
 
   cl_mem mptr = static_cast<cl_mem>(ptr);
   OPENCL_CALL(clReleaseMemObject(mptr));
@@ -142,52 +142,52 @@ void OpenCLWorkspace::CopyDataFromTo(const void* from,
                                      void* to,
                                      size_t to_offset,
                                      size_t size,
-                                     TVMContext ctx_from,
-                                     TVMContext ctx_to,
+                                     TVMContext device_from,
+                                     TVMContext device_to,
                                      TVMType type_hint,
                                      TVMStreamHandle stream) {
   this->Init();
   CHECK(stream == nullptr);
-  if (IsOpenCLDevice(ctx_from) && IsOpenCLDevice(ctx_to)) {
+  if (IsOpenCLDevice(device_from) && IsOpenCLDevice(device_to)) {
     OPENCL_CALL(clEnqueueCopyBuffer(
-        this->GetQueue(ctx_to),
+        this->GetQueue(device_to),
         static_cast<cl_mem>((void*)from),  // NOLINT(*)
         static_cast<cl_mem>(to),
         from_offset, to_offset, size, 0, nullptr, nullptr));
-  } else if (IsOpenCLDevice(ctx_from) && ctx_to.device_type == kDLCPU) {
+  } else if (IsOpenCLDevice(device_from) && device_to.device_type == kDLCPU) {
     OPENCL_CALL(clEnqueueReadBuffer(
-        this->GetQueue(ctx_from),
+        this->GetQueue(device_from),
         static_cast<cl_mem>((void*)from),  // NOLINT(*)
         CL_FALSE, from_offset, size,
         static_cast<char*>(to) + to_offset,
         0, nullptr, nullptr));
-    OPENCL_CALL(clFinish(this->GetQueue(ctx_from)));
-  } else if (ctx_from.device_type == kDLCPU && IsOpenCLDevice(ctx_to)) {
+    OPENCL_CALL(clFinish(this->GetQueue(device_from)));
+  } else if (device_from.device_type == kDLCPU && IsOpenCLDevice(device_to)) {
     OPENCL_CALL(clEnqueueWriteBuffer(
-        this->GetQueue(ctx_to),
+        this->GetQueue(device_to),
         static_cast<cl_mem>(to),
         CL_FALSE, to_offset, size,
         static_cast<const char*>(from) + from_offset,
         0, nullptr, nullptr));
-    OPENCL_CALL(clFinish(this->GetQueue(ctx_to)));
+    OPENCL_CALL(clFinish(this->GetQueue(device_to)));
   } else {
     LOG(FATAL) << "Expect copy from/to OpenCL or between OpenCL";
   }
 }
 
-void OpenCLWorkspace::StreamSync(TVMContext ctx, TVMStreamHandle stream) {
+void OpenCLWorkspace::StreamSync(TVMContext device, TVMStreamHandle stream) {
   CHECK(stream == nullptr);
-  OPENCL_CALL(clFinish(this->GetQueue(ctx)));
+  OPENCL_CALL(clFinish(this->GetQueue(device)));
 }
 
-void* OpenCLWorkspace::AllocWorkspace(TVMContext ctx,
+void* OpenCLWorkspace::AllocWorkspace(TVMContext device,
                                       size_t size,
                                       TVMType type_hint) {
-  return GetThreadEntry()->pool.AllocWorkspace(ctx, size);
+  return GetThreadEntry()->pool.AllocWorkspace(device, size);
 }
 
-void OpenCLWorkspace::FreeWorkspace(TVMContext ctx, void* data) {
-  GetThreadEntry()->pool.FreeWorkspace(ctx, data);
+void OpenCLWorkspace::FreeWorkspace(TVMContext device, void* data) {
+  GetThreadEntry()->pool.FreeWorkspace(device, data);
 }
 
 typedef dmlc::ThreadLocalStore<OpenCLThreadEntry> OpenCLThreadStore;

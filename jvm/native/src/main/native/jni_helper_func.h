@@ -175,11 +175,11 @@ void fromJavaDType(JNIEnv *env, jobject jdtype, TVMType *dtype) {
   env->DeleteLocalRef(tvmTypeClass);
 }
 
-void fromJavaContext(JNIEnv *env, jobject jctx, TVMContext *ctx) {
+void fromJavaContext(JNIEnv *env, jobject jdevice, TVMContext *device) {
   jclass tvmContextClass = env->FindClass("org/apache/tvm/TVMContext");
-  ctx->device_type = static_cast<DLDeviceType>(env->GetIntField(jctx,
+  device->device_type = static_cast<DLDeviceType>(env->GetIntField(jdevice,
     env->GetFieldID(tvmContextClass, "deviceType", "I")));
-  ctx->device_id = static_cast<int>(env->GetIntField(jctx,
+  device->device_id = static_cast<int>(env->GetIntField(jdevice,
     env->GetFieldID(tvmContextClass, "deviceId", "I")));
   env->DeleteLocalRef(tvmContextClass);
 }

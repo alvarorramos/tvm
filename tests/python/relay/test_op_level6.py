@@ -19,7 +19,7 @@
 import numpy as np
 import tvm
 from tvm import relay
-from tvm.relay.testing import ctx_list
+from tvm.relay.testing import device_list
 
 def test_argsort():
     def verify_argsort(shape, axis, is_ascend, dtype):
@@ -32,9 +32,9 @@ def test_argsort():
         else:
             ref_res = np.argsort(-x_data, axis=axis)
 
-        for target, ctx in ctx_list():
+        for target, device in device_list():
             for kind in ["graph", "debug"]:
-                intrp = relay.create_executor(kind, ctx=ctx, target=target)
+                intrp = relay.create_executor(kind, device=device, target=target)
                 op_res = intrp.evaluate(func)(x_data)
                 tvm.testing.assert_allclose(op_res.asnumpy(), ref_res.astype(dtype), rtol=1e-5)
     for dtype in ["int32", "int64", "float32", "float64"]:
@@ -69,9 +69,9 @@ def test_topk():
                 np_values[i, :] = np_data[i, np_indices[i, :]]
         np_indices = np_indices.astype(dtype)
 
-        for target, ctx in ctx_list():
+        for target, device in device_list():
             for kind in ["graph", "debug"]:
-                intrp = relay.create_executor(kind, ctx=ctx, target=target)
+                intrp = relay.create_executor(kind, device=device, target=target)
                 op_res = intrp.evaluate(func)(np_data)
                 if ret_type == "both":
                     tvm.testing.assert_allclose(op_res[0].asnumpy(), np_values)

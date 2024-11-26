@@ -107,7 +107,7 @@ class Executable(object):
             f = relay.Function([x], x + x)
             mod = relay.Module({"main": f})
             # create a Relay VM.
-            ctx = tvm.cpu()
+            device = tvm.cpu()
             target = "llvm"
             executable = relay.vm.compile(mod, target)
             code, lib = executable.save()
@@ -124,7 +124,7 @@ class Executable(object):
             # execute the deserialized executable.
             x_data = np.random.rand(10, 10).astype('float32')
             des_vm = relay.vm.VirtualMachine(des_exec)
-            des_vm.init(ctx)
+            des_vm.init(device)
             res = des_vm.run(x_data)
             print(res.asnumpy())
         """
@@ -272,15 +272,15 @@ class VirtualMachine(object):
         self._invoke = self.mod["invoke"]
         self._set_input = self.mod["set_input"]
 
-    def init(self, ctx):
+    def init(self, device):
         """Initialize the context in the VM.
 
         Parameters
         ----------
-        ctx : :py:class:`TVMContext`
+        device : :py:class:`TVMContext`
             The runtime context to run the code on.
         """
-        args = [ctx.device_type, ctx.device_id]
+        args = [device.device_type, device.device_id]
         self._init(*args)
 
     def set_input(self, func_name, *args, **kwargs):
@@ -467,22 +467,22 @@ class VMExecutor(Executor):
     mod : :py:class:`~tvm.relay.module.Module`
         The module to support the execution.
 
-    ctx : :py:class:`~tvm.TVMContext`
+    device : :py:class:`~tvm.TVMContext`
         The runtime context to run the code on.
 
     target : :py:class:`Target`
         The target option to build the function.
     """
 
-    def __init__(self, mod, ctx, target):
+    def __init__(self, mod, device, target):
         if mod is None:
             raise RuntimeError("Must provide module to get VM executor.")
         self.mod = mod
-        self.ctx = ctx
+        self.device = device
         self.target = target
         self.executable = compile(mod, target)
         self.vm = VirtualMachine(self.executable)
-        self.vm.init(ctx)
+        self.vm.init(device)
 
     def _make_executor(self, expr=None):
         main = self.mod["main"]

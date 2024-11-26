@@ -220,8 +220,8 @@ def test_gemm(N, L, M, dtype, layout):
 # and run the kernel to compare with numpy to check whether the results are correct.
 
 # check whether the gpu has tensorcore
-ctx = tvm.gpu()
-if not nvcc.have_tensorcore(ctx.compute_version):
+device = tvm.gpu()
+if not nvcc.have_tensorcore(device.compute_version):
   print('the gpu has no tensorcore, skipping...')
   sys.exit(0)
 
@@ -307,14 +307,14 @@ def tune_and_evaluate(M, N, L, dtype, layout):
     elif (layout == "TT"):
       c_np = np.dot(a_np.astype(np.int32).T, b_np.astype(np.int32).T)
 
-  c_tvm = tvm.nd.array(np.zeros(c_np.shape, dtype=c_np_type), ctx=ctx)
-  a_tvm = tvm.nd.array(a_np, ctx=ctx)
-  b_tvm = tvm.nd.array(b_np, ctx=ctx)
+  c_tvm = tvm.nd.array(np.zeros(c_np.shape, dtype=c_np_type), device=device)
+  a_tvm = tvm.nd.array(a_np, device=device)
+  b_tvm = tvm.nd.array(b_np, device=device)
   func(a_tvm, b_tvm, c_tvm)
 
   tvm.testing.assert_allclose(c_np, c_tvm.asnumpy(), rtol=1e-3)
 
-  evaluator = func.time_evaluator(func.entry_name, ctx, number=100)
+  evaluator = func.time_evaluator(func.entry_name, device, number=100)
   print('Time cost of this operator: %f' % evaluator(a_tvm, b_tvm, c_tvm).mean)
 
 # We do not run the tuning in our webpage server since it takes some time.

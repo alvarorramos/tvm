@@ -492,8 +492,8 @@ def infer_value(input_val, params):
     func = _expr.Function(analysis.free_vars(input_val), input_val)
     with tvm.relay.build_config(opt_level=0):
         graph, lib, params = tvm.relay.build(func, target="llvm", params=params)
-    ctx = tvm.cpu(0)
-    m = graph_runtime.create(graph, lib, ctx)
+    device = tvm.cpu(0)
+    m = graph_runtime.create(graph, lib, device)
     m.set_input(**params)
     m.run()
     return m.get_output(0)

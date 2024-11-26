@@ -24,17 +24,17 @@ from tvm.contrib import graph_runtime
 import topi
 import topi.testing
 from tvm import relay
-from tvm.relay.testing.config import ctx_list
+from tvm.relay.testing.config import device_list
 from topi.testing import conv2d_nchw_python
 
 import coremltools as cm
 import model_zoo
 
-def get_tvm_output(func, x, params, target, ctx,
+def get_tvm_output(func, x, params, target, device,
                    out_shape=(1, 1000), input_name='image', dtype='float32'):
     with relay.transform.build_config(opt_level=3):
         graph, lib, params = relay.build(func, target, params=params)
-    m = graph_runtime.create(graph, lib, ctx)
+    m = graph_runtime.create(graph, lib, device)
     # set inputs
     m.set_input(input_name, tvm.nd.array(x.astype(dtype)))
     m.set_input(**params)
@@ -49,10 +49,10 @@ def run_model_checkonly(model_file, model_name='', input_name='image'):
     shape_dict = {input_name : x.shape}
     # Some Relay passes change operators on the fly. Ensuring that we generate
     # new graph for each target.
-    for target, ctx in ctx_list():
+    for target, device in device_list():
         mod, params = relay.frontend.from_coreml(model, shape_dict)
-        tvm_output = get_tvm_output(mod["main"], x, params, target, ctx)
-        print(target, ctx, model_name, 'prediction id: ', np.argmax(tvm_output.flat))
+        tvm_output = get_tvm_output(mod["main"], x, params, target, device)
+        print(target, device, model_name, 'prediction id: ', np.argmax(tvm_output.flat))
 
 def test_mobilenet_checkonly():
     model_file = model_zoo.get_mobilenet()
@@ -62,7 +62,7 @@ def test_resnet50_checkonly():
     model_file = model_zoo.get_resnet50()
     run_model_checkonly(model_file, 'resnet50')
 
-def run_tvm_graph(coreml_model, target, ctx, input_data, input_name, output_shape, output_dtype='float32'):
+def run_tvm_graph(coreml_model, target, device, input_data, input_name, output_shape, output_dtype='float32'):
     """ Generic function to compile on relay and execute on tvm """
     if isinstance(input_data, list):
         shape_dict = {}
@@ -79,7 +79,7 @@ def run_tvm_graph(coreml_model, target, ctx, input_data, input_name, output_shap
         graph, lib, params = relay.build(mod, target, params=params)
 
     from tvm.contrib import graph_runtime
-    m = graph_runtime.create(graph, lib, ctx)
+    m = graph_runtime.create(graph, lib, device)
     # set inputs
     if isinstance(input_data, list):
         for i, e in enumerate(input_name):
@@ -121,8 +121,8 @@ def verify_AddLayerParams(input_dim, alpha=2):
                             output_name='output',
                             mode='ADD')
     model = cm.models.MLModel(builder.spec)
-    for target, ctx in ctx_list():
-        out = run_tvm_graph(model, target, ctx, [a_np1, a_np2], ['input1', 'input2'], b_np.shape, dtype)
+    for target, device in device_list():
+        out = run_tvm_graph(model, target, device, [a_np1, a_np2], ['input1', 'input2'], b_np.shape, dtype)
         tvm.testing.assert_allclose(out, b_np, rtol=1e-5)
 
 def test_forward_AddLayerParams():
@@ -147,8 +147,8 @@ def verify_MultiplyLayerParams(input_dim, alpha):
                             output_name='output',
                             mode='MULTIPLY')
     model = cm.models.MLModel(builder.spec)
-    for target, ctx in ctx_list():
-        out = run_tvm_graph(model, target, ctx, [a_np1, a_np2], ['input1', 'input2'], b_np.shape, dtype)
+    for target, device in device_list():
+        out = run_tvm_graph(model, target, device, [a_np1, a_np2], ['input1', 'input2'], b_np.shape, dtype)
         tvm.testing.assert_allclose(out, b_np, rtol=1e-5)
 
 def test_forward_MultiplyLayerParams():
@@ -172,8 +172,8 @@ def verify_ConcatLayerParams(input1_dim, input2_dim):
                             output_name='output',
                             mode='CONCAT')
     model = cm.models.MLModel(builder.spec)
-    for target, ctx in ctx_list():
-        out = run_tvm_graph(model, target, ctx, [a_np1, a_np2], ['input1', 'input2'], b_np.shape, dtype)
+    for target, device in device_list():
+        out = run_tvm_graph(model, target, device, [a_np1, a_np2], ['input1', 'input2'], b_np.shape, dtype)
         tvm.testing.assert_allclose(out, b_np, rtol=1e-5)
 
 def test_forward_ConcatLayerParams():
@@ -202,8 +202,8 @@ def verify_UpsampleLayerParams(input_dim, scale, mode):
                          output_name='output')
 
     model = cm.models.MLModel(builder.spec)
-    for target, ctx in ctx_list():
-        out = run_tvm_graph(model, target, ctx, a_np, 'input', b_np.shape, dtype)
+    for target, device in device_list():
+        out = run_tvm_graph(model, target, device, a_np, 'input', b_np.shape, dtype)
         tvm.testing.assert_allclose(out, b_np, rtol=1e-5)
 
 def test_forward_UpsampleLayerParams():
@@ -222,8 +222,8 @@ def verify_l2_normalize(input_dim, eps):
     builder.add_l2_normalize(name='L2', epsilon=eps, input_name='input', output_name='output')
 
     model = cm.models.MLModel(builder.spec)
-    for target, ctx in ctx_list():
-        out = run_tvm_graph(model, target, ctx, a_np, 'input', b_np.shape, dtype)
+    for target, device in device_list():
+        out = run_tvm_graph(model, target, device, a_np, 'input', b_np.shape, dtype)
         tvm.testing.assert_allclose(out, b_np, rtol=1e-5)
 
 def test_forward_l2_normalize():
@@ -247,8 +247,8 @@ def verify_lrn(input_dim, size, bias, alpha, beta):
                     local_size=size)
 
     model = cm.models.MLModel(builder.spec)
-    for target, ctx in ctx_list():
-        out = run_tvm_graph(model, target, ctx, a_np, 'input', b_np.shape, dtype)
+    for target, device in device_list():
+        out = run_tvm_graph(model, target, device, a_np, 'input', b_np.shape, dtype)
         tvm.testing.assert_allclose(out, b_np, rtol=1e-5)
 
 def test_forward_lrn():
@@ -271,8 +271,8 @@ def verify_average(input_dim1, input_dim2, axis=0):
                             output_name='output',
                             mode='AVE')
     model = cm.models.MLModel(builder.spec)
-    for target, ctx in ctx_list():
-        out = run_tvm_graph(model, target, ctx, [a_np1, a_np2], ['input1', 'input2'], b_np.shape, dtype)
+    for target, device in device_list():
+        out = run_tvm_graph(model, target, device, [a_np1, a_np2], ['input1', 'input2'], b_np.shape, dtype)
         tvm.testing.assert_allclose(out, b_np, rtol=1e-5)
 
 def test_forward_average():
@@ -299,8 +299,8 @@ def verify_max(input_dim):
                             output_name='output',
                             mode='MAX')
     model = cm.models.MLModel(builder.spec)
-    for target, ctx in ctx_list():
-        out = run_tvm_graph(model, target, ctx, [a_np1, a_np2, a_np3],
+    for target, device in device_list():
+        out = run_tvm_graph(model, target, device, [a_np1, a_np2, a_np3],
                             ['input1', 'input2', 'input3'], b_np.shape, dtype)
         tvm.testing.assert_allclose(out, b_np, rtol=1e-5)
 
@@ -327,8 +327,8 @@ def verify_min(input_dim):
                             output_name='output',
                             mode='MIN')
     model = cm.models.MLModel(builder.spec)
-    for target, ctx in ctx_list():
-        out = run_tvm_graph(model, target, ctx, [a_np1, a_np2, a_np3],
+    for target, device in device_list():
+        out = run_tvm_graph(model, target, device, [a_np1, a_np2, a_np3],
                             ['input1', 'input2', 'input3'], b_np.shape, dtype)
         tvm.testing.assert_allclose(out, b_np, rtol=1e-5)
 
@@ -361,8 +361,8 @@ def verify_image_scaler(input_dim, blue_bias=0.0, green_bias=0.0, red_bias=0.0, 
     builder.add_elementwise(name='add', input_names=['input1', 'input2'],
                             output_name='output', alpha=0, mode='ADD')
     model = cm.models.MLModel(builder.spec)
-    for target, ctx in ctx_list():
-        out = run_tvm_graph(model, target, ctx, [a_np, a_np],
+    for target, device in device_list():
+        out = run_tvm_graph(model, target, device, [a_np, a_np],
                             ['input1', 'input2'], b_np.shape, dtype)
         tvm.testing.assert_allclose(out, b_np, rtol=1e-5)
 
@@ -393,8 +393,8 @@ def verify_convolution(input_dim, filter, padding):
                             input_name='input1',
                             output_name='output')
     model = cm.models.MLModel(builder.spec)
-    for target, ctx in ctx_list():
-        out = run_tvm_graph(model, target, ctx, [a_np],
+    for target, device in device_list():
+        out = run_tvm_graph(model, target, device, [a_np],
                             ['input1'], output_shape=None)
         tvm.testing.assert_allclose(out, b_np, rtol=1e-5)
 

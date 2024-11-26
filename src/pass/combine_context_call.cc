@@ -43,21 +43,21 @@ class ContextCallCombiner final : public IRMutator {
   Expr Mutate_(const Call* op, const Expr& e) final {
     if (op->is_intrinsic(intrinsic::tvm_thread_context)) {
       CHECK_EQ(op->args.size(), 1U);
-      Expr ctx = op->args[0];
-      auto it  = ctx_map_.find(ctx);
-      if (it != ctx_map_.end()) {
+      Expr device = op->args[0];
+      auto it  = device_map_.find(device);
+      if (it != device_map_.end()) {
         return it->second;
       } else {
-        CHECK(ctx.type().is_handle());
+        CHECK(device.type().is_handle());
         std::string name;
-        if (const Call* call = ctx.as<Call>()) {
+        if (const Call* call = device.as<Call>()) {
           name = call->name + "_cache";
         } else {
-          name = "ctx_cache_";
+          name = "device_cache_";
         }
-        Var ctx_var(name, ctx.type());
-        ctx_map_[ctx] = ctx_var;
-        return std::move(ctx_var);
+        Var device_var(name, device.type());
+        device_map_[device] = device_var;
+        return std::move(device_var);
       }
     } else {
       return IRMutator::Mutate_(op, e);
@@ -69,9 +69,9 @@ class ContextCallCombiner final : public IRMutator {
         op->attr_key == attr::coproc_uop_scope) {
       // Map of comparison expression to variable
       std::map<Expr, Var, CompareExpr> temp;
-      std::swap(temp, ctx_map_);
+      std::swap(temp, device_map_);
       Stmt stmt = IRMutator::Mutate_(op, s);
-      std::swap(temp, ctx_map_);
+      std::swap(temp, device_map_);
       return BuildContext(temp, stmt);
     } else {
       return IRMutator::Mutate_(op, s);
@@ -82,9 +82,9 @@ class ContextCallCombiner final : public IRMutator {
     if (op->for_type == ForType::Parallel) {
       // Map of comparison expression to variable
       std::map<Expr, Var, CompareExpr> temp;
-      std::swap(temp, ctx_map_);
+      std::swap(temp, device_map_);
       Stmt stmt = IRMutator::Mutate_(op, s);
-      std::swap(temp, ctx_map_);
+      std::swap(temp, device_map_);
       return BuildContext(temp, stmt);
     } else {
       return IRMutator::Mutate_(op, s);
@@ -92,7 +92,7 @@ class ContextCallCombiner final : public IRMutator {
   }
 
   Stmt Combine(Stmt stmt) {
-    return BuildContext(ctx_map_, this->Mutate(stmt));
+    return BuildContext(device_map_, this->Mutate(stmt));
   }
 
  private:
@@ -104,7 +104,7 @@ class ContextCallCombiner final : public IRMutator {
     return body;
   }
   // Map of comparison expression to variable
-  std::map<Expr, Var, CompareExpr> ctx_map_;
+  std::map<Expr, Var, CompareExpr> device_map_;
 };
 
 LoweredFunc CombineContextCall(LoweredFunc f) {

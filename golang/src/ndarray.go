@@ -243,9 +243,9 @@ func (parray Array) GetDType() (retVal string) {
     return
 }
 
-// GetCtx returns the number of dimentions in Array
-func (parray Array) GetCtx() (retVal Context) {
-    ret := ((*C.TVMArray)(unsafe.Pointer(parray))).ctx
+// Getdevice returns the number of dimentions in Array
+func (parray Array) Getdevice() (retVal Context) {
+    ret := ((*C.TVMArray)(unsafe.Pointer(parray))).device
     retVal = *(*Context)(unsafe.Pointer(&ret))
     return
 }
@@ -294,7 +294,7 @@ func nativeTVMArrayAlloc(shape []int64, ndim int32,
 // returns pointer to Array on successful execution and error if any.
 func Empty(shape []int64, args ...interface{}) (parray *Array, err error) {
     typeName := "float32"
-    ctx := Context{KDLCPU, 0}
+    device := Context{KDLCPU, 0}
 
     if len(shape) < 1 {
         err = fmt.Errorf("Invalid shape for Array creation: %v", len(shape))
@@ -306,7 +306,7 @@ func Empty(shape []int64, args ...interface{}) (parray *Array, err error) {
             case string:
                 typeName = args[i].(string)
             case Context:
-                ctx = args[i].(Context)
+                device = args[i].(Context)
             default:
                 err = fmt.Errorf("Invalid Optional Argument Type: %T", val)
                 return
@@ -320,7 +320,7 @@ func Empty(shape []int64, args ...interface{}) (parray *Array, err error) {
     ndim := int32(len(shape))
     newArray, err := nativeTVMArrayAlloc(shape, ndim, int32(tvmType.code),
                                     int32(tvmType.bits), int32(tvmType.lanes),
-                                    ctx.DeviceType, ctx.DeviceID)
+                                    device.DeviceType, device.DeviceID)
     if err != nil {
         return
     }

@@ -28,11 +28,11 @@ def test_nearbyint():
     A_rounded = tvm.compute((m,), lambda *i: tvm.nearbyint(A(*i)), name='A')
     s = tvm.create_schedule(A_rounded.op)
     f = tvm.build(s, [A, A_rounded], "llvm")
-    ctx = tvm.cpu(0)
+    device = tvm.cpu(0)
     n = 10
-    a = tvm.nd.array(np.random.uniform(high=100, size=n).astype(A.dtype), ctx)
+    a = tvm.nd.array(np.random.uniform(high=100, size=n).astype(A.dtype), device)
     a_rounded = tvm.nd.array( \
-            np.random.uniform(size=n).astype(A_rounded.dtype), ctx)
+            np.random.uniform(size=n).astype(A_rounded.dtype), device)
     f(a, a_rounded)
     # Note that numpys rint rounds to nearest integer with
     # ties to halfway is broken by rounding to even.

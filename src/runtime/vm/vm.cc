@@ -45,10 +45,10 @@ namespace runtime {
 namespace vm {
 
 
-inline Storage make_storage(size_t size, size_t alignment, TVMType dtype_hint, TVMContext ctx) {
-  // We could put cache in here, from ctx to storage allocator.
+inline Storage make_storage(size_t size, size_t alignment, TVMType dtype_hint, TVMContext device) {
+  // We could put cache in here, from device to storage allocator.
   auto storage_obj = SimpleObjAllocator().make_object<StorageObj>();
-  auto alloc = MemoryManager::Global()->GetAllocator(ctx);
+  auto alloc = MemoryManager::Global()->GetAllocator(device);
   DCHECK(alloc != nullptr)
     << "allocator must not null";
   storage_obj->buffer = alloc->Alloc(size, alignment, dtype_hint);
@@ -612,11 +612,11 @@ std::ostream& operator<<(std::ostream& os, const VMFunction& vm_func) {
   return os;
 }
 
-ObjectRef CopyTo(ObjectRef src, const DLDevice& ctx) {
+ObjectRef CopyTo(ObjectRef src, const DLDevice& device) {
   if (const TensorObj* obj = src.as<TensorObj>()) {
     auto tensor = obj->data;
-    if (tensor->ctx.device_type != ctx.device_type) {
-      auto copy = tensor.CopyTo(ctx);
+    if (tensor->device.device_type != device.device_type) {
+      auto copy = tensor.CopyTo(device);
       return Tensor(copy);
     } else {
       return src;
@@ -650,11 +650,11 @@ PackedFunc VirtualMachine::GetFunction(const std::string& name,
       CHECK_EQ(args.size() % 2, 0);
       std::vector<TVMContext> contexts;
       for (int i = 0; i < args.size() / 2; ++i) {
-        TVMContext ctx;
+        TVMContext device;
         int device_type = args[i * 2];
-        ctx.device_type = DLDeviceType(device_type);
-        ctx.device_id = args[i * 2 + 1];
-        contexts.push_back(ctx);
+        device.device_type = DLDeviceType(device_type);
+        device.device_id = args[i * 2 + 1];
+        contexts.push_back(device);
       }
       this->Init(contexts);
     });
@@ -668,12 +668,12 @@ PackedFunc VirtualMachine::GetFunction(const std::string& name,
       const auto& vm_func = exec_->functions[func_index];
       const auto& param_names = vm_func.params;
       // TODO(icemelon9): For heterogeneous execution, get input device information
-      TVMContext ctx = ctxs_[0];
+      TVMContext device = devices_[0];
       CHECK_EQ(args.size() - 1, param_names.size()) <<
           "The number of provided parameters doesn't match the number of arguments";
       std::vector<ObjectRef> func_args(param_names.size());
       for (int i = 1; i < args.size(); ++i) {
-        ObjectRef obj = CopyTo(args[i], ctx);
+        ObjectRef obj = CopyTo(args[i], device);
         func_args[i - 1] = obj;
       }
       inputs_.erase(func_name);
@@ -686,17 +686,17 @@ PackedFunc VirtualMachine::GetFunction(const std::string& name,
 }
 
 TVMContext VirtualMachine::GetParamsContext() const {
-  CHECK(!ctxs_.empty()) << "Context has not been initialized yet.";
+  CHECK(!devices_.empty()) << "Context has not been initialized yet.";
 
   // Use the fallback device if no device index is available.
-  int fallback_device_type = static_cast<int>(ctxs_[0].device_type);
+  int fallback_device_type = static_cast<int>(devices_[0].device_type);
   // TODO(wweic): For heterogeneous execution, get device information from byte
 
   const auto& cit =
-      std::find_if(ctxs_.begin(), ctxs_.end(), [&fallback_device_type](const TVMContext& c) {
+      std::find_if(devices_.begin(), devices_.end(), [&fallback_device_type](const TVMContext& c) {
         return fallback_device_type == static_cast<int>(c.device_type);
       });
-  return (cit == ctxs_.end() ? ctxs_[0] : *cit);
+  return (cit == devices_.end() ? devices_[0] : *cit);
 }
 
 void VirtualMachine::PushFrame(Index arg_count, Index ret_pc, const VMFunction& vm_func) {
@@ -733,8 +733,8 @@ ObjectRef VirtualMachine::Invoke(const VMFunction& func, const std::vector<Objec
 
   InvokeGlobal(func, args);
   RunLoop();
-  // TODO(wweic) ctx could be obtained from the ctxs list.
-  auto alloc = MemoryManager::Global()->GetAllocator(ctxs_[0]);
+  // TODO(wweic) device could be obtained from the devices list.
+  auto alloc = MemoryManager::Global()->GetAllocator(devices_[0]);
   DLOG(INFO) << "Memory used: " << alloc->UsedMemory() << " B";
   return return_register_;
 }
@@ -803,8 +803,8 @@ void VirtualMachine::LoadExecutable(const Executable* exec) {
 }
 
 
-void VirtualMachine::Init(const std::vector<TVMContext>& ctxs) {
-  ctxs_ = ctxs;
+void VirtualMachine::Init(const std::vector<TVMContext>& devices) {
+  devices_ = devices;
 }
 
 inline void VirtualMachine::WriteRegister(Index r, const ObjectRef& val) {
@@ -866,8 +866,8 @@ void VirtualMachine::RunLoop() {
         }
 
         if (!const_pool_[instr.const_index].defined()) {
-          // TODO(wweic) ctx could be obtained from the ctxs list.
-          const_pool_[instr.const_index] = CopyTo(constant_obj, ctxs_[0]);
+          // TODO(wweic) device could be obtained from the devices list.
+          const_pool_[instr.const_index] = CopyTo(constant_obj, devices_[0]);
         }
         WriteRegister(instr.dst, const_pool_[instr.const_index]);
         pc_++;
@@ -982,13 +982,13 @@ void VirtualMachine::RunLoop() {
         goto main_loop;
       }
       case Opcode::AllocTensorReg: {
-        DLDevice cpu_ctx;
-        cpu_ctx.device_type = kDLCPU;
-        cpu_ctx.device_id = 0;
+        DLDevice cpu_device;
+        cpu_device.device_type = kDLCPU;
+        cpu_device.device_id = 0;
         auto shape_tensor_obj = ReadRegister(instr.alloc_tensor_reg.shape_register);
         const auto* tensor = shape_tensor_obj.as<TensorObj>();
         CHECK(tensor != nullptr);
-        NDArray shape_tensor = tensor->data.CopyTo(cpu_ctx);
+        NDArray shape_tensor = tensor->data.CopyTo(cpu_device);
         const DLTensor* dl_tensor = shape_tensor.operator->();
         CHECK_EQ(dl_tensor->dtype.code, 0u);
         CHECK_LE(dl_tensor->dtype.bits, 64);
@@ -1034,7 +1034,7 @@ void VirtualMachine::RunLoop() {
           "alignment=" << alignment <<
           "dtype_hint=" << TVMType2String(instr.alloc_storage.dtype_hint);
 
-        auto storage = make_storage(size, alignment, instr.alloc_storage.dtype_hint, ctxs_[0]);
+        auto storage = make_storage(size, alignment, instr.alloc_storage.dtype_hint, devices_[0]);
         WriteRegister(instr.dst, storage);
         pc_++;
         goto main_loop;

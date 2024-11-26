@@ -80,7 +80,7 @@ def test_gemm():
             remote.upload(temp.relpath("gemm.o"))
             f = remote.load_module("gemm.o")
             # verify
-            ctx = remote.ext_dev(0)
+            device = remote.ext_dev(0)
             # Data in original format
             data_orig = np.random.randint(
                 -128, 128, size=(batch_size, channel)).astype(data.dtype)
@@ -93,9 +93,9 @@ def test_gemm():
                 channel // env.BLOCK_OUT, env.BLOCK_OUT,
                 channel // env.BLOCK_IN, env.BLOCK_IN).transpose((0, 2, 1, 3))
             res_np = np.zeros(res_shape).astype(res.dtype)
-            data_arr = tvm.nd.array(data_packed, ctx)
-            weight_arr = tvm.nd.array(weight_packed, ctx)
-            res_arr = tvm.nd.array(res_np, ctx)
+            data_arr = tvm.nd.array(data_packed, device)
+            weight_arr = tvm.nd.array(weight_packed, device)
+            res_arr = tvm.nd.array(res_np, device)
             res_ref = np.zeros(res_shape).astype(env.acc_dtype)
             for b in range(batch_size // env.BATCH):
                 for i in range(channel // env.BLOCK_OUT):
@@ -104,7 +104,7 @@ def test_gemm():
                                                  weight_packed[i,j].T.astype(env.acc_dtype))
             res_ref = np.right_shift(res_ref, 8)
             res_ref = np.clip(res_ref, 0, (1<<(env.INP_WIDTH-1))-1).astype(res.dtype)
-            time_f = f.time_evaluator("gemm", ctx, number=20)
+            time_f = f.time_evaluator("gemm", device, number=20)
             if env.TARGET in ["sim", "tsim"]:
                 simulator.clear_stats()
             cost = time_f(data_arr, weight_arr, res_arr)

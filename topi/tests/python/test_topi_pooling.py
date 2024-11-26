@@ -69,16 +69,16 @@ def verify_pool(n, ic, ih, kh, sh, padding, pool_type, ceil_mode, count_include_
     b_np = np.maximum(b_np, 0.0)
 
     def check_device(device):
-        ctx = tvm.context(device, 0)
-        if not ctx.exist:
+        device = tvm.context(device, 0)
+        if not device.exist:
             print("Skip because %s is not enabled" % device)
             return
         print("Running on target: %s" % device)
         with tvm.target.create(device):
             s = topi.generic.schedule_pool(B, layout)
 
-        a = tvm.nd.array(a_np, ctx)
-        b = tvm.nd.array(np.zeros(get_const_tuple(B.shape), dtype=dtype), ctx)
+        a = tvm.nd.array(a_np, device)
+        b = tvm.nd.array(np.zeros(get_const_tuple(B.shape), dtype=dtype), device)
         f = tvm.build(s, [A, B], device)
         f(a, b)
         tvm.testing.assert_allclose(b.asnumpy(), b_np, rtol=1e-5)
@@ -124,17 +124,17 @@ def verify_pool_grad(n, ic, ih, kh, sh, padding, pool_type, ceil_mode, count_inc
         pool_grad_np = np.maximum(pool_grad_np, 0.)
 
     def check_device(device):
-        ctx = tvm.context(device, 0)
-        if not ctx.exist:
+        device = tvm.context(device, 0)
+        if not device.exist:
             print("Skip because %s is not enabled" % device)
             return
         print("Running on target: %s" % device)
         with tvm.target.create(device):
             s = topi.generic.schedule_pool_grad(PoolGrad)
 
-        a = tvm.nd.array(a_np, ctx)
-        out_grad = tvm.nd.array(out_grad_np, ctx)
-        pool_grad = tvm.nd.array(np.zeros(get_const_tuple(PoolGrad.shape), dtype=dtype), ctx)
+        a = tvm.nd.array(a_np, device)
+        out_grad = tvm.nd.array(out_grad_np, device)
+        pool_grad = tvm.nd.array(np.zeros(get_const_tuple(PoolGrad.shape), dtype=dtype), device)
         f = tvm.build(s, [A, OutGrad, PoolGrad], device)
         f(a, out_grad, pool_grad)
         tvm.testing.assert_allclose(pool_grad.asnumpy(), pool_grad_np, rtol=1e-5)
@@ -196,15 +196,15 @@ def verify_global_pool(n, c, h, w, pool_type, layout='NCHW'):
     b_np = np.maximum(b_np, 0.0)
 
     def check_device(device):
-        ctx = tvm.context(device, 0)
-        if not ctx.exist:
+        device = tvm.context(device, 0)
+        if not device.exist:
             print("Skip because %s is not enabled" % device)
             return
         print("Running on target: %s" % device)
         with tvm.target.create(device):
             s = topi.generic.schedule_adaptive_pool(B)
-        a = tvm.nd.array(a_np, ctx)
-        b = tvm.nd.array(np.zeros(get_const_tuple(B.shape), dtype=B.dtype), ctx)
+        a = tvm.nd.array(a_np, device)
+        b = tvm.nd.array(np.zeros(get_const_tuple(B.shape), dtype=B.dtype), device)
         f = tvm.build(s, [A, B], device)
         f(a, b)
         tvm.testing.assert_allclose(b.asnumpy(), b_np, rtol=1e-5)
@@ -250,15 +250,15 @@ def verify_adaptive_pool(dshape, out_size, pool_type, layout="NCHW", dtype="floa
     data = tvm.placeholder(dshape, name="data", dtype=dtype)
     out = topi.nn.adaptive_pool(data, out_size, pool_type, layout)
     def check_device(device):
-        ctx = tvm.context(device, 0)
-        if not ctx.exist:
+        device = tvm.context(device, 0)
+        if not device.exist:
             print("Skip because %s is not enabled" % device)
             return
         print("Running on target: %s" % device)
         with tvm.target.create(device):
             s = topi.generic.schedule_adaptive_pool(out)
-        a = tvm.nd.array(np_data, ctx)
-        b = tvm.nd.array(np.zeros(get_const_tuple(oshape), dtype=out.dtype), ctx)
+        a = tvm.nd.array(np_data, device)
+        b = tvm.nd.array(np.zeros(get_const_tuple(oshape), dtype=out.dtype), device)
         f = tvm.build(s, [data, out], device)
         f(a, b)
         tvm.testing.assert_allclose(b.asnumpy(), np_out, rtol=1e-5)

@@ -36,14 +36,14 @@ def benchmark(network, target):
         graph, lib, params = relay.build(net, target=target, params=params)
 
     # create runtime
-    ctx = tvm.context(str(target), 0)
-    module = runtime.create(graph, lib, ctx)
+    device = tvm.context(str(target), 0)
+    module = runtime.create(graph, lib, device)
     data_tvm = tvm.nd.array((np.random.uniform(size=input_shape)).astype(dtype))
     module.set_input('data', data_tvm)
     module.set_input(**params)
 
     # evaluate
-    ftimer = module.module.time_evaluator("run", ctx, number=1, repeat=args.repeat)
+    ftimer = module.module.time_evaluator("run", device, number=1, repeat=args.repeat)
     prof_res = np.array(ftimer().results) * 1000  # multiply 1000 for converting to millisecond
     print("%-20s %-19s (%s)" % (network, "%.2f ms" % np.mean(prof_res), "%.2f ms" % np.std(prof_res)))
 

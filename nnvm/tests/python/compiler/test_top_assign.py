@@ -21,7 +21,7 @@ from tvm.contrib import graph_runtime
 
 import nnvm.symbol as sym
 import nnvm.compiler
-from nnvm.testing.config import ctx_list
+from nnvm.testing.config import device_list
 
 
 def test_update():
@@ -34,10 +34,10 @@ def test_update():
     shape_dict = {"w": dshape, "w2":dshape}
     dtype = "float32"
 
-    def check(target, ctx):
+    def check(target, device):
         graph, lib, _ = nnvm.compiler.build(w2, target, shape_dict)
 
-        m = graph_runtime.create(graph, lib, ctx)
+        m = graph_runtime.create(graph, lib, device)
 
         data = tvm.nd.array(np.random.uniform(size=dshape).astype(dtype))
         m.set_input("w", data)
@@ -49,8 +49,8 @@ def test_update():
         out = m.get_input("w2", tvm.nd.empty(dshape, dtype))
         tvm.testing.assert_allclose(out.asnumpy(), data.asnumpy() + 3, rtol=1e-5)
 
-    for target, ctx in ctx_list():
-        check(target, ctx)
+    for target, device in device_list():
+        check(target, device)
 
 
 if __name__ == "__main__":

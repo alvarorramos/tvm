@@ -50,24 +50,24 @@ std::unique_ptr<CodeGenLLVM> CodeGenLLVM::Create(llvm::TargetMachine *tm) {
 
 void CodeGenLLVM::Init(const std::string& module_name,
                        llvm::TargetMachine* tm,
-                       llvm::LLVMContext* ctx,
+                       llvm::LLVMContext* device,
                        bool system_lib,
                        bool dynamic_lookup) {
   InitializeLLVM();
-  ctx_ = ctx;
-  builder_.reset(new IRBuilder(*ctx_));
-  module_.reset(new llvm::Module(module_name, *ctx_));
-  md_builder_.reset(new llvm::MDBuilder(*ctx_));
+  device_ = device;
+  builder_.reset(new IRBuilder(*device_));
+  module_.reset(new llvm::Module(module_name, *device_));
+  md_builder_.reset(new llvm::MDBuilder(*device_));
   // types
-  t_void_ = llvm::Type::getVoidTy(*ctx_);
-  t_void_p_ = llvm::Type::getInt8Ty(*ctx_)->getPointerTo();
-  t_int_ = llvm::Type::getInt32Ty(*ctx_);
-  t_char_ = llvm::Type::getInt8Ty(*ctx_);
-  t_int8_ = llvm::Type::getInt8Ty(*ctx_);
-  t_int16_ = llvm::Type::getInt16Ty(*ctx_);
-  t_int32_ = llvm::Type::getInt32Ty(*ctx_);
-  t_int64_ = llvm::Type::getInt64Ty(*ctx_);
-  t_float64_ = llvm::Type::getDoubleTy(*ctx_);
+  t_void_ = llvm::Type::getVoidTy(*device_);
+  t_void_p_ = llvm::Type::getInt8Ty(*device_)->getPointerTo();
+  t_int_ = llvm::Type::getInt32Ty(*device_);
+  t_char_ = llvm::Type::getInt8Ty(*device_);
+  t_int8_ = llvm::Type::getInt8Ty(*device_);
+  t_int16_ = llvm::Type::getInt16Ty(*device_);
+  t_int32_ = llvm::Type::getInt32Ty(*device_);
+  t_int64_ = llvm::Type::getInt64Ty(*device_);
+  t_float64_ = llvm::Type::getDoubleTy(*device_);
   // meta data
   md_very_likely_branch_ = md_builder_->createBranchWeights(1<<20, 1);
   md_tbaa_root_ = md_builder_->createTBAARoot("tvm-tbaa");
@@ -157,7 +157,7 @@ void CodeGenLLVM::AddFunctionInternal(const LoweredFunc& f, bool ret_void) {
       }
     }
   }
-  llvm::BasicBlock* entry = llvm::BasicBlock::Create(*ctx_, "entry", function_);
+  llvm::BasicBlock* entry = llvm::BasicBlock::Create(*device_, "entry", function_);
   builder_->SetInsertPoint(entry);
   this->VisitStmt(f->body);
   if (ret_void) {
@@ -187,7 +187,7 @@ void CodeGenLLVM::HandleImport(const std::string& code) {
   if (code.length() >= 3 &&
       (code.substr(code.length() - 3) == ".ll" ||
        code.substr(code.length() - 3) == ".bc")) {
-    mlib = llvm::parseIRFile(code, err, *ctx_);
+    mlib = llvm::parseIRFile(code, err, *device_);
     if (mlib.get() == nullptr) {
       std::string msg = err.getMessage();
       LOG(FATAL) << "Fail to load bitcode file " << code << "\n"
@@ -196,7 +196,7 @@ void CodeGenLLVM::HandleImport(const std::string& code) {
   } else {
     std::unique_ptr<llvm::MemoryBuffer> buf =
         llvm::MemoryBuffer::getMemBuffer(code);
-    mlib = llvm::parseIR(*buf, err, *ctx_);
+    mlib = llvm::parseIR(*buf, err, *device_);
     if (mlib.get() == nullptr) {
       std::string msg = err.getMessage();
       LOG(FATAL) << "Fail to load llvm ir "
@@ -309,12 +309,12 @@ llvm::Type* CodeGenLLVM::LLVMType(const Type& t) const {
   }
   llvm::Type* etype = nullptr;
   if (t.is_int() || t.is_uint()) {
-    etype = llvm::Type::getIntNTy(*ctx_, t.bits());
+    etype = llvm::Type::getIntNTy(*device_, t.bits());
   } else if (t.is_float()) {
     switch (t.bits()) {
-      case 16: etype = llvm::Type::getHalfTy(*ctx_); break;
-      case 32: etype = llvm::Type::getFloatTy(*ctx_); break;
-      case 64: etype = llvm::Type::getDoubleTy(*ctx_); break;
+      case 16: etype = llvm::Type::getHalfTy(*device_); break;
+      case 32: etype = llvm::Type::getFloatTy(*device_); break;
+      case 64: etype = llvm::Type::getDoubleTy(*device_); break;
       default: LOG(FATAL) << "do not support " << t;
     }
   }
@@ -531,11 +531,11 @@ void CodeGenLLVM::CreateSerialFor(llvm::Value* begin,
   using llvm::BasicBlock;
   BasicBlock* pre_block = builder_->GetInsertBlock();
   BasicBlock* for_begin = BasicBlock::Create(
-      *ctx_, "for_begin", function_);
+      *device_, "for_begin", function_);
   BasicBlock* for_body = BasicBlock::Create(
-      *ctx_, "for_body", function_);
+      *device_, "for_body", function_);
   BasicBlock* for_end = BasicBlock::Create(
-      *ctx_, "for_end", function_);
+      *device_, "for_end", function_);
   builder_->CreateBr(for_begin);
   builder_->SetInsertPoint(for_begin);
   llvm::PHINode* loop_value = builder_->CreatePHI(begin->getType(), 2);
@@ -599,7 +599,7 @@ llvm::Value* CodeGenLLVM::GetConstString(const std::string& str) {
 #else
   global->setAlignment(1);
 #endif
-  global->setInitializer(llvm::ConstantDataArray::getString(*ctx_, str));
+  global->setInitializer(llvm::ConstantDataArray::getString(*device_, str));
   llvm::Constant* zero = ConstInt32(0);
   llvm::Constant* indices[] = {zero, zero};
   llvm::Constant* ptr = llvm::ConstantExpr::getGetElementPtr(
@@ -727,11 +727,11 @@ llvm::Value* CodeGenLLVM::CreateIntrinsic(const Call* op) {
         << "if_then_else can only take scalar condition";
     using llvm::BasicBlock;
     BasicBlock* then_block = BasicBlock::Create(
-        *ctx_, "if_then", function_);
+        *device_, "if_then", function_);
     BasicBlock* else_block = BasicBlock::Create(
-        *ctx_, "if_else", function_);
+        *device_, "if_else", function_);
     BasicBlock* end_block = BasicBlock::Create(
-        *ctx_, "if_end", function_);
+        *device_, "if_end", function_);
     builder_->CreateCondBr(MakeValue(op->args[0]), then_block, else_block);
     builder_->SetInsertPoint(then_block);
     llvm::Value* then_value = MakeValue(op->args[1]);
@@ -1107,12 +1107,12 @@ void CodeGenLLVM::VisitStmt_(const IfThenElse* op) {
   using llvm::BasicBlock;
   llvm::Value* cond = MakeValue(op->condition);
   BasicBlock* then_block = BasicBlock::Create(
-      *ctx_, "if_then", function_);
+      *device_, "if_then", function_);
   BasicBlock* end_block = BasicBlock::Create(
-      *ctx_, "if_end", function_);
+      *device_, "if_end", function_);
   if (op->else_case.defined()) {
     BasicBlock* else_block = BasicBlock::Create(
-        *ctx_, "if_else", function_);
+        *device_, "if_else", function_);
     builder_->CreateCondBr(cond, then_block, else_block);
     builder_->SetInsertPoint(then_block);
     this->VisitStmt(op->then_case);
@@ -1198,7 +1198,7 @@ void CodeGenLLVM::VisitStmt_(const AttrStmt* op) {
 }
 
 void CodeGenLLVM::VisitStmt_(const AssertStmt* op) {
-  With<arith::ConstraintContext> cctx(analyzer_.get(), op->condition);
+  With<arith::ConstraintContext> cdevice(analyzer_.get(), op->condition);
   this->VisitStmt(op->body);
 }
 

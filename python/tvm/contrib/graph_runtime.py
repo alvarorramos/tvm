@@ -22,7 +22,7 @@ from .._ffi.function import get_global_func
 from .._ffi.runtime_ctypes import TVMContext
 from ..rpc import base as rpc_base
 
-def create(graph_json_str, libmod, ctx):
+def create(graph_json_str, libmod, device):
     """Create a runtime executor module given a graph and module.
     Parameters
     ----------
@@ -32,7 +32,7 @@ def create(graph_json_str, libmod, ctx):
         points to the name of PackedFunc in the libmod.
     libmod : tvm.Module
         The module of the corresponding function
-    ctx : TVMContext or list of TVMContext
+    device : TVMContext or list of TVMContext
         The context to deploy the module. It can be local or remote when there
         is only one TVMContext. Otherwise, the first context in the list will
         be used as this purpose. All context should be given for heterogeneous
@@ -48,59 +48,59 @@ def create(graph_json_str, libmod, ctx):
         except AttributeError:
             raise ValueError("Type %s is not supported" % type(graph_json_str))
 
-    ctx, num_rpc_ctx, device_type_id = get_device_ctx(libmod, ctx)
+    device, num_rpc_device, device_type_id = get_device_device(libmod, device)
 
-    if num_rpc_ctx == len(ctx):
+    if num_rpc_device == len(device):
         hmod = rpc_base._ModuleHandle(libmod)
-        fcreate = ctx[0]._rpc_sess.get_function("tvm.graph_runtime.remote_create")
+        fcreate = device[0]._rpc_sess.get_function("tvm.graph_runtime.remote_create")
         return GraphModule(fcreate(graph_json_str, hmod, *device_type_id))
 
     fcreate = get_global_func("tvm.graph_runtime.create")
     return GraphModule(fcreate(graph_json_str, libmod, *device_type_id))
 
-def get_device_ctx(libmod, ctx):
+def get_device_device(libmod, device):
     """Parse and validate all the device context(s).
     Parameters
     ----------
     libmod : tvm.Module
         The module of the corresponding function
-    ctx : TVMContext or list of TVMContext
+    device : TVMContext or list of TVMContext
     Returns
     -------
-    ctx : list of TVMContext
-    num_rpc_ctx : Number of rpc contexts
+    device : list of TVMContext
+    num_rpc_device : Number of rpc contexts
     device_type_id : List of device type and device id
     """
 
-    if isinstance(ctx, TVMContext):
-        ctx = [ctx]
-    elif not isinstance(ctx, (list, tuple)):
-        raise ValueError("ctx has to be the type of TVMContext or a list of "
+    if isinstance(device, TVMContext):
+        device = [device]
+    elif not isinstance(device, (list, tuple)):
+        raise ValueError("device has to be the type of TVMContext or a list of "
                          "TVMCTVMContext")
-    for cur_ctx in ctx:
-        if not isinstance(cur_ctx, TVMContext):
-            raise ValueError("ctx has to be the type of TVMContext or a list "
+    for cur_device in device:
+        if not isinstance(cur_device, TVMContext):
+            raise ValueError("device has to be the type of TVMContext or a list "
                              "of TVMContext")
 
     # device_type_id[0], device_type_id[1] are used as the primary/fallback
     # context type and id. All other ones are used as device context for
     # heterogeneous execution.
-    num_rpc_ctx = 0
+    num_rpc_device = 0
     device_type_id = []
-    for cur_ctx in ctx:
-        device_type = cur_ctx.device_type
+    for cur_device in device:
+        device_type = cur_device.device_type
         if device_type >= rpc_base.RPC_SESS_MASK:
             assert libmod.type_key == "rpc"
             assert rpc_base._SessTableIndex(
-                libmod) == cur_ctx._rpc_sess._tbl_index
-            num_rpc_ctx += 1
-            device_type = cur_ctx.device_type % rpc_base.RPC_SESS_MASK
+                libmod) == cur_device._rpc_sess._tbl_index
+            num_rpc_device += 1
+            device_type = cur_device.device_type % rpc_base.RPC_SESS_MASK
         device_type_id.append(device_type)
-        device_type_id.append(cur_ctx.device_id)
+        device_type_id.append(cur_device.device_id)
 
-    if 0 < num_rpc_ctx < len(ctx):
+    if 0 < num_rpc_device < len(device):
         raise ValueError("Either all or none of the contexts should be rpc.")
-    return ctx, num_rpc_ctx, device_type_id
+    return device, num_rpc_device, device_type_id
 
 
 class GraphModule(object):

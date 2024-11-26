@@ -21,7 +21,7 @@ import tvm
 from tvm import autotvm
 from tvm import relay
 from tvm.relay import transform
-from tvm.relay.testing import ctx_list
+from tvm.relay.testing import device_list
 from tvm.contrib import util
 import topi.testing
 
@@ -128,10 +128,10 @@ def test_conv2d_run():
             ref_res = fref(data.astype(out_dtype), dkernel.astype(out_dtype))
 
 
-        for target, ctx in ctx_list():
+        for target, device in device_list():
             if target in except_targets:
                 continue
-            intrp1 = relay.create_executor("graph", ctx=ctx, target=target)
+            intrp1 = relay.create_executor("graph", device=device, target=target)
             op_res1 = intrp1.evaluate(func)(data, kernel)
             tvm.testing.assert_allclose(op_res1.asnumpy(), ref_res, rtol=1e-5, atol=1e-5)
 
@@ -266,12 +266,12 @@ def test_conv2d_winograd():
             groups=groups)
 
         with WinogradFallback(), relay.build_config(opt_level=3):
-            for target, ctx in ctx_list():
+            for target, device in device_list():
                 if target != 'cuda':
                     continue
                 params = {'w': tvm.nd.array(kernel)}
                 graph, lib, params = relay.build_module.build(mod, target=target, params=params)
-                module = tvm.contrib.graph_runtime.create(graph, lib, ctx)
+                module = tvm.contrib.graph_runtime.create(graph, lib, device)
                 module.set_input('x', tvm.nd.array(data))
                 module.set_input(**params)
                 module.run()
@@ -342,8 +342,8 @@ def test_conv2d_transpose_nchw_run():
     d_np[:,:,0:c_np.shape[2],0:c_np.shape[3]] = c_np
     ref_res = d_np
 
-    for target, ctx in ctx_list():
-        intrp1 = relay.create_executor("graph", ctx=ctx, target=target)
+    for target, device in device_list():
+        intrp1 = relay.create_executor("graph", device=device, target=target)
         op_res1 = intrp1.evaluate(func)(data, kernel)
         tvm.testing.assert_allclose(op_res1.asnumpy(), ref_res, rtol=1e-5, atol=1e-5)
 
@@ -370,8 +370,8 @@ def test_conv2d_transpose_nhwc_run():
     d_np[:,0:c_np.shape[1],0:c_np.shape[2],:] = c_np
     ref_res = d_np
 
-    for target, ctx in ctx_list():
-        intrp1 = relay.create_executor("graph", ctx=ctx, target=target)
+    for target, device in device_list():
+        intrp1 = relay.create_executor("graph", device=device, target=target)
         op_res1 = intrp1.evaluate(func)(data, kernel)
         tvm.testing.assert_allclose(op_res1.asnumpy(), ref_res, rtol=1e-5, atol=1e-5)
 
@@ -408,8 +408,8 @@ def _test_pool2d(opfunc, reffunc):
     func = relay.Function([x], y)
     data = np.random.uniform(size=dshape).astype(dtype)
     ref_res = reffunc(data.reshape(1,3,14,2,14,2), axis=(3,5))
-    for target, ctx in ctx_list():
-        intrp1 = relay.create_executor("graph", ctx=ctx, target=target)
+    for target, device in device_list():
+        intrp1 = relay.create_executor("graph", device=device, target=target)
         op_res1 = intrp1.evaluate(func)(data)
         tvm.testing.assert_allclose(op_res1.asnumpy(), ref_res, rtol=1e-5, atol=1e-5)
 
@@ -428,8 +428,8 @@ def _test_pool2d_int(opfunc, reffunc, dtype):
     func = relay.Function([x], y)
     data = np.random.random_integers(low=-128, high=128, size=dshape)
     ref_res = reffunc(data.reshape(1,3,14,2,14,2), axis=(3,5)).astype(dtype)
-    for target, ctx in ctx_list():
-        intrp1 = relay.create_executor("graph", ctx=ctx, target=target)
+    for target, device in device_list():
+        intrp1 = relay.create_executor("graph", device=device, target=target)
         op_res1 = intrp1.evaluate(func)(data)
         tvm.testing.assert_allclose(op_res1.asnumpy(), ref_res, rtol=1e-5, atol=1e-5)
 
@@ -453,8 +453,8 @@ def _test_global_pool2d(opfunc, reffunc):
     func = relay.Function([x], y)
     data = np.random.uniform(size=dshape).astype(dtype)
     ref_res = reffunc(data, axis=(2,3), keepdims=True)
-    for target, ctx in ctx_list():
-        intrp1 = relay.create_executor("graph", ctx=ctx, target=target)
+    for target, device in device_list():
+        intrp1 = relay.create_executor("graph", device=device, target=target)
         op_res1 = intrp1.evaluate(func)(data)
         tvm.testing.assert_allclose(op_res1.asnumpy(), ref_res, rtol=1e-5, atol=1e-5)
 
@@ -497,8 +497,8 @@ def test_avg_pool2d_no_count_pad():
     ref_res = np.maximum(b_np, 0.0)
     data = a_np
 
-    for target, ctx in ctx_list():
-        intrp1 = relay.create_executor("graph", ctx=ctx, target=target)
+    for target, device in device_list():
+        intrp1 = relay.create_executor("graph", device=device, target=target)
         op_res1 = intrp1.evaluate(func)(data)
         tvm.testing.assert_allclose(op_res1.asnumpy(), ref_res, rtol=1e-5, atol=1e-5)
 
@@ -530,9 +530,9 @@ def test_flatten_infer_type():
     x_data = np.random.uniform(low=-1, high=1, size=shape).astype(dtype)
     ref_res = x_data.flatten().reshape(o_shape)
 
-    for target, ctx in ctx_list():
-        intrp1 = relay.create_executor("graph", ctx=ctx, target=target)
-        intrp2 = relay.create_executor("debug", ctx=ctx, target=target)
+    for target, device in device_list():
+        intrp1 = relay.create_executor("graph", device=device, target=target)
+        intrp2 = relay.create_executor("debug", device=device, target=target)
         op_res1 = intrp1.evaluate(func)(x_data)
         tvm.testing.assert_allclose(op_res1.asnumpy(), ref_res, rtol=1e-5)
         op_res2 = intrp2.evaluate(func)(x_data)
@@ -562,8 +562,8 @@ def test_pad_run():
         func = relay.Function([x], y)
         data = np.random.uniform(size=dshape).astype(dtype)
         ref_res = np.pad(data, ((1, 1), (2, 2), (3, 3), (4, 4)), 'constant')
-        for target, ctx in ctx_list():
-            intrp1 = relay.create_executor("graph", ctx=ctx, target=target)
+        for target, device in device_list():
+            intrp1 = relay.create_executor("graph", device=device, target=target)
             op_res1 = intrp1.evaluate(func)(data)
             tvm.testing.assert_allclose(op_res1.asnumpy(), ref_res, rtol=1e-5, atol=1e-5)
 
@@ -593,9 +593,9 @@ def test_lrn():
     x_data = np.random.uniform(low=-1, high=1, size=shape).astype(dtype)
     ref_res = topi.testing.lrn_python(x_data, size, axis, bias, alpha, beta)
 
-    for target, ctx in ctx_list():
-        intrp1 = relay.create_executor("graph", ctx=ctx, target=target)
-        intrp2 = relay.create_executor("debug", ctx=ctx, target=target)
+    for target, device in device_list():
+        intrp1 = relay.create_executor("graph", device=device, target=target)
+        intrp2 = relay.create_executor("debug", device=device, target=target)
         op_res1 = intrp1.evaluate(func)(x_data)
         tvm.testing.assert_allclose(op_res1.asnumpy(), ref_res, rtol=1e-5)
         op_res2 = intrp2.evaluate(func)(x_data)
@@ -621,9 +621,9 @@ def test_l2_normalize():
     x_data = np.random.uniform(low=-1, high=1, size=shape).astype(dtype)
     ref_res = topi.testing.l2_normalize_python(x_data, eps, axis)
 
-    for target, ctx in ctx_list():
-        intrp1 = relay.create_executor("graph", ctx=ctx, target=target)
-        intrp2 = relay.create_executor("debug", ctx=ctx, target=target)
+    for target, device in device_list():
+        intrp1 = relay.create_executor("graph", device=device, target=target)
+        intrp2 = relay.create_executor("debug", device=device, target=target)
         op_res1 = intrp1.evaluate(func)(x_data)
         tvm.testing.assert_allclose(op_res1.asnumpy(), ref_res, rtol=1e-5)
         op_res2 = intrp2.evaluate(func)(x_data)
@@ -645,8 +645,8 @@ def test_batch_flatten():
 
     data = np.random.rand(5, 10, 5).astype(t1.dtype)
     ref_res = batch_flatten(data)
-    for target, ctx in ctx_list():
-        intrp = relay.create_executor("graph", ctx=ctx, target=target)
+    for target, device in device_list():
+        intrp = relay.create_executor("graph", device=device, target=target)
         op_res = intrp.evaluate(func)(data)
         np.testing.assert_allclose(op_res.asnumpy(), ref_res, rtol=0.01)
 
@@ -678,8 +678,8 @@ def _test_upsampling(layout, method, align_corners=False):
     else:
         ref = topi.testing.bilinear_resize_python(data, (int(round(h*scale_h)),
                                                   int(round(w*scale_w))), layout)
-    for target, ctx in ctx_list():
-        executor = relay.create_executor("graph", ctx=ctx, target=target)
+    for target, device in device_list():
+        executor = relay.create_executor("graph", device=device, target=target)
         out = executor.evaluate(func)(data)
         tvm.testing.assert_allclose(out.asnumpy(), ref, rtol=1e-5, atol=1e-5)
 

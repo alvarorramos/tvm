@@ -24,9 +24,9 @@
 //! # Example
 //!
 //! ```
-//! let ctx = TVMContext::new(1, 0);
+//! let device = TVMContext::new(1, 0);
 //! let cpu0 = TVMContext::cpu(0);
-//! assert_eq!(ctx, cpu0);
+//! assert_eq!(device, cpu0);
 //! ```
 //!
 //! Or from a supported device name.
@@ -152,16 +152,16 @@ impl<'a> From<&TVMDeviceType> for TVMArgValue<'a> {
 /// ## Examples
 ///
 /// ```
-/// let ctx = TVMContext::from("gpu");
-/// assert!(ctx.exist());
+/// let device = TVMContext::from("gpu");
+/// assert!(device.exist());
 ///
 /// ```
 ///
 /// It is possible to query the underlying context as follows
 ///
 /// ```
-/// println!("maximun threads per block: {}", ctx.max_threads_per_block());
-/// println!("compute version: {}", ctx.compute_version());
+/// println!("maximun threads per block: {}", device.max_threads_per_block());
+/// println!("compute version: {}", device.compute_version());
 /// ```
 #[derive(Debug, Default, Clone, Copy, Hash, PartialEq, Eq)]
 pub struct TVMContext {
@@ -181,11 +181,11 @@ impl TVMContext {
     }
 }
 
-macro_rules! impl_ctxs {
-    ($(($ctx:ident, $dldevt:expr));+) => {
+macro_rules! impl_devices {
+    ($(($device:ident, $dldevt:expr));+) => {
         $(
             impl TVMContext {
-                pub fn $ctx(device_id: i32) -> Self {
+                pub fn $device(device_id: i32) -> Self {
                     Self::new(TVMDeviceType($dldevt), device_id)
                 }
             }
@@ -193,7 +193,7 @@ macro_rules! impl_ctxs {
     };
 }
 
-impl_ctxs!((cpu, 1);
+impl_devices!((cpu, 1);
             (gpu, 2);
             (nvptx, 2);
             (cuda, 2);
@@ -271,19 +271,19 @@ impl_device_attrs!((max_threads_per_block, 1);
                 (max_thread_dimensions, 8));
 
 impl From<ffi::DLDevice> for TVMContext {
-    fn from(ctx: ffi::DLDevice) -> Self {
+    fn from(device: ffi::DLDevice) -> Self {
         TVMContext {
-            device_type: TVMDeviceType::from(ctx.device_type),
-            device_id: ctx.device_id,
+            device_type: TVMDeviceType::from(device.device_type),
+            device_id: device.device_id,
         }
     }
 }
 
 impl From<TVMContext> for ffi::DLDevice {
-    fn from(ctx: TVMContext) -> Self {
+    fn from(device: TVMContext) -> Self {
         ffi::DLDevice {
-            device_type: ctx.device_type.into(),
-            device_id: ctx.device_id as i32,
+            device_type: device.device_type.into(),
+            device_id: device.device_id as i32,
         }
     }
 }
@@ -300,20 +300,20 @@ mod tests {
 
     #[test]
     fn context() {
-        let ctx = TVMContext::cpu(0);
-        println!("ctx: {}", ctx);
-        let default_ctx = TVMContext::new(TVMDeviceType(1), 0);
-        assert_eq!(ctx.clone(), default_ctx);
-        assert_ne!(ctx, TVMContext::gpu(0));
+        let device = TVMContext::cpu(0);
+        println!("device: {}", device);
+        let default_device = TVMContext::new(TVMDeviceType(1), 0);
+        assert_eq!(device.clone(), default_device);
+        assert_ne!(device, TVMContext::gpu(0));
 
-        let str_ctx = TVMContext::new(TVMDeviceType::from("gpu"), 0);
-        assert_eq!(str_ctx.clone(), str_ctx);
-        assert_ne!(str_ctx, TVMContext::new(TVMDeviceType::from("cpu"), 0));
+        let str_device = TVMContext::new(TVMDeviceType::from("gpu"), 0);
+        assert_eq!(str_device.clone(), str_device);
+        assert_ne!(str_device, TVMContext::new(TVMDeviceType::from("cpu"), 0));
     }
 
     #[test]
     fn sync() {
-        let ctx = TVMContext::cpu(0);
-        assert!(ctx.sync().is_ok())
+        let device = TVMContext::cpu(0);
+        assert!(device.sync().is_ok())
     }
 }

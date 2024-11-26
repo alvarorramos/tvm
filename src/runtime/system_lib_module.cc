@@ -60,9 +60,9 @@ class SystemLibModuleNode : public ModuleNode {
 
   void RegisterSymbol(const std::string& name, void* ptr) {
     std::lock_guard<std::mutex> lock(mutex_);
-    if (name == symbol::tvm_module_ctx) {
-      void** ctx_addr = reinterpret_cast<void**>(ptr);
-      *ctx_addr = this;
+    if (name == symbol::tvm_module_device) {
+      void** device_addr = reinterpret_cast<void**>(ptr);
+      *device_addr = this;
     } else if (name == symbol::tvm_dev_mblob) {
       // Record pointer to content of submodules to be loaded.
       // We defer loading submodules to the first call to GetFunction().

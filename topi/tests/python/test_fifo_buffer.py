@@ -44,8 +44,8 @@ def verify_fifo_buffer(buffer_shape, data_shape, axis, dtype='float32'):
     buffer_np, data_np, out_np = get_ref_data()
 
     def check_device(device):
-        ctx = tvm.context(device, 0)
-        if not ctx.exist:
+        device = tvm.context(device, 0)
+        if not device.exist:
             print('  Skip because %s is not enabled' % device)
             return
         print('  Running on target: {}'.format(device))
@@ -54,9 +54,9 @@ def verify_fifo_buffer(buffer_shape, data_shape, axis, dtype='float32'):
             out = topi.nn.fifo_buffer(data, buffer, axis=axis)
             s = topi.generic.schedule_injective([out])
 
-        buffer_tvm = tvm.nd.array(buffer_np, ctx=ctx)
-        data_tvm = tvm.nd.array(data_np, ctx=ctx)
-        out_tvm = tvm.nd.empty(shape=buffer_shape, ctx=ctx, dtype=dtype)
+        buffer_tvm = tvm.nd.array(buffer_np, device=device)
+        data_tvm = tvm.nd.array(data_np, device=device)
+        out_tvm = tvm.nd.empty(shape=buffer_shape, device=device, dtype=dtype)
         f = tvm.build(s, [data, buffer, out], device, name='fifo')
         f(data_tvm, buffer_tvm, out_tvm)
         tvm.testing.assert_allclose(out_tvm.asnumpy(), out_np)
@@ -120,8 +120,8 @@ def verify_conv1d_integration():
     inc_input_np, input_window_np, kernel_np, context_np, output_window_np = get_data()
 
     def check_device(device):
-        ctx = tvm.context(device, 0)
-        if not ctx.exist:
+        device = tvm.context(device, 0)
+        if not device.exist:
             print('  Skip because %s is not enabled' % device)
             return
         print('  Running on target: {}'.format(device))
@@ -151,19 +151,19 @@ def verify_conv1d_integration():
             s = topi.generic.schedule_conv2d_nchw([out])
             conv2d = tvm.build(s, [input_window, kernel, out], device, name='conv2d')
 
-        input_window_tvm = tvm.nd.array(input_window_np, ctx=ctx)
-        new_input_window_tvm = tvm.nd.empty(shape=input_window_shape, ctx=ctx, dtype=dtype)
-        kernel_tvm = tvm.nd.array(kernel_np, ctx=ctx)
-        context_tvm = tvm.nd.array(context_np, ctx=ctx)
-        new_context_tvm = tvm.nd.empty(shape=context_shape, ctx=ctx, dtype=dtype)
-        inc_output_tvm = tvm.nd.empty(shape=inc_output_shape, ctx=ctx, dtype=dtype)
-        output_window_tvm = tvm.nd.array(output_window_np, ctx=ctx)
-        new_output_window_tvm = tvm.nd.empty(shape=output_window_shape, ctx=ctx, dtype=dtype)
-        output_window_ref_tvm = tvm.nd.empty(shape=output_window_shape, ctx=ctx, dtype=dtype)
+        input_window_tvm = tvm.nd.array(input_window_np, device=device)
+        new_input_window_tvm = tvm.nd.empty(shape=input_window_shape, device=device, dtype=dtype)
+        kernel_tvm = tvm.nd.array(kernel_np, device=device)
+        context_tvm = tvm.nd.array(context_np, device=device)
+        new_context_tvm = tvm.nd.empty(shape=context_shape, device=device, dtype=dtype)
+        inc_output_tvm = tvm.nd.empty(shape=inc_output_shape, device=device, dtype=dtype)
+        output_window_tvm = tvm.nd.array(output_window_np, device=device)
+        new_output_window_tvm = tvm.nd.empty(shape=output_window_shape, device=device, dtype=dtype)
+        output_window_ref_tvm = tvm.nd.empty(shape=output_window_shape, device=device, dtype=dtype)
 
         for i in range(num_iteration):
             # Take i-th slice of inc_input_np
-            inc_input_tvm = tvm.nd.array(inc_input_np[i], ctx=ctx)
+            inc_input_tvm = tvm.nd.array(inc_input_np[i], device=device)
 
             # Compute new output window incrementally, using the FIFO buffer op
             update_context(inc_input_tvm, context_tvm, new_context_tvm)

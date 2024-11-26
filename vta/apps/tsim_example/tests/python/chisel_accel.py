@@ -24,9 +24,9 @@ def test_accel():
     dtype = "uint64"
     n = np.random.randint(1, rmax)
     c = np.random.randint(0, rmax)
-    ctx = tvm.cpu(0)
-    a = tvm.nd.array(np.random.randint(rmax, size=n).astype(dtype), ctx)
-    b = tvm.nd.array(np.zeros(n).astype(dtype), ctx)
+    device = tvm.cpu(0)
+    a = tvm.nd.array(np.random.randint(rmax, size=n).astype(dtype), device)
+    b = tvm.nd.array(np.zeros(n).astype(dtype), device)
     f = tsim.load_module()
     cycles = f(a, b, c)
     msg = "cycles:{0:4} n:{1:2} c:{2:2}".format(cycles, n, c)

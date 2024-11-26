@@ -75,12 +75,12 @@ def test_combination():
     D = k + A - B * C + x
     s = tvm.create_schedule(D.op)
     foo = tvm.build(s, [x, A, B, C, D], "llvm")
-    ctx = tvm.cpu(0)
+    device = tvm.cpu(0)
     x = 2
-    a = tvm.nd.array(np.random.uniform(size=(n, m)).astype(A.dtype), ctx)
-    b = tvm.nd.array(np.random.uniform(size=(n, m)).astype(B.dtype), ctx)
-    c = tvm.nd.array(np.random.uniform(size=(n, m)).astype(C.dtype), ctx)
-    d = tvm.nd.array(np.zeros((n, m), dtype=D.dtype), ctx)
+    a = tvm.nd.array(np.random.uniform(size=(n, m)).astype(A.dtype), device)
+    b = tvm.nd.array(np.random.uniform(size=(n, m)).astype(B.dtype), device)
+    c = tvm.nd.array(np.random.uniform(size=(n, m)).astype(C.dtype), device)
+    d = tvm.nd.array(np.zeros((n, m), dtype=D.dtype), device)
     foo(x, a, b, c, d)
     tvm.testing.assert_allclose(d.asnumpy(), k + a.asnumpy() - b.asnumpy() * c.asnumpy() + x)
 
@@ -102,8 +102,8 @@ def verify_tensor_scalar_bop(shape, typ="add"):
         raise NotImplementedError()
 
     def check_device(device):
-        ctx = tvm.context(device, 0)
-        if not ctx.exist:
+        device = tvm.context(device, 0)
+        if not device.exist:
             print("Skip because %s is not enabled" % device)
             return
         print("Running on target: %s" % device)
@@ -124,8 +124,8 @@ def verify_tensor_scalar_bop(shape, typ="add"):
         else:
             raise NotImplementedError()
 
-        a_nd = tvm.nd.array(a_npy, ctx)
-        b_nd = tvm.nd.array(np.empty(b_npy.shape).astype(B.dtype), ctx)
+        a_nd = tvm.nd.array(a_npy, device)
+        b_nd = tvm.nd.array(np.empty(b_npy.shape).astype(B.dtype), device)
         foo(a_nd, b_nd, k_, *shape)
         tvm.testing.assert_allclose(b_nd.asnumpy(), b_npy, rtol=1e-5)
 
@@ -148,8 +148,8 @@ def verify_broadcast_bop(lhs_shape, rhs_shape, typ="add"):
         raise NotImplementedError()
 
     def check_device(device):
-        ctx = tvm.context(device, 0)
-        if not ctx.exist:
+        device = tvm.context(device, 0)
+        if not device.exist:
             print("Skip because %s is not enabled" % device)
             return
         print("Running on target: %s" % device)
@@ -171,9 +171,9 @@ def verify_broadcast_bop(lhs_shape, rhs_shape, typ="add"):
         else:
             raise NotImplementedError()
 
-        lhs_nd = tvm.nd.array(lhs_npy, ctx)
-        rhs_nd = tvm.nd.array(rhs_npy, ctx)
-        out_nd = tvm.nd.array(np.empty(out_npy.shape).astype(B.dtype), ctx)
+        lhs_nd = tvm.nd.array(lhs_npy, device)
+        rhs_nd = tvm.nd.array(rhs_npy, device)
+        out_nd = tvm.nd.array(np.empty(out_npy.shape).astype(B.dtype), device)
         for _ in range(1):
             foo(lhs_nd, rhs_nd, out_nd)
         tvm.testing.assert_allclose(out_nd.asnumpy(), out_npy, rtol=1E-4, atol=1E-4)
@@ -184,8 +184,8 @@ def verify_broadcast_bop(lhs_shape, rhs_shape, typ="add"):
 
 def verify_conv2d_scalar_bop(batch, in_size, in_channel, num_filter, kernel, stride, padding, typ="add"):
     def check_device(device):
-        ctx = tvm.context(device, 0)
-        if not ctx.exist:
+        device = tvm.context(device, 0)
+        if not device.exist:
             print("Skip because %s is not enabled" % device)
             return
         print("Running on target: %s" % device)
@@ -225,10 +225,10 @@ def verify_conv2d_scalar_bop(batch, in_size, in_channel, num_filter, kernel, str
         else:
             raise NotImplementedError()
 
-        a_nd = tvm.nd.array(a_npy, ctx)
-        w_nd = tvm.nd.array(w_npy, ctx)
-        b_nd = tvm.nd.array(np.empty(b_npy.shape).astype(B.dtype), ctx)
-        c_nd = tvm.nd.array(np.empty(c_npy.shape).astype(C.dtype), ctx)
+        a_nd = tvm.nd.array(a_npy, device)
+        w_nd = tvm.nd.array(w_npy, device)
+        b_nd = tvm.nd.array(np.empty(b_npy.shape).astype(B.dtype), device)
+        c_nd = tvm.nd.array(np.empty(c_npy.shape).astype(C.dtype), device)
         foo(a_nd, w_nd, b_nd, c_nd)
         tvm.testing.assert_allclose(c_nd.asnumpy(), c_npy, rtol=1E-4, atol=1E-4)
 

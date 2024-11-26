@@ -38,10 +38,10 @@ namespace codegen {
 class SPIRVTools {
  public:
   SPIRVTools() {
-    ctx_ = spvContextCreate(SPV_ENV_VULKAN_1_0);
+    device_ = spvContextCreate(SPV_ENV_VULKAN_1_0);
   }
   ~SPIRVTools() {
-    spvContextDestroy(ctx_);
+    spvContextDestroy(device_);
   }
   std::string BinaryToText(const std::vector<uint32_t>& bin) {
     spv_text text = nullptr;
@@ -50,7 +50,7 @@ class SPIRVTools {
     spv_result_t res;
 
     res = spvBinaryToText(
-       ctx_, spv_bin.code, spv_bin.wordCount,
+       device_, spv_bin.code, spv_bin.wordCount,
       SPV_BINARY_TO_TEXT_OPTION_FRIENDLY_NAMES |
            SPV_BINARY_TO_TEXT_OPTION_INDENT,
         &text, &diagnostic);
@@ -67,7 +67,7 @@ class SPIRVTools {
   }
 
  private:
-  spv_context ctx_;
+  spv_context device_;
 };
 
 runtime::Module BuildSPIRV(Array<LoweredFunc> funcs) {

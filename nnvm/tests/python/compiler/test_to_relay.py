@@ -43,7 +43,7 @@ def check_model(sym, shapes, dtypes, params):
     relay_model, params = to_relay.to_relay(net, shapes, dtypes, params)
     mod = tvm.relay.Module.from_expr(relay_model)
     mod = transform.InferType()(mod)
-    relay_rts = create_executor(kind='graph', mod=mod, ctx=tvm.cpu(0), target='llvm')
+    relay_rts = create_executor(kind='graph', mod=mod, device=tvm.cpu(0), target='llvm')
     inputs.update(params)
     relay_out = relay_rts.evaluate()(*list(inputs.values()))
     np.testing.assert_allclose(nnvm_out.asnumpy(), relay_out.asnumpy())

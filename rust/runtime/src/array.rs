@@ -136,7 +136,7 @@ impl<'d, 's, T> From<&'d [T]> for Storage<'s> {
 pub struct Tensor<'a> {
     /// The bytes which contain the data this `Tensor` represents.
     pub(crate) data: Storage<'a>,
-    pub(crate) ctx: TVMContext,
+    pub(crate) device: TVMContext,
     pub(crate) dtype: DataType,
     pub(crate) shape: Vec<i64>,
     // ^ not usize because `typedef int64_t tvm_index_t` in c_runtime_api.h
@@ -220,7 +220,7 @@ impl<'a> Tensor<'a> {
     pub fn to_owned(&self) -> Tensor<'static> {
         let t = Tensor {
             data: self.data.to_owned(),
-            ctx: self.ctx.clone(),
+            device: self.device.clone(),
             dtype: self.dtype.clone(),
             size: self.size.clone(),
             shape: self.shape.clone(),
@@ -238,7 +238,7 @@ impl<'a> Tensor<'a> {
         let type_width = mem::size_of::<T>() as usize;
         Tensor {
             data: storage,
-            ctx: TVMContext::default(),
+            device: TVMContext::default(),
             dtype: DataType {
                 code: type_code,
                 bits: 8 * type_width,
@@ -255,7 +255,7 @@ impl<'a> Tensor<'a> {
         assert!(!flatten || self.is_contiguous());
         DLTensor {
             data: unsafe { self.data.as_mut_ptr().offset(self.byte_offset) } as *mut c_void,
-            ctx: DLDevice::from(&self.ctx),
+            device: DLDevice::from(&self.device),
             ndim: if flatten { 1 } else { self.shape.len() } as i32,
             dtype: DLDataType::from(&self.dtype),
             shape: if flatten {
@@ -341,7 +341,7 @@ impl<'a> From<DLTensor> for Tensor<'a> {
             ));
             Self {
                 data: storage,
-                ctx: TVMContext::default(),
+                device: TVMContext::default(),
                 dtype: dtype,
                 size: size,
                 shape: shape,

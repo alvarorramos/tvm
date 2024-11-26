@@ -42,10 +42,10 @@ def verify_elemwise_sum(num_args, dtype):
             print("Skip because %s is not enabled" % device)
             return
 
-        ctx = tvm.context(device, 0)
-        out = tvm.nd.array(np.zeros(shape, dtype=dtype), ctx)
+        device = tvm.context(device, 0)
+        out = tvm.nd.array(np.zeros(shape, dtype=dtype), device)
         f = tvm.build(s, tvm_placeholders + [esum], device, name="elemwise_sum")
-        tvm_nd = [tvm.nd.array(nd, ctx) for nd in np_nd] + [out]
+        tvm_nd = [tvm.nd.array(nd, device) for nd in np_nd] + [out]
         f(*tvm_nd)
         np_out = np.sum(np.array(np_nd), axis=0)
         tvm.testing.assert_allclose(out.asnumpy(), np_out, rtol=1e-5)
@@ -71,10 +71,10 @@ def verify_full(shape, dtype, fill_value):
             print("Skip because %s is not enabled" % device)
             return
 
-        ctx = tvm.context(device, 0)
-        out = tvm.nd.array(np.zeros(shape, dtype=dtype), ctx)
+        device = tvm.context(device, 0)
+        out = tvm.nd.array(np.zeros(shape, dtype=dtype), device)
         f = tvm.build(s1, [A, B], device, name="full_like")
-        f(tvm.nd.array(np.zeros(shape, dtype), ctx), out)
+        f(tvm.nd.array(np.zeros(shape, dtype), device), out)
         tvm.testing.assert_allclose(out.asnumpy(), np_nd, rtol=1e-5)
 
         f = tvm.build(s2, [C], device, name="full")

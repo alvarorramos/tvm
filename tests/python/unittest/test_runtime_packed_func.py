@@ -86,11 +86,11 @@ def test_empty_array():
     tvm.convert(myfunc)(x)
 
 
-def test_ctx():
-    def test_ctx_func(ctx):
-        assert tvm.gpu(7) == ctx
+def test_device():
+    def test_device_func(device):
+        assert tvm.gpu(7) == device
         return tvm.cpu(0)
-    x = test_ctx_func(tvm.gpu(7))
+    x = test_device_func(tvm.gpu(7))
     assert x == tvm.cpu(0)
     x = tvm.opencl(10)
     x = tvm._api_internal._context_test(x, x.device_type, x.device_id)
@@ -274,7 +274,7 @@ if __name__ == "__main__":
     test_convert()
     test_return_func()
     test_byte_array()
-    test_ctx()
+    test_device()
     test_trace_expr_assign()
     test_trace_expr_sum_generated()
     test_trace_expr_sum_custom()

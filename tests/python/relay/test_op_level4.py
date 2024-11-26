@@ -18,7 +18,7 @@ import tvm
 import numpy as np
 from tvm import relay
 from tvm.relay import transform
-from tvm.relay.testing import ctx_list
+from tvm.relay.testing import device_list
 import topi.testing
 
 def run_infer_type(expr):
@@ -51,8 +51,8 @@ def test_binary_op():
             ref_res = ref(x_data, y_data)
             func = relay.Function([x, y], z)
 
-            for target, ctx in ctx_list():
-                intrp = relay.create_executor("graph", ctx=ctx, target=target)
+            for target, device in device_list():
+                intrp = relay.create_executor("graph", device=device, target=target)
                 op_res = intrp.evaluate(func)(x_data, y_data)
                 tvm.testing.assert_allclose(op_res.asnumpy(), ref_res)
 
@@ -86,8 +86,8 @@ def test_cmp_type():
             ref_res = ref(x_data, y_data)
             func = relay.Function([x, y], z)
 
-            for target, ctx in ctx_list():
-                intrp = relay.create_executor("graph", ctx=ctx, target=target)
+            for target, device in device_list():
+                intrp = relay.create_executor("graph", device=device, target=target)
                 op_res = intrp.evaluate(func)(x_data, y_data)
                 tvm.testing.assert_allclose(op_res.asnumpy(), ref_res)
 
@@ -114,8 +114,8 @@ def test_binary_int_broadcast():
         func = relay.Function([x, y], z)
         ref_res = ref(x_data, y_data)
 
-        for target, ctx in ctx_list():
-            intrp = relay.create_executor("graph", ctx=ctx, target=target)
+        for target, device in device_list():
+            intrp = relay.create_executor("graph", device=device, target=target)
             op_res = intrp.evaluate(func)(x_data, y_data)
             tvm.testing.assert_allclose(op_res.asnumpy(), ref_res)
 
@@ -135,9 +135,9 @@ def test_where():
     x = np.random.uniform(size=shape).astype(dtype)
     y = np.random.uniform(size=shape).astype(dtype)
     ref_res = np.where(condition, x, y)
-    for target, ctx in ctx_list():
+    for target, device in device_list():
         for kind in ["graph", "debug"]:
-            intrp = relay.create_executor(kind, ctx=ctx, target=target)
+            intrp = relay.create_executor(kind, device=device, target=target)
             op_res = intrp.evaluate(func)(condition, x, y)
             tvm.testing.assert_allclose(op_res.asnumpy(), ref_res, rtol=1e-5)
 
@@ -175,9 +175,9 @@ def verify_reduce(funcs, data, axis, keepdims, exclude, output, dtype="float32")
             return
         ref_res = ref_func(x_data + 0, axis=axis, keepdims=keepdims)
 
-    for target, ctx in ctx_list():
-        intrp1 = relay.create_executor("graph", ctx=ctx, target=target)
-        intrp2 = relay.create_executor("debug", ctx=ctx, target=target)
+    for target, device in device_list():
+        intrp1 = relay.create_executor("graph", device=device, target=target)
+        intrp2 = relay.create_executor("debug", device=device, target=target)
         op_res1 = intrp1.evaluate(func)(x_data)
         tvm.testing.assert_allclose(op_res1.asnumpy(), ref_res, rtol=1e-5)
         op_res2 = intrp2.evaluate(func)(x_data)
@@ -241,9 +241,9 @@ def verify_mean_var_std(funcs, shape, axis, keepdims):
     ref_mean = np.mean(x_data, axis=axis, dtype=dtype, keepdims=keepdims)
     ref_res = ref_func(x_data, axis=axis, dtype=dtype, keepdims=keepdims)
 
-    for target, ctx in ctx_list():
-        intrp1 = relay.create_executor("graph", ctx=ctx, target=target)
-        intrp2 = relay.create_executor("debug", ctx=ctx, target=target)
+    for target, device in device_list():
+        intrp1 = relay.create_executor("graph", device=device, target=target)
+        intrp2 = relay.create_executor("debug", device=device, target=target)
         op_res1 = intrp1.evaluate(func)(x_data)
         tvm.testing.assert_allclose(op_res1[0].asnumpy(), ref_mean, rtol=1e-5)
         tvm.testing.assert_allclose(op_res1[1].asnumpy(), ref_res, rtol=1e-5)
@@ -282,8 +282,8 @@ def test_strided_slice():
         x_data = np.random.uniform(size=dshape).astype("float32")
         ref_res = topi.testing.strided_slice_python(
             x_data, begin, end, strides)
-        for target, ctx in ctx_list():
-            intrp = relay.create_executor("graph", ctx=ctx, target=target)
+        for target, device in device_list():
+            intrp = relay.create_executor("graph", device=device, target=target)
             op_res = intrp.evaluate(func)(x_data)
             tvm.testing.assert_allclose(op_res.asnumpy(), ref_res)
 

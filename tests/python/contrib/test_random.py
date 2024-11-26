@@ -31,9 +31,9 @@ def test_randint():
         if not tvm.get_global_func("tvm.contrib.random.randint", True):
             print("skip because extern function is not available")
             return
-        ctx = tvm.cpu(0)
+        device = tvm.cpu(0)
         f = tvm.build(s, [A], target)
-        a = tvm.nd.array(np.zeros((m, n), dtype=A.dtype), ctx)
+        a = tvm.nd.array(np.zeros((m, n), dtype=A.dtype), device)
         f(a)
         na = a.asnumpy()
         assert abs(np.mean(na)) < 0.2
@@ -55,9 +55,9 @@ def test_uniform():
         if not tvm.get_global_func("tvm.contrib.random.uniform", True):
             print("skip because extern function is not available")
             return
-        ctx = tvm.cpu(0)
+        device = tvm.cpu(0)
         f = tvm.build(s, [A], target)
-        a = tvm.nd.array(np.zeros((m, n), dtype=A.dtype), ctx)
+        a = tvm.nd.array(np.zeros((m, n), dtype=A.dtype), device)
         f(a)
         na = a.asnumpy()
         assert abs(np.mean(na) - 0.5) < 1e-2
@@ -79,9 +79,9 @@ def test_normal():
         if not tvm.get_global_func("tvm.contrib.random.normal", True):
             print("skip because extern function is not available")
             return
-        ctx = tvm.cpu(0)
+        device = tvm.cpu(0)
         f = tvm.build(s, [A], target)
-        a = tvm.nd.array(np.zeros((m, n), dtype=A.dtype), ctx)
+        a = tvm.nd.array(np.zeros((m, n), dtype=A.dtype), device)
         f(a)
         na = a.asnumpy()
         assert abs(np.mean(na) - 3) < 1e-2

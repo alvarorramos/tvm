@@ -83,12 +83,12 @@ TVM_REGISTER_API("_test_check_eq_callback")
 
 TVM_REGISTER_API("_context_test")
 .set_body([](TVMArgs args,  TVMRetValue *ret) {
-    DLDevice ctx = args[0];
+    DLDevice device = args[0];
     int dtype = args[1];
     int did = args[2];
-    CHECK_EQ(static_cast<int>(ctx.device_type), dtype);
-    CHECK_EQ(static_cast<int>(ctx.device_id), did);
-    *ret = ctx;
+    CHECK_EQ(static_cast<int>(device.device_type), dtype);
+    CHECK_EQ(static_cast<int>(device.device_id), did);
+    *ret = device;
   });
 
 

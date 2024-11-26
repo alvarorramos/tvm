@@ -32,7 +32,7 @@ import org.apache.tvm.TVMContext;
  */
 public class GraphModule {
   private Module module;
-  private TVMContext ctx;
+  private TVMContext device;
 
   private Function fsetInput;
   private Function frun;
@@ -41,9 +41,9 @@ public class GraphModule {
   private Function fdebugGetOutput;
   private Function floadParams;
 
-  GraphModule(Module module, TVMContext ctx) {
+  GraphModule(Module module, TVMContext device) {
     this.module = module;
-    this.ctx = ctx;
+    this.device = device;
     fsetInput = module.getFunction("set_input");
     frun = module.getFunction("run");
     fgetInput = module.getFunction("get_input");
@@ -82,8 +82,8 @@ public class GraphModule {
    */
   public GraphModule setInput(String key, NDArray value) {
     NDArray input = value;
-    if (!value.ctx().equals(ctx)) {
-      input = NDArray.empty(value.shape(), ctx);
+    if (!value.device().equals(device)) {
+      input = NDArray.empty(value.shape(), device);
       value.copyTo(input);
     }
     fsetInput.pushArg(key).pushArg(input).invoke();
@@ -98,8 +98,8 @@ public class GraphModule {
    */
   public GraphModule setInput(int key, NDArray value) {
     NDArray input = value;
-    if (!value.ctx().equals(ctx)) {
-      input = NDArray.empty(value.shape(), ctx);
+    if (!value.device().equals(device)) {
+      input = NDArray.empty(value.shape(), device);
       value.copyTo(input);
     }
     fsetInput.pushArg(key).pushArg(input).invoke();

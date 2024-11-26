@@ -48,8 +48,8 @@ def verify_get_valid_counts(dshape, score_threshold, id_index, score_index):
                     np_out2[i, j, k] = -1.0
 
     def check_device(device):
-        ctx = tvm.context(device, 0)
-        if not ctx.exist:
+        device = tvm.context(device, 0)
+        if not device.exist:
             print("Skip because %s is not enabled" % device)
             return
         print("Running on target: %s" % device)
@@ -58,9 +58,9 @@ def verify_get_valid_counts(dshape, score_threshold, id_index, score_index):
             outs = get_valid_counts(data, score_threshold, id_index, score_index)
             s = topi.generic.schedule_get_valid_counts(outs)
 
-        tvm_input_data = tvm.nd.array(np_data, ctx)
-        tvm_out1 = tvm.nd.array(np.zeros(np_out1.shape, dtype="int32"), ctx)
-        tvm_out2 = tvm.nd.array(np.zeros(np_out2.shape, dtype=dtype), ctx)
+        tvm_input_data = tvm.nd.array(np_data, device)
+        tvm_out1 = tvm.nd.array(np.zeros(np_out1.shape, dtype="int32"), device)
+        tvm_out2 = tvm.nd.array(np.zeros(np_out2.shape, dtype=dtype), device)
         f = tvm.build(s, [data, outs[0], outs[1]], device)
         f(tvm_input_data, tvm_out1, tvm_out2)
         tvm.testing.assert_allclose(tvm_out1.asnumpy(), np_out1, rtol=1e-3)
@@ -89,8 +89,8 @@ def verify_non_max_suppression(np_data, np_valid_count, np_result, np_indices_re
     valid_count = tvm.placeholder((batch,), dtype="int32", name="valid_count")
 
     def check_device(device):
-        ctx = tvm.context(device, 0)
-        if not ctx.exist:
+        device = tvm.context(device, 0)
+        if not device.exist:
             print("Skip because %s is not enabled" % device)
             return
         print("Running on target: %s" % device)
@@ -110,15 +110,15 @@ def verify_non_max_suppression(np_data, np_valid_count, np_result, np_indices_re
             s = topi.generic.schedule_nms(out)
             indices_s = topi.generic.schedule_nms(indices_out)
 
-        tvm_data = tvm.nd.array(np_data, ctx)
-        tvm_valid_count = tvm.nd.array(np_valid_count, ctx)
+        tvm_data = tvm.nd.array(np_data, device)
+        tvm_valid_count = tvm.nd.array(np_valid_count, device)
 
-        tvm_out = tvm.nd.array(np.zeros(dshape, dtype=data.dtype), ctx)
+        tvm_out = tvm.nd.array(np.zeros(dshape, dtype=data.dtype), device)
         f = tvm.build(s, [data, valid_count, out], device)
         f(tvm_data, tvm_valid_count, tvm_out)
         tvm.testing.assert_allclose(tvm_out.asnumpy(), np_result, rtol=1e-4)
 
-        tvm_indices_out = tvm.nd.array(np.zeros(indices_dshape, dtype="int32"), ctx)
+        tvm_indices_out = tvm.nd.array(np.zeros(indices_dshape, dtype="int32"), device)
         f = tvm.build(indices_s, [data, valid_count, indices_out], device)
         f(tvm_data, tvm_valid_count, tvm_indices_out)
         tvm.testing.assert_allclose(tvm_indices_out.asnumpy(), np_indices_result, rtol=1e-4)
@@ -188,8 +188,8 @@ def verify_multibox_prior(dshape, sizes=(1,), ratios=(1,), steps=(-1, -1), offse
         np_out = np.clip(np_out, 0, 1)
 
     def check_device(device):
-        ctx = tvm.context(device, 0)
-        if not ctx.exist:
+        device = tvm.context(device, 0)
+        if not device.exist:
             print("Skip because %s is not enabled" % device)
             return
         print("Running on target: %s" % device)
@@ -200,8 +200,8 @@ def verify_multibox_prior(dshape, sizes=(1,), ratios=(1,), steps=(-1, -1), offse
                 out = topi.cuda.ssd.multibox_prior(data, sizes, ratios, steps, offsets, clip)
             s = topi.generic.schedule_multibox_prior(out)
 
-        tvm_input_data = tvm.nd.array(input_data, ctx)
-        tvm_out = tvm.nd.array(np.zeros(oshape, dtype=dtype), ctx)
+        tvm_input_data = tvm.nd.array(input_data, device)
+        tvm_out = tvm.nd.array(np.zeros(oshape, dtype=dtype), device)
         f = tvm.build(s, [data, out], device)
         f(tvm_input_data, tvm_out)
         tvm.testing.assert_allclose(tvm_out.asnumpy(), np_out, rtol=1e-3)
@@ -234,8 +234,8 @@ def test_multibox_detection():
                                  [0, 0.30000001, 0, 0, 0.22903419, 0.20435292]]])
 
     def check_device(device):
-        ctx = tvm.context(device, 0)
-        if not ctx.exist:
+        device = tvm.context(device, 0)
+        if not device.exist:
             print("Skip because %s is not enabled" % device)
             return
         print("Running on target: %s" % device)
@@ -246,10 +246,10 @@ def test_multibox_detection():
                 out = topi.cuda.ssd.multibox_detection(cls_prob, loc_preds, anchors)
             s = topi.generic.schedule_multibox_detection(out)
 
-        tvm_cls_prob = tvm.nd.array(np_cls_prob.astype(cls_prob.dtype), ctx)
-        tvm_loc_preds = tvm.nd.array(np_loc_preds.astype(loc_preds.dtype), ctx)
-        tvm_anchors = tvm.nd.array(np_anchors.astype(anchors.dtype), ctx)
-        tvm_out = tvm.nd.array(np.zeros((batch_size, num_anchors, 6)).astype(out.dtype), ctx)
+        tvm_cls_prob = tvm.nd.array(np_cls_prob.astype(cls_prob.dtype), device)
+        tvm_loc_preds = tvm.nd.array(np_loc_preds.astype(loc_preds.dtype), device)
+        tvm_anchors = tvm.nd.array(np_anchors.astype(anchors.dtype), device)
+        tvm_out = tvm.nd.array(np.zeros((batch_size, num_anchors, 6)).astype(out.dtype), device)
         f = tvm.build(s, [cls_prob, loc_preds, anchors, out], device)
         f(tvm_cls_prob, tvm_loc_preds, tvm_anchors, tvm_out)
         tvm.testing.assert_allclose(tvm_out.asnumpy(), expected_np_out, rtol=1e-4)
@@ -279,8 +279,8 @@ def verify_roi_align(batch, in_channel, in_size, num_roi, pooled_size, spatial_s
     a_np, rois_np, b_np = get_ref_data()
 
     def check_device(device):
-        ctx = tvm.context(device, 0)
-        if not ctx.exist:
+        device = tvm.context(device, 0)
+        if not device.exist:
             print("Skip because %s is not enabled" % device)
             return
         print("Running on target: %s" % device)
@@ -291,9 +291,9 @@ def verify_roi_align(batch, in_channel, in_size, num_roi, pooled_size, spatial_s
                                                 sample_ratio=sample_ratio)
             s = topi.generic.schedule_roi_align(b)
 
-        tvm_a = tvm.nd.array(a_np, ctx)
-        tvm_rois = tvm.nd.array(rois_np, ctx)
-        tvm_b = tvm.nd.array(np.zeros(get_const_tuple(b.shape), dtype=b.dtype), ctx=ctx)
+        tvm_a = tvm.nd.array(a_np, device)
+        tvm_rois = tvm.nd.array(rois_np, device)
+        tvm_b = tvm.nd.array(np.zeros(get_const_tuple(b.shape), dtype=b.dtype), device=device)
         f = tvm.build(s, [a, rois, b], device)
         f(tvm_a, tvm_rois, tvm_b)
         tvm.testing.assert_allclose(tvm_b.asnumpy(), b_np, rtol=1e-3)
@@ -329,8 +329,8 @@ def verify_roi_pool(batch, in_channel, in_size, num_roi, pooled_size, spatial_sc
     a_np, rois_np, b_np = get_ref_data()
 
     def check_device(device):
-        ctx = tvm.context(device, 0)
-        if not ctx.exist:
+        device = tvm.context(device, 0)
+        if not device.exist:
             print("Skip because %s is not enabled" % device)
             return
         print("Running on target: %s" % device)
@@ -340,9 +340,9 @@ def verify_roi_pool(batch, in_channel, in_size, num_roi, pooled_size, spatial_sc
                                                 spatial_scale=spatial_scale)
             s = topi.generic.schedule_roi_pool(b)
 
-        tvm_a = tvm.nd.array(a_np, ctx)
-        tvm_rois = tvm.nd.array(rois_np, ctx)
-        tvm_b = tvm.nd.array(np.zeros(get_const_tuple(b.shape), dtype=b.dtype), ctx=ctx)
+        tvm_a = tvm.nd.array(a_np, device)
+        tvm_rois = tvm.nd.array(rois_np, device)
+        tvm_b = tvm.nd.array(np.zeros(get_const_tuple(b.shape), dtype=b.dtype), device=device)
         f = tvm.build(s, [a, rois, b], device)
         f(tvm_a, tvm_rois, tvm_b)
         tvm.testing.assert_allclose(tvm_b.asnumpy(), b_np, rtol=1e-4)
@@ -362,8 +362,8 @@ def verify_proposal(np_cls_prob, np_bbox_pred, np_im_info, np_out, attrs):
     im_info = tvm.placeholder(np_im_info.shape)
 
     def check_device(device):
-        ctx = tvm.context(device, 0)
-        if not ctx.exist:
+        device = tvm.context(device, 0)
+        if not device.exist:
             print("Skip because %s is not enabled" % device)
             return
         print("Running on target: %s" % device)
@@ -371,10 +371,10 @@ def verify_proposal(np_cls_prob, np_bbox_pred, np_im_info, np_out, attrs):
             out = topi.vision.proposal(cls_prob, bbox_pred, im_info, **attrs)
             s = topi.generic.schedule_proposal(out)
             f = tvm.build(s, [cls_prob, bbox_pred, im_info, out], device)
-            tvm_cls_prob = tvm.nd.array(np_cls_prob, ctx=ctx)
-            tvm_bbox_pred = tvm.nd.array(np_bbox_pred, ctx=ctx)
-            tvm_im_info = tvm.nd.array(np_im_info, ctx=ctx)
-            tvm_out = tvm.nd.empty(ctx=ctx, shape=out.shape, dtype=out.dtype)
+            tvm_cls_prob = tvm.nd.array(np_cls_prob, device=device)
+            tvm_bbox_pred = tvm.nd.array(np_bbox_pred, device=device)
+            tvm_im_info = tvm.nd.array(np_im_info, device=device)
+            tvm_out = tvm.nd.empty(device=device, shape=out.shape, dtype=out.dtype)
             f(tvm_cls_prob, tvm_bbox_pred, tvm_im_info, tvm_out)
             tvm.testing.assert_allclose(tvm_out.asnumpy(), np_out, rtol=1e-4)
 

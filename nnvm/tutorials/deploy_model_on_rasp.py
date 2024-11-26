@@ -205,8 +205,8 @@ remote.upload(lib_fname)
 rlib = remote.load_module('net.tar')
 
 # create the remote runtime module
-ctx = remote.cpu(0)
-module = runtime.create(graph, rlib, ctx)
+device = remote.cpu(0)
+module = runtime.create(graph, rlib, device)
 # set parameter (upload params to the remote device. This may take a while)
 module.set_input(**params)
 # set input data

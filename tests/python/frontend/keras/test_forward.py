@@ -18,7 +18,7 @@ import numpy as np
 import tvm
 from tvm import relay
 from tvm.contrib import graph_runtime
-from tvm.relay.testing.config import ctx_list
+from tvm.relay.testing.config import device_list
 import keras
 
 # prevent Keras from using up all gpu memory
@@ -40,14 +40,14 @@ def verify_keras_frontend(keras_model, need_transpose=True):
     def get_keras_output(xs, dtype='float32'):
         return keras_model.predict(xs)
 
-    def get_tvm_output(xs, target, ctx, dtype='float32'):
+    def get_tvm_output(xs, target, device, dtype='float32'):
         shape_dict = {name: x.shape for (name, x) in zip(keras_model.input_names, xs)}
         mod, params = relay.frontend.from_keras(keras_model, shape_dict)
         with relay.transform.build_config(opt_level=2):
             graph, lib, params = relay.build(mod,
                                              target,
                                              params=params)
-        m = graph_runtime.create(graph, lib, ctx)
+        m = graph_runtime.create(graph, lib, device)
         for name, x in zip(keras_model.input_names, xs):
             m.set_input(name, tvm.nd.array(x.astype(dtype)))
         m.set_input(**params)
@@ -63,9 +63,9 @@ def verify_keras_frontend(keras_model, need_transpose=True):
     xs = [np.random.uniform(size=shape, low=-1.0, high=1.0) for shape in in_shapes]
     keras_out = get_keras_output(xs)
     keras_out = keras_out if isinstance(keras_out, list) else [keras_out]
-    for target, ctx in ctx_list():
+    for target, device in device_list():
         inputs = [to_channels_first(x) for x in xs] if need_transpose else xs
-        tvm_out = get_tvm_output(inputs, target, ctx)
+        tvm_out = get_tvm_output(inputs, target, device)
         for kout, tout in zip(keras_out, tvm_out):
             if need_transpose:
                 tout = to_channels_last(tout)

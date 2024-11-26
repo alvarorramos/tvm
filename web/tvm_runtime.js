@@ -77,13 +77,13 @@ var tvm_runtime = tvm_runtime || {};
     var SIZEOF_INT64 = 8;
     var SIZEOF_DOUBLE = 8;
     var SIZEOF_TYPE = 4;
-    var SIZEOF_CTX = SIZEOF_INT + SIZEOF_INT;
+    var SIZEOF_device = SIZEOF_INT + SIZEOF_INT;
     var SIZEOF_TVMVALUE = SIZEOF_DOUBLE;
     var ARRAY_OFFSET_DATA = 0;
-    var ARRAY_OFFSET_CTX = ARRAY_OFFSET_DATA + SIZEOF_POINTER;
-    var ARRAY_OFFSET_DEV_TYPE = ARRAY_OFFSET_CTX;
-    var ARRAY_OFFSET_DEV_ID = ARRAY_OFFSET_CTX + SIZEOF_INT;
-    var ARRAY_OFFSET_NDIM = ARRAY_OFFSET_CTX + SIZEOF_CTX;
+    var ARRAY_OFFSET_device = ARRAY_OFFSET_DATA + SIZEOF_POINTER;
+    var ARRAY_OFFSET_DEV_TYPE = ARRAY_OFFSET_device;
+    var ARRAY_OFFSET_DEV_ID = ARRAY_OFFSET_device + SIZEOF_INT;
+    var ARRAY_OFFSET_NDIM = ARRAY_OFFSET_device + SIZEOF_device;
     var ARRAY_OFFSET_DTYPE = ARRAY_OFFSET_NDIM + SIZEOF_INT;
     var ARRAY_OFFSET_DTYPE_CODE = ARRAY_OFFSET_DTYPE;
     var ARRAY_OFFSET_DTYPE_BITS = ARRAY_OFFSET_DTYPE_CODE + SIZEOF_INT8;
@@ -377,7 +377,7 @@ var tvm_runtime = tvm_runtime || {};
       var dtype =  new TVMType(code, bits, lanes);
       this.dtype = dtype;
       this.BYTES_PER_ELEMENT = (dtype.bits * dtype.lanes / 8);
-      // ctx
+      // device
       var device_type = Module.getValue(this.handle + ARRAY_OFFSET_DEV_TYPE, "i32");
       var device_id = Module.getValue(this.handle + ARRAY_OFFSET_DEV_ID, "i32");
       this.context = new TVMContext(device_type, device_id);
@@ -711,7 +711,7 @@ var tvm_runtime = tvm_runtime || {};
       }
     };
     // TVMContext
-    var CTX_MASK2STR = {
+    var device_MASK2STR = {
       1 : "cpu",
       2 : "gpu",
       4 : "opencl",
@@ -720,7 +720,7 @@ var tvm_runtime = tvm_runtime || {};
       9 : "vpi",
       11 : "opengl",
     };
-    var CTX_STR2MASK = {
+    var device_STR2MASK = {
       "cpu": 1,
       "gpu": 2,
       "cuda": 2,
@@ -733,7 +733,7 @@ var tvm_runtime = tvm_runtime || {};
     };
     TVMContext.prototype = {
       toString : function() {
-        return CTX_MASK2STR[this.device_type] + "(" + this.device_id.toString() + ")";
+        return device_MASK2STR[this.device_type] + "(" + this.device_id.toString() + ")";
       }
     };
     //-----------------------------------------
@@ -748,7 +748,7 @@ var tvm_runtime = tvm_runtime || {};
      */
     this.context = function(device_type, device_id) {
       if (typeof device_type == "string") {
-        device_type = CTX_STR2MASK[device_type];
+        device_type = device_STR2MASK[device_type];
       }
       return new TVMContext(device_type, device_id);
     };
@@ -758,12 +758,12 @@ var tvm_runtime = tvm_runtime || {};
      *
      * @param {Array.<number>} shape The shape of the array.
      * @param {string} dtype The data type of the array, optional, default="float32"
-     * @param {tvm.TVMContext} ctx The context of the array, optional, default=cpu(0).
+     * @param {tvm.TVMContext} device The context of the array, optional, default=cpu(0).
      * @return {tvm.NDArray} The created ndarray.
      */
-    this.empty = function(shape, dtype, ctx) {
+    this.empty = function(shape, dtype, device) {
       dtype = (typeof dtype !== "undefined") ?  dtype: "float32";
-      ctx = (typeof ctx !== "undefined") ?  ctx : context("cpu", 0);
+      device = (typeof device !== "undefined") ?  device : context("cpu", 0);
       shape = (typeof shape == "number") ? [shape] : shape;
       // alloc
       var cshape = Module._malloc(SIZEOF_INT64 * shape.length);
@@ -774,7 +774,7 @@ var tvm_runtime = tvm_runtime || {};
       dtype = getTVMType(dtype);
       TVM_CALL(TVMArrayAlloc(cshape, shape.length,
                              dtype.code, dtype.bits, dtype.lanes,
-                             ctx.device_type, ctx.device_id,
+                             device.device_type, device.device_id,
                              out.data));
       var out_handle = out.asHandle();
       // release
@@ -1009,13 +1009,13 @@ var tvm_runtime = tvm_runtime || {};
      * @class
      * @memberof tvm
      */
-    function GraphModule(tvm_graph_module, ctx) {
+    function GraphModule(tvm_graph_module, device) {
       CHECK(tvm_graph_module instanceof TVMModule,
             "tvm_graph_module must be TVMModule");
-      CHECK(ctx instanceof TVMContext, "ctx must be TVMContext");
+      CHECK(device instanceof TVMContext, "device must be TVMContext");
 
       this.tvm_graph_module = tvm_graph_module;
-      this.ctx = ctx;
+      this.device = device;
       this._set_input = tvm_graph_module.getFunction("set_input");
       this._load_params = tvm_graph_module.getFunction("load_params");
       this._run = tvm_graph_module.getFunction("run");
@@ -1085,22 +1085,22 @@ var tvm_runtime = tvm_runtime || {};
      * Create a runtime executor module given a graph and a module.
      * @param {string} graph_json_str The Json string of the graph.
      * @param {TVMModule} libmod The TVM module.
-     * @param {TVMContext} ctx The context to deploy the module.
+     * @param {TVMContext} device The context to deploy the module.
      * @return {GraphModule} Runtime graph module for executing the graph.
      */
-    this.createGraphRuntime = function(graph_json_str, libmod, ctx) {
+    this.createGraphRuntime = function(graph_json_str, libmod, device) {
       CHECK(typeof graph_json_str == "string", "graph_json_str must be string");
       CHECK(libmod instanceof TVMModule, "libmod must be TVMModule");
-      CHECK(ctx instanceof TVMContext, "ctx must be TVMContext");
+      CHECK(device instanceof TVMContext, "device must be TVMContext");
 
       var fcreate = getGlobalFunc("tvm.graph_runtime.create");
       CHECK(fcreate != null, "Cannot find tvm.graph_runtime.create");
 
       var tvm_graph_module = fcreate(graph_json_str, libmod,
-                                     new TVMConstant(ctx.device_type, "int32"),
-                                     new TVMConstant(ctx.device_id, "int32"));
+                                     new TVMConstant(device.device_type, "int32"),
+                                     new TVMConstant(device.device_id, "int32"));
 
-      return new GraphModule(tvm_graph_module, ctx);
+      return new GraphModule(tvm_graph_module, device);
     };
 
     //-----------------------------------------

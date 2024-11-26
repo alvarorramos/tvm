@@ -63,12 +63,12 @@ class DevContext(object):
     def __init__(self, env):
         self.vta_axis = tvm.thread_axis("vta")
         self.vta_push_uop = tvm.make.StringImm("VTAPushGEMMOp")
-        ctx = tvm.call_extern("handle", "VTATLSCommandHandle")
+        device = tvm.call_extern("handle", "VTATLSCommandHandle")
         self.command_handle = tvm.make.Call(
-            "handle", "tvm_thread_context", [ctx],
+            "handle", "tvm_thread_context", [device],
             tvm.expr.Call.Intrinsic, None, 0)
         self.DEBUG_NO_SYNC = False
-        env._dev_ctx = self
+        env._dev_device = self
         self.gemm = intrin.gemm(env, env.mock_mode)
 
     def get_task_qid(self, qid):
@@ -160,7 +160,7 @@ class Environment(object):
         # lazy cached members
         self.mock_mode = False
         self._mock_env = None
-        self._dev_ctx = None
+        self._dev_device = None
         self._last_env = None
 
     def __enter__(self):
@@ -184,9 +184,9 @@ class Environment(object):
     @property
     def dev(self):
         """Developer context"""
-        if self._dev_ctx is None:
-            self._dev_ctx = DevContext(self)
-        return self._dev_ctx
+        if self._dev_device is None:
+            self._dev_device = DevContext(self)
+        return self._dev_device
 
     @property
     def mock(self):
@@ -199,7 +199,7 @@ class Environment(object):
             return self
         if self._mock_env is None:
             self._mock_env = copy.copy(self)
-            self._mock_env._dev_ctx = None
+            self._mock_env._dev_device = None
             self._mock_env.mock_mode = True
         return self._mock_env
 

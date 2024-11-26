@@ -72,8 +72,8 @@ def relay_micro_build(func, toolchain_prefix, params=None):
     with tvm.build_config(disable_vectorize=True):
         graph, c_mod, params = relay.build(func, target="c", params=params)
     micro_mod = create_micro_mod(c_mod, TOOLCHAIN_PREFIX)
-    ctx = tvm.micro_dev(0)
-    mod = graph_runtime.create(graph, micro_mod, ctx)
+    device = tvm.micro_dev(0)
+    mod = graph_runtime.create(graph, micro_mod, device)
     mod.set_input(**params)
     return mod
 
@@ -89,9 +89,9 @@ def test_alloc():
     shape = (1024,)
     dtype = "float32"
     with micro.Session(DEVICE_TYPE, TOOLCHAIN_PREFIX):
-        ctx = tvm.micro_dev(0)
+        device = tvm.micro_dev(0)
         np_tensor = np.random.uniform(size=shape).astype(dtype)
-        micro_tensor = tvm.nd.array(np_tensor, ctx)
+        micro_tensor = tvm.nd.array(np_tensor, device)
         tvm.testing.assert_allclose(np_tensor, micro_tensor.asnumpy())
 
 
@@ -115,10 +115,10 @@ def test_add():
     with micro.Session(DEVICE_TYPE, TOOLCHAIN_PREFIX):
         micro_mod = create_micro_mod(c_mod, TOOLCHAIN_PREFIX)
         micro_func = micro_mod[func_name]
-        ctx = tvm.micro_dev(0)
-        a = tvm.nd.array(np.random.uniform(size=shape).astype(dtype), ctx)
-        b = tvm.nd.array(np.random.uniform(size=shape).astype(dtype), ctx)
-        c = tvm.nd.array(np.zeros(shape, dtype=dtype), ctx)
+        device = tvm.micro_dev(0)
+        a = tvm.nd.array(np.random.uniform(size=shape).astype(dtype), device)
+        b = tvm.nd.array(np.random.uniform(size=shape).astype(dtype), device)
+        c = tvm.nd.array(np.zeros(shape, dtype=dtype), device)
         micro_func(a, b, c)
 
         tvm.testing.assert_allclose(
@@ -146,9 +146,9 @@ def test_workspace_add():
     with micro.Session(DEVICE_TYPE, TOOLCHAIN_PREFIX):
         micro_mod = create_micro_mod(c_mod, TOOLCHAIN_PREFIX)
         micro_func = micro_mod[func_name]
-        ctx = tvm.micro_dev(0)
-        a = tvm.nd.array(np.random.uniform(size=shape).astype(dtype), ctx)
-        c = tvm.nd.array(np.zeros(shape, dtype=dtype), ctx)
+        device = tvm.micro_dev(0)
+        a = tvm.nd.array(np.random.uniform(size=shape).astype(dtype), device)
+        c = tvm.nd.array(np.zeros(shape, dtype=dtype), device)
         micro_func(a, c)
 
         tvm.testing.assert_allclose(

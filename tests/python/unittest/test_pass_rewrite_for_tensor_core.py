@@ -96,15 +96,15 @@ def tensor_core_matmul(warp_tile_m=16, m=64, n=32, l=96):
 
     func = tvm.build(s, [A, B, C], 'cuda')
 
-    ctx = tvm.gpu(0)
+    device = tvm.gpu(0)
     a_np = np.random.uniform(size=(n, l)).astype(A.dtype)
     b_np = np.random.uniform(size=(l, m)).astype(B.dtype)
     c_np = np.zeros((n, m), dtype=np.float32)
-    a = tvm.nd.array(a_np, ctx)
-    b = tvm.nd.array(b_np, ctx)
-    c = tvm.nd.array(np.zeros((n, m), dtype=C.dtype), ctx)
+    a = tvm.nd.array(a_np, device)
+    b = tvm.nd.array(b_np, device)
+    c = tvm.nd.array(np.zeros((n, m), dtype=C.dtype), device)
     func(a, b, c)
-    evaluator = func.time_evaluator(func.entry_name, ctx, number=3)
+    evaluator = func.time_evaluator(func.entry_name, device, number=3)
     print('gemm m=%d n=%d k=%d: %f ms' % (m, n, l, evaluator(a, b, c).mean * 1e3))
 
     c_np = np.dot(a_np, b_np)
@@ -188,15 +188,15 @@ def tensor_core_batch_matmul(warp_tile_m=16, m=64, n=32, l=96, batch=2):
 
     func = tvm.build(s, [A, B, C], 'cuda')
 
-    ctx = tvm.gpu(0)
+    device = tvm.gpu(0)
     a_np = np.random.uniform(size=(batch, n, l)).astype(A.dtype)
     b_np = np.random.uniform(size=(batch, l, m)).astype(B.dtype)
     c_np = np.zeros((batch, n, m), dtype=np.float32)
-    a = tvm.nd.array(a_np, ctx)
-    b = tvm.nd.array(b_np, ctx)
-    c = tvm.nd.array(np.zeros((batch, n, m), dtype=C.dtype), ctx)
+    a = tvm.nd.array(a_np, device)
+    b = tvm.nd.array(b_np, device)
+    c = tvm.nd.array(np.zeros((batch, n, m), dtype=C.dtype), device)
     func(a, b, c)
-    evaluator = func.time_evaluator(func.entry_name, ctx, number=3)
+    evaluator = func.time_evaluator(func.entry_name, device, number=3)
     print('batch gemm m=%d n=%d k=%d batch=%d: %f ms' % (m, n, l, batch, evaluator(a, b, c).mean * 1e3))
 
     for bs in range(batch):

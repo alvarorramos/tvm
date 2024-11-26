@@ -22,7 +22,7 @@ from tvm.contrib import graph_runtime
 from tvm.relay.scope_builder import ScopeBuilder
 from tvm.relay.op import add
 from tvm.relay.module import Module
-from tvm.relay.testing.config import ctx_list
+from tvm.relay.testing.config import device_list
 
 # @tq, @jr should we put this in testing ns?
 def check_rts(expr, args, expected_result, mod=None):
@@ -101,7 +101,7 @@ def test_with_params():
     y_data = np.random.rand(1, 5).astype('float32')
     params = {"y": y_data}
     graph, lib, params = relay.build(relay.Module.from_expr(func), "llvm", params=params)
-    mod = graph_runtime.create(graph, lib, ctx=tvm.cpu(0))
+    mod = graph_runtime.create(graph, lib, device=tvm.cpu(0))
     mod.set_input(**params)
     mod.set_input(x=x_data)
     mod.run()
@@ -167,10 +167,10 @@ def test_gru_like():
     out_shape = (1, rnn_dim)
     z = unit(rnn_dim)
 
-    for target, ctx in ctx_list():
+    for target, device in device_list():
         with relay.build_config(opt_level=2):
             graph, lib, params = relay.build(relay.Module.from_expr(z), target)
-            m = graph_runtime.create(graph, lib, ctx)
+            m = graph_runtime.create(graph, lib, device)
             m.set_input("X", tvm.nd.array(x.astype(dtype)))
             m.set_input("y", tvm.nd.array(y.astype(dtype)))
             m.set_input(**params)

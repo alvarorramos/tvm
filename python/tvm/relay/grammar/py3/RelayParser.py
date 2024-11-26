@@ -434,11 +434,11 @@ class RelayParser ( Parser ):
 
     def prog(self):
 
-        localctx = RelayParser.ProgContext(self, self._ctx, self.state)
-        self.enterRule(localctx, 0, self.RULE_prog)
+        localdevice = RelayParser.ProgContext(self, self._device, self.state)
+        self.enterRule(localdevice, 0, self.RULE_prog)
         self._la = 0 # Token type
         try:
-            self.enterOuterAlt(localctx, 1)
+            self.enterOuterAlt(localdevice, 1)
             self.state = 68
             self.match(RelayParser.SEMVER)
             self.state = 76
@@ -474,12 +474,12 @@ class RelayParser ( Parser ):
             self.state = 81
             self.match(RelayParser.EOF)
         except RecognitionException as re:
-            localctx.exception = re
+            localdevice.exception = re
             self._errHandler.reportError(self, re)
             self._errHandler.recover(self, re)
         finally:
             self.exitRule()
-        return localctx
+        return localdevice
 
 
     class GeneralIdentContext(ParserRuleContext):
@@ -508,15 +508,15 @@ class RelayParser ( Parser ):
 
     def generalIdent(self):
 
-        localctx = RelayParser.GeneralIdentContext(self, self._ctx, self.state)
-        self.enterRule(localctx, 2, self.RULE_generalIdent)
+        localdevice = RelayParser.GeneralIdentContext(self, self._device, self.state)
+        self.enterRule(localdevice, 2, self.RULE_generalIdent)
         try:
-            self.enterOuterAlt(localctx, 1)
+            self.enterOuterAlt(localdevice, 1)
             self.state = 83
             self.match(RelayParser.CNAME)
             self.state = 88
             self._errHandler.sync(self)
-            _alt = self._interp.adaptivePredict(self._input,3,self._ctx)
+            _alt = self._interp.adaptivePredict(self._input,3,self._device)
             while _alt!=2 and _alt!=ATN.INVALID_ALT_NUMBER:
                 if _alt==1:
                     self.state = 84
@@ -525,15 +525,15 @@ class RelayParser ( Parser ):
                     self.match(RelayParser.CNAME) 
                 self.state = 90
                 self._errHandler.sync(self)
-                _alt = self._interp.adaptivePredict(self._input,3,self._ctx)
+                _alt = self._interp.adaptivePredict(self._input,3,self._device)
 
         except RecognitionException as re:
-            localctx.exception = re
+            localdevice.exception = re
             self._errHandler.reportError(self, re)
             self._errHandler.recover(self, re)
         finally:
             self.exitRule()
-        return localctx
+        return localdevice
 
 
     class GlobalVarContext(ParserRuleContext):
@@ -559,21 +559,21 @@ class RelayParser ( Parser ):
 
     def globalVar(self):
 
-        localctx = RelayParser.GlobalVarContext(self, self._ctx, self.state)
-        self.enterRule(localctx, 4, self.RULE_globalVar)
+        localdevice = RelayParser.GlobalVarContext(self, self._device, self.state)
+        self.enterRule(localdevice, 4, self.RULE_globalVar)
         try:
-            self.enterOuterAlt(localctx, 1)
+            self.enterOuterAlt(localdevice, 1)
             self.state = 91
             self.match(RelayParser.T__1)
             self.state = 92
             self.match(RelayParser.CNAME)
         except RecognitionException as re:
-            localctx.exception = re
+            localdevice.exception = re
             self._errHandler.reportError(self, re)
             self._errHandler.recover(self, re)
         finally:
             self.exitRule()
-        return localctx
+        return localdevice
 
 
     class LocalVarContext(ParserRuleContext):
@@ -599,11 +599,11 @@ class RelayParser ( Parser ):
 
     def localVar(self):
 
-        localctx = RelayParser.LocalVarContext(self, self._ctx, self.state)
-        self.enterRule(localctx, 6, self.RULE_localVar)
+        localdevice = RelayParser.LocalVarContext(self, self._device, self.state)
+        self.enterRule(localdevice, 6, self.RULE_localVar)
         self._la = 0 # Token type
         try:
-            self.enterOuterAlt(localctx, 1)
+            self.enterOuterAlt(localdevice, 1)
             self.state = 94
             self.match(RelayParser.T__2)
             self.state = 95
@@ -614,12 +614,12 @@ class RelayParser ( Parser ):
                 self._errHandler.reportMatch(self)
                 self.consume()
         except RecognitionException as re:
-            localctx.exception = re
+            localdevice.exception = re
             self._errHandler.reportError(self, re)
             self._errHandler.recover(self, re)
         finally:
             self.exitRule()
-        return localctx
+        return localdevice
 
 
     class GraphVarContext(ParserRuleContext):
@@ -645,21 +645,21 @@ class RelayParser ( Parser ):
 
     def graphVar(self):
 
-        localctx = RelayParser.GraphVarContext(self, self._ctx, self.state)
-        self.enterRule(localctx, 8, self.RULE_graphVar)
+        localdevice = RelayParser.GraphVarContext(self, self._device, self.state)
+        self.enterRule(localdevice, 8, self.RULE_graphVar)
         try:
-            self.enterOuterAlt(localctx, 1)
+            self.enterOuterAlt(localdevice, 1)
             self.state = 97
             self.match(RelayParser.T__2)
             self.state = 98
             self.match(RelayParser.NAT)
         except RecognitionException as re:
-            localctx.exception = re
+            localdevice.exception = re
             self._errHandler.reportError(self, re)
             self._errHandler.recover(self, re)
         finally:
             self.exitRule()
-        return localctx
+        return localdevice
 
 
     class ExprListContext(ParserRuleContext):
@@ -689,11 +689,11 @@ class RelayParser ( Parser ):
 
     def exprList(self):
 
-        localctx = RelayParser.ExprListContext(self, self._ctx, self.state)
-        self.enterRule(localctx, 10, self.RULE_exprList)
+        localdevice = RelayParser.ExprListContext(self, self._device, self.state)
+        self.enterRule(localdevice, 10, self.RULE_exprList)
         self._la = 0 # Token type
         try:
-            self.enterOuterAlt(localctx, 1)
+            self.enterOuterAlt(localdevice, 1)
             self.state = 108
             self._errHandler.sync(self)
             _la = self._input.LA(1)
@@ -715,12 +715,12 @@ class RelayParser ( Parser ):
 
 
         except RecognitionException as re:
-            localctx.exception = re
+            localdevice.exception = re
             self._errHandler.reportError(self, re)
             self._errHandler.recover(self, re)
         finally:
             self.exitRule()
-        return localctx
+        return localdevice
 
 
     class CallListContext(ParserRuleContext):
@@ -734,16 +734,16 @@ class RelayParser ( Parser ):
             return RelayParser.RULE_callList
 
      
-        def copyFrom(self, ctx:ParserRuleContext):
-            super().copyFrom(ctx)
+        def copyFrom(self, device:ParserRuleContext):
+            super().copyFrom(device)
 
 
 
     class CallWithAttrContext(CallListContext):
 
-        def __init__(self, parser, ctx:ParserRuleContext): # actually a RelayParser.CallListContext
+        def __init__(self, parser, device:ParserRuleContext): # actually a RelayParser.CallListContext
             super().__init__(parser)
-            self.copyFrom(ctx)
+            self.copyFrom(device)
 
         def attrSeq(self):
             return self.getTypedRuleContext(RelayParser.AttrSeqContext,0)
@@ -764,9 +764,9 @@ class RelayParser ( Parser ):
 
     class CallNoAttrContext(CallListContext):
 
-        def __init__(self, parser, ctx:ParserRuleContext): # actually a RelayParser.CallListContext
+        def __init__(self, parser, device:ParserRuleContext): # actually a RelayParser.CallListContext
             super().__init__(parser)
-            self.copyFrom(ctx)
+            self.copyFrom(device)
 
         def exprList(self):
             return self.getTypedRuleContext(RelayParser.ExprListContext,0)
@@ -782,25 +782,25 @@ class RelayParser ( Parser ):
 
     def callList(self):
 
-        localctx = RelayParser.CallListContext(self, self._ctx, self.state)
-        self.enterRule(localctx, 12, self.RULE_callList)
+        localdevice = RelayParser.CallListContext(self, self._device, self.state)
+        self.enterRule(localdevice, 12, self.RULE_callList)
         try:
             self.state = 120
             self._errHandler.sync(self)
-            la_ = self._interp.adaptivePredict(self._input,7,self._ctx)
+            la_ = self._interp.adaptivePredict(self._input,7,self._device)
             if la_ == 1:
-                localctx = RelayParser.CallNoAttrContext(self, localctx)
-                self.enterOuterAlt(localctx, 1)
+                localdevice = RelayParser.CallNoAttrContext(self, localdevice)
+                self.enterOuterAlt(localdevice, 1)
                 self.state = 110
                 self.exprList()
                 pass
 
             elif la_ == 2:
-                localctx = RelayParser.CallWithAttrContext(self, localctx)
-                self.enterOuterAlt(localctx, 2)
+                localdevice = RelayParser.CallWithAttrContext(self, localdevice)
+                self.enterOuterAlt(localdevice, 2)
                 self.state = 116
                 self._errHandler.sync(self)
-                _alt = self._interp.adaptivePredict(self._input,6,self._ctx)
+                _alt = self._interp.adaptivePredict(self._input,6,self._device)
                 while _alt!=2 and _alt!=ATN.INVALID_ALT_NUMBER:
                     if _alt==1:
                         self.state = 111
@@ -809,7 +809,7 @@ class RelayParser ( Parser ):
                         self.match(RelayParser.T__4) 
                     self.state = 118
                     self._errHandler.sync(self)
-                    _alt = self._interp.adaptivePredict(self._input,6,self._ctx)
+                    _alt = self._interp.adaptivePredict(self._input,6,self._device)
 
                 self.state = 119
                 self.attrSeq()
@@ -817,12 +817,12 @@ class RelayParser ( Parser ):
 
 
         except RecognitionException as re:
-            localctx.exception = re
+            localdevice.exception = re
             self._errHandler.reportError(self, re)
             self._errHandler.recover(self, re)
         finally:
             self.exitRule()
-        return localctx
+        return localdevice
 
 
     class ExprContext(ParserRuleContext):
@@ -836,15 +836,15 @@ class RelayParser ( Parser ):
             return RelayParser.RULE_expr
 
      
-        def copyFrom(self, ctx:ParserRuleContext):
-            super().copyFrom(ctx)
+        def copyFrom(self, device:ParserRuleContext):
+            super().copyFrom(device)
 
 
     class FuncExprContext(ExprContext):
 
-        def __init__(self, parser, ctx:ParserRuleContext): # actually a RelayParser.ExprContext
+        def __init__(self, parser, device:ParserRuleContext): # actually a RelayParser.ExprContext
             super().__init__(parser)
-            self.copyFrom(ctx)
+            self.copyFrom(device)
 
         def func(self):
             return self.getTypedRuleContext(RelayParser.FuncContext,0)
@@ -859,9 +859,9 @@ class RelayParser ( Parser ):
 
     class MetaExprContext(ExprContext):
 
-        def __init__(self, parser, ctx:ParserRuleContext): # actually a RelayParser.ExprContext
+        def __init__(self, parser, device:ParserRuleContext): # actually a RelayParser.ExprContext
             super().__init__(parser)
-            self.copyFrom(ctx)
+            self.copyFrom(device)
 
         def meta(self):
             return self.getTypedRuleContext(RelayParser.MetaContext,0)
@@ -876,9 +876,9 @@ class RelayParser ( Parser ):
 
     class MatchContext(ExprContext):
 
-        def __init__(self, parser, ctx:ParserRuleContext): # actually a RelayParser.ExprContext
+        def __init__(self, parser, device:ParserRuleContext): # actually a RelayParser.ExprContext
             super().__init__(parser)
-            self.copyFrom(ctx)
+            self.copyFrom(device)
 
         def matchType(self):
             return self.getTypedRuleContext(RelayParser.MatchTypeContext,0)
@@ -899,9 +899,9 @@ class RelayParser ( Parser ):
 
     class TensorContext(ExprContext):
 
-        def __init__(self, parser, ctx:ParserRuleContext): # actually a RelayParser.ExprContext
+        def __init__(self, parser, device:ParserRuleContext): # actually a RelayParser.ExprContext
             super().__init__(parser)
-            self.copyFrom(ctx)
+            self.copyFrom(device)
 
         def expr(self, i:int=None):
             if i is None:
@@ -919,9 +919,9 @@ class RelayParser ( Parser ):
 
     class GraphContext(ExprContext):
 
-        def __init__(self, parser, ctx:ParserRuleContext): # actually a RelayParser.ExprContext
+        def __init__(self, parser, device:ParserRuleContext): # actually a RelayParser.ExprContext
             super().__init__(parser)
-            self.copyFrom(ctx)
+            self.copyFrom(device)
 
         def graphVar(self):
             return self.getTypedRuleContext(RelayParser.GraphVarContext,0)
@@ -942,9 +942,9 @@ class RelayParser ( Parser ):
 
     class IdentExprContext(ExprContext):
 
-        def __init__(self, parser, ctx:ParserRuleContext): # actually a RelayParser.ExprContext
+        def __init__(self, parser, device:ParserRuleContext): # actually a RelayParser.ExprContext
             super().__init__(parser)
-            self.copyFrom(ctx)
+            self.copyFrom(device)
 
         def ident(self):
             return self.getTypedRuleContext(RelayParser.IdentContext,0)
@@ -959,9 +959,9 @@ class RelayParser ( Parser ):
 
     class StringExprContext(ExprContext):
 
-        def __init__(self, parser, ctx:ParserRuleContext): # actually a RelayParser.ExprContext
+        def __init__(self, parser, device:ParserRuleContext): # actually a RelayParser.ExprContext
             super().__init__(parser)
-            self.copyFrom(ctx)
+            self.copyFrom(device)
 
         def QUOTED_STRING(self):
             return self.getToken(RelayParser.QUOTED_STRING, 0)
@@ -975,9 +975,9 @@ class RelayParser ( Parser ):
 
     class CallContext(ExprContext):
 
-        def __init__(self, parser, ctx:ParserRuleContext): # actually a RelayParser.ExprContext
+        def __init__(self, parser, device:ParserRuleContext): # actually a RelayParser.ExprContext
             super().__init__(parser)
-            self.copyFrom(ctx)
+            self.copyFrom(device)
 
         def expr(self):
             return self.getTypedRuleContext(RelayParser.ExprContext,0)
@@ -995,9 +995,9 @@ class RelayParser ( Parser ):
 
     class NegContext(ExprContext):
 
-        def __init__(self, parser, ctx:ParserRuleContext): # actually a RelayParser.ExprContext
+        def __init__(self, parser, device:ParserRuleContext): # actually a RelayParser.ExprContext
             super().__init__(parser)
-            self.copyFrom(ctx)
+            self.copyFrom(device)
 
         def SUB(self):
             return self.getToken(RelayParser.SUB, 0)
@@ -1014,9 +1014,9 @@ class RelayParser ( Parser ):
 
     class TupleContext(ExprContext):
 
-        def __init__(self, parser, ctx:ParserRuleContext): # actually a RelayParser.ExprContext
+        def __init__(self, parser, device:ParserRuleContext): # actually a RelayParser.ExprContext
             super().__init__(parser)
-            self.copyFrom(ctx)
+            self.copyFrom(device)
 
         def expr(self, i:int=None):
             if i is None:
@@ -1034,9 +1034,9 @@ class RelayParser ( Parser ):
 
     class ParenContext(ExprContext):
 
-        def __init__(self, parser, ctx:ParserRuleContext): # actually a RelayParser.ExprContext
+        def __init__(self, parser, device:ParserRuleContext): # actually a RelayParser.ExprContext
             super().__init__(parser)
-            self.copyFrom(ctx)
+            self.copyFrom(device)
 
         def expr(self):
             return self.getTypedRuleContext(RelayParser.ExprContext,0)
@@ -1051,9 +1051,9 @@ class RelayParser ( Parser ):
 
     class ScalarExprContext(ExprContext):
 
-        def __init__(self, parser, ctx:ParserRuleContext): # actually a RelayParser.ExprContext
+        def __init__(self, parser, device:ParserRuleContext): # actually a RelayParser.ExprContext
             super().__init__(parser)
-            self.copyFrom(ctx)
+            self.copyFrom(device)
 
         def scalar(self):
             return self.getTypedRuleContext(RelayParser.ScalarContext,0)
@@ -1068,9 +1068,9 @@ class RelayParser ( Parser ):
 
     class LetContext(ExprContext):
 
-        def __init__(self, parser, ctx:ParserRuleContext): # actually a RelayParser.ExprContext
+        def __init__(self, parser, device:ParserRuleContext): # actually a RelayParser.ExprContext
             super().__init__(parser)
-            self.copyFrom(ctx)
+            self.copyFrom(device)
 
         def var(self):
             return self.getTypedRuleContext(RelayParser.VarContext,0)
@@ -1091,9 +1091,9 @@ class RelayParser ( Parser ):
 
     class ProjectionContext(ExprContext):
 
-        def __init__(self, parser, ctx:ParserRuleContext): # actually a RelayParser.ExprContext
+        def __init__(self, parser, device:ParserRuleContext): # actually a RelayParser.ExprContext
             super().__init__(parser)
-            self.copyFrom(ctx)
+            self.copyFrom(device)
 
         def expr(self):
             return self.getTypedRuleContext(RelayParser.ExprContext,0)
@@ -1110,9 +1110,9 @@ class RelayParser ( Parser ):
 
     class IfElseContext(ExprContext):
 
-        def __init__(self, parser, ctx:ParserRuleContext): # actually a RelayParser.ExprContext
+        def __init__(self, parser, device:ParserRuleContext): # actually a RelayParser.ExprContext
             super().__init__(parser)
-            self.copyFrom(ctx)
+            self.copyFrom(device)
 
         def expr(self):
             return self.getTypedRuleContext(RelayParser.ExprContext,0)
@@ -1133,10 +1133,10 @@ class RelayParser ( Parser ):
 
     class BinOpContext(ExprContext):
 
-        def __init__(self, parser, ctx:ParserRuleContext): # actually a RelayParser.ExprContext
+        def __init__(self, parser, device:ParserRuleContext): # actually a RelayParser.ExprContext
             super().__init__(parser)
             self.op = None # Token
-            self.copyFrom(ctx)
+            self.copyFrom(device)
 
         def expr(self, i:int=None):
             if i is None:
@@ -1174,22 +1174,22 @@ class RelayParser ( Parser ):
 
 
     def expr(self, _p:int=0):
-        _parentctx = self._ctx
+        _parentdevice = self._device
         _parentState = self.state
-        localctx = RelayParser.ExprContext(self, self._ctx, _parentState)
-        _prevctx = localctx
+        localdevice = RelayParser.ExprContext(self, self._device, _parentState)
+        _prevdevice = localdevice
         _startState = 14
-        self.enterRecursionRule(localctx, 14, self.RULE_expr, _p)
+        self.enterRecursionRule(localdevice, 14, self.RULE_expr, _p)
         self._la = 0 # Token type
         try:
-            self.enterOuterAlt(localctx, 1)
+            self.enterOuterAlt(localdevice, 1)
             self.state = 192
             self._errHandler.sync(self)
-            la_ = self._interp.adaptivePredict(self._input,12,self._ctx)
+            la_ = self._interp.adaptivePredict(self._input,12,self._device)
             if la_ == 1:
-                localctx = RelayParser.ParenContext(self, localctx)
-                self._ctx = localctx
-                _prevctx = localctx
+                localdevice = RelayParser.ParenContext(self, localdevice)
+                self._device = localdevice
+                _prevdevice = localdevice
 
                 self.state = 123
                 self.match(RelayParser.T__5)
@@ -1200,9 +1200,9 @@ class RelayParser ( Parser ):
                 pass
 
             elif la_ == 2:
-                localctx = RelayParser.NegContext(self, localctx)
-                self._ctx = localctx
-                _prevctx = localctx
+                localdevice = RelayParser.NegContext(self, localdevice)
+                self._device = localdevice
+                _prevdevice = localdevice
                 self.state = 127
                 self.match(RelayParser.SUB)
                 self.state = 128
@@ -1210,17 +1210,17 @@ class RelayParser ( Parser ):
                 pass
 
             elif la_ == 3:
-                localctx = RelayParser.FuncExprContext(self, localctx)
-                self._ctx = localctx
-                _prevctx = localctx
+                localdevice = RelayParser.FuncExprContext(self, localdevice)
+                self._device = localdevice
+                _prevdevice = localdevice
                 self.state = 129
                 self.func()
                 pass
 
             elif la_ == 4:
-                localctx = RelayParser.TupleContext(self, localctx)
-                self._ctx = localctx
-                _prevctx = localctx
+                localdevice = RelayParser.TupleContext(self, localdevice)
+                self._device = localdevice
+                _prevdevice = localdevice
                 self.state = 130
                 self.match(RelayParser.T__5)
                 self.state = 131
@@ -1228,9 +1228,9 @@ class RelayParser ( Parser ):
                 pass
 
             elif la_ == 5:
-                localctx = RelayParser.TupleContext(self, localctx)
-                self._ctx = localctx
-                _prevctx = localctx
+                localdevice = RelayParser.TupleContext(self, localdevice)
+                self._device = localdevice
+                _prevdevice = localdevice
                 self.state = 132
                 self.match(RelayParser.T__5)
                 self.state = 133
@@ -1242,9 +1242,9 @@ class RelayParser ( Parser ):
                 pass
 
             elif la_ == 6:
-                localctx = RelayParser.TupleContext(self, localctx)
-                self._ctx = localctx
-                _prevctx = localctx
+                localdevice = RelayParser.TupleContext(self, localdevice)
+                self._device = localdevice
+                _prevdevice = localdevice
                 self.state = 137
                 self.match(RelayParser.T__5)
                 self.state = 138
@@ -1268,9 +1268,9 @@ class RelayParser ( Parser ):
                 pass
 
             elif la_ == 7:
-                localctx = RelayParser.TensorContext(self, localctx)
-                self._ctx = localctx
-                _prevctx = localctx
+                localdevice = RelayParser.TensorContext(self, localdevice)
+                self._device = localdevice
+                _prevdevice = localdevice
                 self.state = 147
                 self.match(RelayParser.T__7)
                 self.state = 156
@@ -1298,9 +1298,9 @@ class RelayParser ( Parser ):
                 pass
 
             elif la_ == 8:
-                localctx = RelayParser.IfElseContext(self, localctx)
-                self._ctx = localctx
-                _prevctx = localctx
+                localdevice = RelayParser.IfElseContext(self, localdevice)
+                self._device = localdevice
+                _prevdevice = localdevice
                 self.state = 159
                 self.match(RelayParser.T__9)
                 self.state = 160
@@ -1318,9 +1318,9 @@ class RelayParser ( Parser ):
                 pass
 
             elif la_ == 9:
-                localctx = RelayParser.MatchContext(self, localctx)
-                self._ctx = localctx
-                _prevctx = localctx
+                localdevice = RelayParser.MatchContext(self, localdevice)
+                self._device = localdevice
+                _prevdevice = localdevice
                 self.state = 167
                 self.matchType()
                 self.state = 168
@@ -1340,9 +1340,9 @@ class RelayParser ( Parser ):
                 pass
 
             elif la_ == 10:
-                localctx = RelayParser.LetContext(self, localctx)
-                self._ctx = localctx
-                _prevctx = localctx
+                localdevice = RelayParser.LetContext(self, localdevice)
+                self._device = localdevice
+                _prevdevice = localdevice
                 self.state = 175
                 self.match(RelayParser.T__13)
                 self.state = 176
@@ -1358,9 +1358,9 @@ class RelayParser ( Parser ):
                 pass
 
             elif la_ == 11:
-                localctx = RelayParser.GraphContext(self, localctx)
-                self._ctx = localctx
-                _prevctx = localctx
+                localdevice = RelayParser.GraphContext(self, localdevice)
+                self._device = localdevice
+                _prevdevice = localdevice
                 self.state = 182
                 self.graphVar()
                 self.state = 183
@@ -1374,62 +1374,62 @@ class RelayParser ( Parser ):
                 pass
 
             elif la_ == 12:
-                localctx = RelayParser.IdentExprContext(self, localctx)
-                self._ctx = localctx
-                _prevctx = localctx
+                localdevice = RelayParser.IdentExprContext(self, localdevice)
+                self._device = localdevice
+                _prevdevice = localdevice
                 self.state = 188
                 self.ident()
                 pass
 
             elif la_ == 13:
-                localctx = RelayParser.ScalarExprContext(self, localctx)
-                self._ctx = localctx
-                _prevctx = localctx
+                localdevice = RelayParser.ScalarExprContext(self, localdevice)
+                self._device = localdevice
+                _prevdevice = localdevice
                 self.state = 189
                 self.scalar()
                 pass
 
             elif la_ == 14:
-                localctx = RelayParser.MetaExprContext(self, localctx)
-                self._ctx = localctx
-                _prevctx = localctx
+                localdevice = RelayParser.MetaExprContext(self, localdevice)
+                self._device = localdevice
+                _prevdevice = localdevice
                 self.state = 190
                 self.meta()
                 pass
 
             elif la_ == 15:
-                localctx = RelayParser.StringExprContext(self, localctx)
-                self._ctx = localctx
-                _prevctx = localctx
+                localdevice = RelayParser.StringExprContext(self, localdevice)
+                self._device = localdevice
+                _prevdevice = localdevice
                 self.state = 191
                 self.match(RelayParser.QUOTED_STRING)
                 pass
 
 
-            self._ctx.stop = self._input.LT(-1)
+            self._device.stop = self._input.LT(-1)
             self.state = 219
             self._errHandler.sync(self)
-            _alt = self._interp.adaptivePredict(self._input,14,self._ctx)
+            _alt = self._interp.adaptivePredict(self._input,14,self._device)
             while _alt!=2 and _alt!=ATN.INVALID_ALT_NUMBER:
                 if _alt==1:
                     if self._parseListeners is not None:
                         self.triggerExitRuleEvent()
-                    _prevctx = localctx
+                    _prevdevice = localdevice
                     self.state = 217
                     self._errHandler.sync(self)
-                    la_ = self._interp.adaptivePredict(self._input,13,self._ctx)
+                    la_ = self._interp.adaptivePredict(self._input,13,self._device)
                     if la_ == 1:
-                        localctx = RelayParser.BinOpContext(self, RelayParser.ExprContext(self, _parentctx, _parentState))
-                        self.pushNewRecursionContext(localctx, _startState, self.RULE_expr)
+                        localdevice = RelayParser.BinOpContext(self, RelayParser.ExprContext(self, _parentdevice, _parentState))
+                        self.pushNewRecursionContext(localdevice, _startState, self.RULE_expr)
                         self.state = 194
-                        if not self.precpred(self._ctx, 19):
+                        if not self.precpred(self._device, 19):
                             from antlr4.error.Errors import FailedPredicateException
-                            raise FailedPredicateException(self, "self.precpred(self._ctx, 19)")
+                            raise FailedPredicateException(self, "self.precpred(self._device, 19)")
                         self.state = 195
-                        localctx.op = self._input.LT(1)
+                        localdevice.op = self._input.LT(1)
                         _la = self._input.LA(1)
                         if not(_la==RelayParser.MUL or _la==RelayParser.DIV):
-                            localctx.op = self._errHandler.recoverInline(self)
+                            localdevice.op = self._errHandler.recoverInline(self)
                         else:
                             self._errHandler.reportMatch(self)
                             self.consume()
@@ -1438,17 +1438,17 @@ class RelayParser ( Parser ):
                         pass
 
                     elif la_ == 2:
-                        localctx = RelayParser.BinOpContext(self, RelayParser.ExprContext(self, _parentctx, _parentState))
-                        self.pushNewRecursionContext(localctx, _startState, self.RULE_expr)
+                        localdevice = RelayParser.BinOpContext(self, RelayParser.ExprContext(self, _parentdevice, _parentState))
+                        self.pushNewRecursionContext(localdevice, _startState, self.RULE_expr)
                         self.state = 197
-                        if not self.precpred(self._ctx, 18):
+                        if not self.precpred(self._device, 18):
                             from antlr4.error.Errors import FailedPredicateException
-                            raise FailedPredicateException(self, "self.precpred(self._ctx, 18)")
+                            raise FailedPredicateException(self, "self.precpred(self._device, 18)")
                         self.state = 198
-                        localctx.op = self._input.LT(1)
+                        localdevice.op = self._input.LT(1)
                         _la = self._input.LA(1)
                         if not(_la==RelayParser.ADD or _la==RelayParser.SUB):
-                            localctx.op = self._errHandler.recoverInline(self)
+                            localdevice.op = self._errHandler.recoverInline(self)
                         else:
                             self._errHandler.reportMatch(self)
                             self.consume()
@@ -1457,17 +1457,17 @@ class RelayParser ( Parser ):
                         pass
 
                     elif la_ == 3:
-                        localctx = RelayParser.BinOpContext(self, RelayParser.ExprContext(self, _parentctx, _parentState))
-                        self.pushNewRecursionContext(localctx, _startState, self.RULE_expr)
+                        localdevice = RelayParser.BinOpContext(self, RelayParser.ExprContext(self, _parentdevice, _parentState))
+                        self.pushNewRecursionContext(localdevice, _startState, self.RULE_expr)
                         self.state = 200
-                        if not self.precpred(self._ctx, 17):
+                        if not self.precpred(self._device, 17):
                             from antlr4.error.Errors import FailedPredicateException
-                            raise FailedPredicateException(self, "self.precpred(self._ctx, 17)")
+                            raise FailedPredicateException(self, "self.precpred(self._device, 17)")
                         self.state = 201
-                        localctx.op = self._input.LT(1)
+                        localdevice.op = self._input.LT(1)
                         _la = self._input.LA(1)
                         if not((((_la) & ~0x3f) == 0 and ((1 << _la) & ((1 << RelayParser.LT) | (1 << RelayParser.GT) | (1 << RelayParser.LE) | (1 << RelayParser.GE))) != 0)):
-                            localctx.op = self._errHandler.recoverInline(self)
+                            localdevice.op = self._errHandler.recoverInline(self)
                         else:
                             self._errHandler.reportMatch(self)
                             self.consume()
@@ -1476,17 +1476,17 @@ class RelayParser ( Parser ):
                         pass
 
                     elif la_ == 4:
-                        localctx = RelayParser.BinOpContext(self, RelayParser.ExprContext(self, _parentctx, _parentState))
-                        self.pushNewRecursionContext(localctx, _startState, self.RULE_expr)
+                        localdevice = RelayParser.BinOpContext(self, RelayParser.ExprContext(self, _parentdevice, _parentState))
+                        self.pushNewRecursionContext(localdevice, _startState, self.RULE_expr)
                         self.state = 203
-                        if not self.precpred(self._ctx, 16):
+                        if not self.precpred(self._device, 16):
                             from antlr4.error.Errors import FailedPredicateException
-                            raise FailedPredicateException(self, "self.precpred(self._ctx, 16)")
+                            raise FailedPredicateException(self, "self.precpred(self._device, 16)")
                         self.state = 204
-                        localctx.op = self._input.LT(1)
+                        localdevice.op = self._input.LT(1)
                         _la = self._input.LA(1)
                         if not(_la==RelayParser.EQ or _la==RelayParser.NE):
-                            localctx.op = self._errHandler.recoverInline(self)
+                            localdevice.op = self._errHandler.recoverInline(self)
                         else:
                             self._errHandler.reportMatch(self)
                             self.consume()
@@ -1495,12 +1495,12 @@ class RelayParser ( Parser ):
                         pass
 
                     elif la_ == 5:
-                        localctx = RelayParser.LetContext(self, RelayParser.ExprContext(self, _parentctx, _parentState))
-                        self.pushNewRecursionContext(localctx, _startState, self.RULE_expr)
+                        localdevice = RelayParser.LetContext(self, RelayParser.ExprContext(self, _parentdevice, _parentState))
+                        self.pushNewRecursionContext(localdevice, _startState, self.RULE_expr)
                         self.state = 206
-                        if not self.precpred(self._ctx, 6):
+                        if not self.precpred(self._device, 6):
                             from antlr4.error.Errors import FailedPredicateException
-                            raise FailedPredicateException(self, "self.precpred(self._ctx, 6)")
+                            raise FailedPredicateException(self, "self.precpred(self._device, 6)")
                         self.state = 207
                         self.match(RelayParser.T__16)
                         self.state = 208
@@ -1508,12 +1508,12 @@ class RelayParser ( Parser ):
                         pass
 
                     elif la_ == 6:
-                        localctx = RelayParser.CallContext(self, RelayParser.ExprContext(self, _parentctx, _parentState))
-                        self.pushNewRecursionContext(localctx, _startState, self.RULE_expr)
+                        localdevice = RelayParser.CallContext(self, RelayParser.ExprContext(self, _parentdevice, _parentState))
+                        self.pushNewRecursionContext(localdevice, _startState, self.RULE_expr)
                         self.state = 209
-                        if not self.precpred(self._ctx, 21):
+                        if not self.precpred(self._device, 21):
                             from antlr4.error.Errors import FailedPredicateException
-                            raise FailedPredicateException(self, "self.precpred(self._ctx, 21)")
+                            raise FailedPredicateException(self, "self.precpred(self._device, 21)")
                         self.state = 210
                         self.match(RelayParser.T__5)
                         self.state = 211
@@ -1523,12 +1523,12 @@ class RelayParser ( Parser ):
                         pass
 
                     elif la_ == 7:
-                        localctx = RelayParser.ProjectionContext(self, RelayParser.ExprContext(self, _parentctx, _parentState))
-                        self.pushNewRecursionContext(localctx, _startState, self.RULE_expr)
+                        localdevice = RelayParser.ProjectionContext(self, RelayParser.ExprContext(self, _parentdevice, _parentState))
+                        self.pushNewRecursionContext(localdevice, _startState, self.RULE_expr)
                         self.state = 214
-                        if not self.precpred(self._ctx, 8):
+                        if not self.precpred(self._device, 8):
                             from antlr4.error.Errors import FailedPredicateException
-                            raise FailedPredicateException(self, "self.precpred(self._ctx, 8)")
+                            raise FailedPredicateException(self, "self.precpred(self._device, 8)")
                         self.state = 215
                         self.match(RelayParser.T__0)
                         self.state = 216
@@ -1538,15 +1538,15 @@ class RelayParser ( Parser ):
              
                 self.state = 221
                 self._errHandler.sync(self)
-                _alt = self._interp.adaptivePredict(self._input,14,self._ctx)
+                _alt = self._interp.adaptivePredict(self._input,14,self._device)
 
         except RecognitionException as re:
-            localctx.exception = re
+            localdevice.exception = re
             self._errHandler.reportError(self, re)
             self._errHandler.recover(self, re)
         finally:
-            self.unrollRecursionContexts(_parentctx)
-        return localctx
+            self.unrollRecursionContexts(_parentdevice)
+        return localdevice
 
 
     class FuncContext(ParserRuleContext):
@@ -1585,11 +1585,11 @@ class RelayParser ( Parser ):
 
     def func(self):
 
-        localctx = RelayParser.FuncContext(self, self._ctx, self.state)
-        self.enterRule(localctx, 16, self.RULE_func)
+        localdevice = RelayParser.FuncContext(self, self._device, self.state)
+        self.enterRule(localdevice, 16, self.RULE_func)
         self._la = 0 # Token type
         try:
-            self.enterOuterAlt(localctx, 1)
+            self.enterOuterAlt(localdevice, 1)
             self.state = 222
             self.match(RelayParser.T__17)
             self.state = 224
@@ -1619,12 +1619,12 @@ class RelayParser ( Parser ):
             self.state = 233
             self.body()
         except RecognitionException as re:
-            localctx.exception = re
+            localdevice.exception = re
             self._errHandler.reportError(self, re)
             self._errHandler.recover(self, re)
         finally:
             self.exitRule()
-        return localctx
+        return localdevice
 
 
     class DefnContext(ParserRuleContext):
@@ -1638,16 +1638,16 @@ class RelayParser ( Parser ):
             return RelayParser.RULE_defn
 
      
-        def copyFrom(self, ctx:ParserRuleContext):
-            super().copyFrom(ctx)
+        def copyFrom(self, device:ParserRuleContext):
+            super().copyFrom(device)
 
 
 
     class ExternAdtDefnContext(DefnContext):
 
-        def __init__(self, parser, ctx:ParserRuleContext): # actually a RelayParser.DefnContext
+        def __init__(self, parser, device:ParserRuleContext): # actually a RelayParser.DefnContext
             super().__init__(parser)
-            self.copyFrom(ctx)
+            self.copyFrom(device)
 
         def generalIdent(self):
             return self.getTypedRuleContext(RelayParser.GeneralIdentContext,0)
@@ -1665,9 +1665,9 @@ class RelayParser ( Parser ):
 
     class FuncDefnContext(DefnContext):
 
-        def __init__(self, parser, ctx:ParserRuleContext): # actually a RelayParser.DefnContext
+        def __init__(self, parser, device:ParserRuleContext): # actually a RelayParser.DefnContext
             super().__init__(parser)
-            self.copyFrom(ctx)
+            self.copyFrom(device)
 
         def globalVar(self):
             return self.getTypedRuleContext(RelayParser.GlobalVarContext,0)
@@ -1694,9 +1694,9 @@ class RelayParser ( Parser ):
 
     class AdtDefnContext(DefnContext):
 
-        def __init__(self, parser, ctx:ParserRuleContext): # actually a RelayParser.DefnContext
+        def __init__(self, parser, device:ParserRuleContext): # actually a RelayParser.DefnContext
             super().__init__(parser)
-            self.copyFrom(ctx)
+            self.copyFrom(device)
 
         def generalIdent(self):
             return self.getTypedRuleContext(RelayParser.GeneralIdentContext,0)
@@ -1718,16 +1718,16 @@ class RelayParser ( Parser ):
 
     def defn(self):
 
-        localctx = RelayParser.DefnContext(self, self._ctx, self.state)
-        self.enterRule(localctx, 18, self.RULE_defn)
+        localdevice = RelayParser.DefnContext(self, self._device, self.state)
+        self.enterRule(localdevice, 18, self.RULE_defn)
         self._la = 0 # Token type
         try:
             self.state = 266
             self._errHandler.sync(self)
             token = self._input.LA(1)
             if token in [RelayParser.T__19]:
-                localctx = RelayParser.FuncDefnContext(self, localctx)
-                self.enterOuterAlt(localctx, 1)
+                localdevice = RelayParser.FuncDefnContext(self, localdevice)
+                self.enterOuterAlt(localdevice, 1)
                 self.state = 235
                 self.match(RelayParser.T__19)
                 self.state = 236
@@ -1760,8 +1760,8 @@ class RelayParser ( Parser ):
                 self.body()
                 pass
             elif token in [RelayParser.T__20]:
-                localctx = RelayParser.ExternAdtDefnContext(self, localctx)
-                self.enterOuterAlt(localctx, 2)
+                localdevice = RelayParser.ExternAdtDefnContext(self, localdevice)
+                self.enterOuterAlt(localdevice, 2)
                 self.state = 249
                 self.match(RelayParser.T__20)
                 self.state = 250
@@ -1778,8 +1778,8 @@ class RelayParser ( Parser ):
 
                 pass
             elif token in [RelayParser.T__21]:
-                localctx = RelayParser.AdtDefnContext(self, localctx)
-                self.enterOuterAlt(localctx, 3)
+                localdevice = RelayParser.AdtDefnContext(self, localdevice)
+                self.enterOuterAlt(localdevice, 3)
                 self.state = 255
                 self.match(RelayParser.T__21)
                 self.state = 256
@@ -1809,12 +1809,12 @@ class RelayParser ( Parser ):
                 raise NoViableAltException(self)
 
         except RecognitionException as re:
-            localctx.exception = re
+            localdevice.exception = re
             self._errHandler.reportError(self, re)
             self._errHandler.recover(self, re)
         finally:
             self.exitRule()
-        return localctx
+        return localdevice
 
 
     class ConstructorNameContext(ParserRuleContext):
@@ -1840,19 +1840,19 @@ class RelayParser ( Parser ):
 
     def constructorName(self):
 
-        localctx = RelayParser.ConstructorNameContext(self, self._ctx, self.state)
-        self.enterRule(localctx, 20, self.RULE_constructorName)
+        localdevice = RelayParser.ConstructorNameContext(self, self._device, self.state)
+        self.enterRule(localdevice, 20, self.RULE_constructorName)
         try:
-            self.enterOuterAlt(localctx, 1)
+            self.enterOuterAlt(localdevice, 1)
             self.state = 268
             self.match(RelayParser.CNAME)
         except RecognitionException as re:
-            localctx.exception = re
+            localdevice.exception = re
             self._errHandler.reportError(self, re)
             self._errHandler.recover(self, re)
         finally:
             self.exitRule()
-        return localctx
+        return localdevice
 
 
     class AdtConsDefnListContext(ParserRuleContext):
@@ -1882,16 +1882,16 @@ class RelayParser ( Parser ):
 
     def adtConsDefnList(self):
 
-        localctx = RelayParser.AdtConsDefnListContext(self, self._ctx, self.state)
-        self.enterRule(localctx, 22, self.RULE_adtConsDefnList)
+        localdevice = RelayParser.AdtConsDefnListContext(self, self._device, self.state)
+        self.enterRule(localdevice, 22, self.RULE_adtConsDefnList)
         self._la = 0 # Token type
         try:
-            self.enterOuterAlt(localctx, 1)
+            self.enterOuterAlt(localdevice, 1)
             self.state = 270
             self.adtConsDefn()
             self.state = 275
             self._errHandler.sync(self)
-            _alt = self._interp.adaptivePredict(self._input,23,self._ctx)
+            _alt = self._interp.adaptivePredict(self._input,23,self._device)
             while _alt!=2 and _alt!=ATN.INVALID_ALT_NUMBER:
                 if _alt==1:
                     self.state = 271
@@ -1900,7 +1900,7 @@ class RelayParser ( Parser ):
                     self.adtConsDefn() 
                 self.state = 277
                 self._errHandler.sync(self)
-                _alt = self._interp.adaptivePredict(self._input,23,self._ctx)
+                _alt = self._interp.adaptivePredict(self._input,23,self._device)
 
             self.state = 279
             self._errHandler.sync(self)
@@ -1911,12 +1911,12 @@ class RelayParser ( Parser ):
 
 
         except RecognitionException as re:
-            localctx.exception = re
+            localdevice.exception = re
             self._errHandler.reportError(self, re)
             self._errHandler.recover(self, re)
         finally:
             self.exitRule()
-        return localctx
+        return localdevice
 
 
     class AdtConsDefnContext(ParserRuleContext):
@@ -1950,11 +1950,11 @@ class RelayParser ( Parser ):
 
     def adtConsDefn(self):
 
-        localctx = RelayParser.AdtConsDefnContext(self, self._ctx, self.state)
-        self.enterRule(localctx, 24, self.RULE_adtConsDefn)
+        localdevice = RelayParser.AdtConsDefnContext(self, self._device, self.state)
+        self.enterRule(localdevice, 24, self.RULE_adtConsDefn)
         self._la = 0 # Token type
         try:
-            self.enterOuterAlt(localctx, 1)
+            self.enterOuterAlt(localdevice, 1)
             self.state = 281
             self.constructorName()
             self.state = 293
@@ -1982,12 +1982,12 @@ class RelayParser ( Parser ):
 
 
         except RecognitionException as re:
-            localctx.exception = re
+            localdevice.exception = re
             self._errHandler.reportError(self, re)
             self._errHandler.recover(self, re)
         finally:
             self.exitRule()
-        return localctx
+        return localdevice
 
 
     class MatchClauseListContext(ParserRuleContext):
@@ -2017,16 +2017,16 @@ class RelayParser ( Parser ):
 
     def matchClauseList(self):
 
-        localctx = RelayParser.MatchClauseListContext(self, self._ctx, self.state)
-        self.enterRule(localctx, 26, self.RULE_matchClauseList)
+        localdevice = RelayParser.MatchClauseListContext(self, self._device, self.state)
+        self.enterRule(localdevice, 26, self.RULE_matchClauseList)
         self._la = 0 # Token type
         try:
-            self.enterOuterAlt(localctx, 1)
+            self.enterOuterAlt(localdevice, 1)
             self.state = 295
             self.matchClause()
             self.state = 300
             self._errHandler.sync(self)
-            _alt = self._interp.adaptivePredict(self._input,27,self._ctx)
+            _alt = self._interp.adaptivePredict(self._input,27,self._device)
             while _alt!=2 and _alt!=ATN.INVALID_ALT_NUMBER:
                 if _alt==1:
                     self.state = 296
@@ -2035,7 +2035,7 @@ class RelayParser ( Parser ):
                     self.matchClause() 
                 self.state = 302
                 self._errHandler.sync(self)
-                _alt = self._interp.adaptivePredict(self._input,27,self._ctx)
+                _alt = self._interp.adaptivePredict(self._input,27,self._device)
 
             self.state = 304
             self._errHandler.sync(self)
@@ -2046,12 +2046,12 @@ class RelayParser ( Parser ):
 
 
         except RecognitionException as re:
-            localctx.exception = re
+            localdevice.exception = re
             self._errHandler.reportError(self, re)
             self._errHandler.recover(self, re)
         finally:
             self.exitRule()
-        return localctx
+        return localdevice
 
 
     class MatchClauseContext(ParserRuleContext):
@@ -2082,10 +2082,10 @@ class RelayParser ( Parser ):
 
     def matchClause(self):
 
-        localctx = RelayParser.MatchClauseContext(self, self._ctx, self.state)
-        self.enterRule(localctx, 28, self.RULE_matchClause)
+        localdevice = RelayParser.MatchClauseContext(self, self._device, self.state)
+        self.enterRule(localdevice, 28, self.RULE_matchClause)
         try:
-            self.enterOuterAlt(localctx, 1)
+            self.enterOuterAlt(localdevice, 1)
             self.state = 306
             self.pattern()
             self.state = 307
@@ -2109,12 +2109,12 @@ class RelayParser ( Parser ):
                 raise NoViableAltException(self)
 
         except RecognitionException as re:
-            localctx.exception = re
+            localdevice.exception = re
             self._errHandler.reportError(self, re)
             self._errHandler.recover(self, re)
         finally:
             self.exitRule()
-        return localctx
+        return localdevice
 
 
     class MatchTypeContext(ParserRuleContext):
@@ -2138,11 +2138,11 @@ class RelayParser ( Parser ):
 
     def matchType(self):
 
-        localctx = RelayParser.MatchTypeContext(self, self._ctx, self.state)
-        self.enterRule(localctx, 30, self.RULE_matchType)
+        localdevice = RelayParser.MatchTypeContext(self, self._device, self.state)
+        self.enterRule(localdevice, 30, self.RULE_matchType)
         self._la = 0 # Token type
         try:
-            self.enterOuterAlt(localctx, 1)
+            self.enterOuterAlt(localdevice, 1)
             self.state = 315
             _la = self._input.LA(1)
             if not(_la==RelayParser.T__23 or _la==RelayParser.T__24):
@@ -2151,12 +2151,12 @@ class RelayParser ( Parser ):
                 self._errHandler.reportMatch(self)
                 self.consume()
         except RecognitionException as re:
-            localctx.exception = re
+            localdevice.exception = re
             self._errHandler.reportError(self, re)
             self._errHandler.recover(self, re)
         finally:
             self.exitRule()
-        return localctx
+        return localdevice
 
 
     class PatternListContext(ParserRuleContext):
@@ -2186,11 +2186,11 @@ class RelayParser ( Parser ):
 
     def patternList(self):
 
-        localctx = RelayParser.PatternListContext(self, self._ctx, self.state)
-        self.enterRule(localctx, 32, self.RULE_patternList)
+        localdevice = RelayParser.PatternListContext(self, self._device, self.state)
+        self.enterRule(localdevice, 32, self.RULE_patternList)
         self._la = 0 # Token type
         try:
-            self.enterOuterAlt(localctx, 1)
+            self.enterOuterAlt(localdevice, 1)
             self.state = 317
             self.match(RelayParser.T__5)
             self.state = 318
@@ -2210,12 +2210,12 @@ class RelayParser ( Parser ):
             self.state = 326
             self.match(RelayParser.T__6)
         except RecognitionException as re:
-            localctx.exception = re
+            localdevice.exception = re
             self._errHandler.reportError(self, re)
             self._errHandler.recover(self, re)
         finally:
             self.exitRule()
-        return localctx
+        return localdevice
 
 
     class PatternContext(ParserRuleContext):
@@ -2229,16 +2229,16 @@ class RelayParser ( Parser ):
             return RelayParser.RULE_pattern
 
      
-        def copyFrom(self, ctx:ParserRuleContext):
-            super().copyFrom(ctx)
+        def copyFrom(self, device:ParserRuleContext):
+            super().copyFrom(device)
 
 
 
     class WildcardPatternContext(PatternContext):
 
-        def __init__(self, parser, ctx:ParserRuleContext): # actually a RelayParser.PatternContext
+        def __init__(self, parser, device:ParserRuleContext): # actually a RelayParser.PatternContext
             super().__init__(parser)
-            self.copyFrom(ctx)
+            self.copyFrom(device)
 
 
         def accept(self, visitor:ParseTreeVisitor):
@@ -2250,9 +2250,9 @@ class RelayParser ( Parser ):
 
     class ConstructorPatternContext(PatternContext):
 
-        def __init__(self, parser, ctx:ParserRuleContext): # actually a RelayParser.PatternContext
+        def __init__(self, parser, device:ParserRuleContext): # actually a RelayParser.PatternContext
             super().__init__(parser)
-            self.copyFrom(ctx)
+            self.copyFrom(device)
 
         def constructorName(self):
             return self.getTypedRuleContext(RelayParser.ConstructorNameContext,0)
@@ -2270,9 +2270,9 @@ class RelayParser ( Parser ):
 
     class TuplePatternContext(PatternContext):
 
-        def __init__(self, parser, ctx:ParserRuleContext): # actually a RelayParser.PatternContext
+        def __init__(self, parser, device:ParserRuleContext): # actually a RelayParser.PatternContext
             super().__init__(parser)
-            self.copyFrom(ctx)
+            self.copyFrom(device)
 
         def patternList(self):
             return self.getTypedRuleContext(RelayParser.PatternListContext,0)
@@ -2287,9 +2287,9 @@ class RelayParser ( Parser ):
 
     class VarPatternContext(PatternContext):
 
-        def __init__(self, parser, ctx:ParserRuleContext): # actually a RelayParser.PatternContext
+        def __init__(self, parser, device:ParserRuleContext): # actually a RelayParser.PatternContext
             super().__init__(parser)
-            self.copyFrom(ctx)
+            self.copyFrom(device)
 
         def localVar(self):
             return self.getTypedRuleContext(RelayParser.LocalVarContext,0)
@@ -2308,22 +2308,22 @@ class RelayParser ( Parser ):
 
     def pattern(self):
 
-        localctx = RelayParser.PatternContext(self, self._ctx, self.state)
-        self.enterRule(localctx, 34, self.RULE_pattern)
+        localdevice = RelayParser.PatternContext(self, self._device, self.state)
+        self.enterRule(localdevice, 34, self.RULE_pattern)
         self._la = 0 # Token type
         try:
             self.state = 339
             self._errHandler.sync(self)
             token = self._input.LA(1)
             if token in [RelayParser.T__3]:
-                localctx = RelayParser.WildcardPatternContext(self, localctx)
-                self.enterOuterAlt(localctx, 1)
+                localdevice = RelayParser.WildcardPatternContext(self, localdevice)
+                self.enterOuterAlt(localdevice, 1)
                 self.state = 328
                 self.match(RelayParser.T__3)
                 pass
             elif token in [RelayParser.T__2]:
-                localctx = RelayParser.VarPatternContext(self, localctx)
-                self.enterOuterAlt(localctx, 2)
+                localdevice = RelayParser.VarPatternContext(self, localdevice)
+                self.enterOuterAlt(localdevice, 2)
                 self.state = 329
                 self.localVar()
                 self.state = 332
@@ -2338,8 +2338,8 @@ class RelayParser ( Parser ):
 
                 pass
             elif token in [RelayParser.CNAME]:
-                localctx = RelayParser.ConstructorPatternContext(self, localctx)
-                self.enterOuterAlt(localctx, 3)
+                localdevice = RelayParser.ConstructorPatternContext(self, localdevice)
+                self.enterOuterAlt(localdevice, 3)
                 self.state = 334
                 self.constructorName()
                 self.state = 336
@@ -2352,8 +2352,8 @@ class RelayParser ( Parser ):
 
                 pass
             elif token in [RelayParser.T__5]:
-                localctx = RelayParser.TuplePatternContext(self, localctx)
-                self.enterOuterAlt(localctx, 4)
+                localdevice = RelayParser.TuplePatternContext(self, localdevice)
+                self.enterOuterAlt(localdevice, 4)
                 self.state = 338
                 self.patternList()
                 pass
@@ -2361,12 +2361,12 @@ class RelayParser ( Parser ):
                 raise NoViableAltException(self)
 
         except RecognitionException as re:
-            localctx.exception = re
+            localdevice.exception = re
             self._errHandler.reportError(self, re)
             self._errHandler.recover(self, re)
         finally:
             self.exitRule()
-        return localctx
+        return localdevice
 
 
     class AdtConsContext(ParserRuleContext):
@@ -2397,11 +2397,11 @@ class RelayParser ( Parser ):
 
     def adtCons(self):
 
-        localctx = RelayParser.AdtConsContext(self, self._ctx, self.state)
-        self.enterRule(localctx, 36, self.RULE_adtCons)
+        localdevice = RelayParser.AdtConsContext(self, self._device, self.state)
+        self.enterRule(localdevice, 36, self.RULE_adtCons)
         self._la = 0 # Token type
         try:
-            self.enterOuterAlt(localctx, 1)
+            self.enterOuterAlt(localdevice, 1)
             self.state = 341
             self.constructorName()
             self.state = 343
@@ -2413,12 +2413,12 @@ class RelayParser ( Parser ):
 
 
         except RecognitionException as re:
-            localctx.exception = re
+            localdevice.exception = re
             self._errHandler.reportError(self, re)
             self._errHandler.recover(self, re)
         finally:
             self.exitRule()
-        return localctx
+        return localdevice
 
 
     class AdtConsParamListContext(ParserRuleContext):
@@ -2448,11 +2448,11 @@ class RelayParser ( Parser ):
 
     def adtConsParamList(self):
 
-        localctx = RelayParser.AdtConsParamListContext(self, self._ctx, self.state)
-        self.enterRule(localctx, 38, self.RULE_adtConsParamList)
+        localdevice = RelayParser.AdtConsParamListContext(self, self._device, self.state)
+        self.enterRule(localdevice, 38, self.RULE_adtConsParamList)
         self._la = 0 # Token type
         try:
-            self.enterOuterAlt(localctx, 1)
+            self.enterOuterAlt(localdevice, 1)
             self.state = 345
             self.match(RelayParser.T__5)
             self.state = 346
@@ -2472,12 +2472,12 @@ class RelayParser ( Parser ):
             self.state = 354
             self.match(RelayParser.T__6)
         except RecognitionException as re:
-            localctx.exception = re
+            localdevice.exception = re
             self._errHandler.reportError(self, re)
             self._errHandler.recover(self, re)
         finally:
             self.exitRule()
-        return localctx
+        return localdevice
 
 
     class AdtConsParamContext(ParserRuleContext):
@@ -2508,19 +2508,19 @@ class RelayParser ( Parser ):
 
     def adtConsParam(self):
 
-        localctx = RelayParser.AdtConsParamContext(self, self._ctx, self.state)
-        self.enterRule(localctx, 40, self.RULE_adtConsParam)
+        localdevice = RelayParser.AdtConsParamContext(self, self._device, self.state)
+        self.enterRule(localdevice, 40, self.RULE_adtConsParam)
         try:
             self.state = 358
             self._errHandler.sync(self)
             token = self._input.LA(1)
             if token in [RelayParser.T__2]:
-                self.enterOuterAlt(localctx, 1)
+                self.enterOuterAlt(localdevice, 1)
                 self.state = 356
                 self.localVar()
                 pass
             elif token in [RelayParser.CNAME]:
-                self.enterOuterAlt(localctx, 2)
+                self.enterOuterAlt(localdevice, 2)
                 self.state = 357
                 self.constructorName()
                 pass
@@ -2528,12 +2528,12 @@ class RelayParser ( Parser ):
                 raise NoViableAltException(self)
 
         except RecognitionException as re:
-            localctx.exception = re
+            localdevice.exception = re
             self._errHandler.reportError(self, re)
             self._errHandler.recover(self, re)
         finally:
             self.exitRule()
-        return localctx
+        return localdevice
 
 
     class ArgListContext(ParserRuleContext):
@@ -2547,16 +2547,16 @@ class RelayParser ( Parser ):
             return RelayParser.RULE_argList
 
      
-        def copyFrom(self, ctx:ParserRuleContext):
-            super().copyFrom(ctx)
+        def copyFrom(self, device:ParserRuleContext):
+            super().copyFrom(device)
 
 
 
     class ArgNoAttrContext(ArgListContext):
 
-        def __init__(self, parser, ctx:ParserRuleContext): # actually a RelayParser.ArgListContext
+        def __init__(self, parser, device:ParserRuleContext): # actually a RelayParser.ArgListContext
             super().__init__(parser)
-            self.copyFrom(ctx)
+            self.copyFrom(device)
 
         def varList(self):
             return self.getTypedRuleContext(RelayParser.VarListContext,0)
@@ -2571,9 +2571,9 @@ class RelayParser ( Parser ):
 
     class ArgWithAttrContext(ArgListContext):
 
-        def __init__(self, parser, ctx:ParserRuleContext): # actually a RelayParser.ArgListContext
+        def __init__(self, parser, device:ParserRuleContext): # actually a RelayParser.ArgListContext
             super().__init__(parser)
-            self.copyFrom(ctx)
+            self.copyFrom(device)
 
         def attrSeq(self):
             return self.getTypedRuleContext(RelayParser.AttrSeqContext,0)
@@ -2595,23 +2595,23 @@ class RelayParser ( Parser ):
 
     def argList(self):
 
-        localctx = RelayParser.ArgListContext(self, self._ctx, self.state)
-        self.enterRule(localctx, 42, self.RULE_argList)
+        localdevice = RelayParser.ArgListContext(self, self._device, self.state)
+        self.enterRule(localdevice, 42, self.RULE_argList)
         self._la = 0 # Token type
         try:
             self.state = 370
             self._errHandler.sync(self)
-            la_ = self._interp.adaptivePredict(self._input,38,self._ctx)
+            la_ = self._interp.adaptivePredict(self._input,38,self._device)
             if la_ == 1:
-                localctx = RelayParser.ArgNoAttrContext(self, localctx)
-                self.enterOuterAlt(localctx, 1)
+                localdevice = RelayParser.ArgNoAttrContext(self, localdevice)
+                self.enterOuterAlt(localdevice, 1)
                 self.state = 360
                 self.varList()
                 pass
 
             elif la_ == 2:
-                localctx = RelayParser.ArgWithAttrContext(self, localctx)
-                self.enterOuterAlt(localctx, 2)
+                localdevice = RelayParser.ArgWithAttrContext(self, localdevice)
+                self.enterOuterAlt(localdevice, 2)
                 self.state = 366
                 self._errHandler.sync(self)
                 _la = self._input.LA(1)
@@ -2630,12 +2630,12 @@ class RelayParser ( Parser ):
 
 
         except RecognitionException as re:
-            localctx.exception = re
+            localdevice.exception = re
             self._errHandler.reportError(self, re)
             self._errHandler.recover(self, re)
         finally:
             self.exitRule()
-        return localctx
+        return localdevice
 
 
     class VarListContext(ParserRuleContext):
@@ -2665,11 +2665,11 @@ class RelayParser ( Parser ):
 
     def varList(self):
 
-        localctx = RelayParser.VarListContext(self, self._ctx, self.state)
-        self.enterRule(localctx, 44, self.RULE_varList)
+        localdevice = RelayParser.VarListContext(self, self._device, self.state)
+        self.enterRule(localdevice, 44, self.RULE_varList)
         self._la = 0 # Token type
         try:
-            self.enterOuterAlt(localctx, 1)
+            self.enterOuterAlt(localdevice, 1)
             self.state = 380
             self._errHandler.sync(self)
             _la = self._input.LA(1)
@@ -2691,12 +2691,12 @@ class RelayParser ( Parser ):
 
 
         except RecognitionException as re:
-            localctx.exception = re
+            localdevice.exception = re
             self._errHandler.reportError(self, re)
             self._errHandler.recover(self, re)
         finally:
             self.exitRule()
-        return localctx
+        return localdevice
 
 
     class VarContext(ParserRuleContext):
@@ -2727,11 +2727,11 @@ class RelayParser ( Parser ):
 
     def var(self):
 
-        localctx = RelayParser.VarContext(self, self._ctx, self.state)
-        self.enterRule(localctx, 46, self.RULE_var)
+        localdevice = RelayParser.VarContext(self, self._device, self.state)
+        self.enterRule(localdevice, 46, self.RULE_var)
         self._la = 0 # Token type
         try:
-            self.enterOuterAlt(localctx, 1)
+            self.enterOuterAlt(localdevice, 1)
             self.state = 382
             self.localVar()
             self.state = 385
@@ -2745,12 +2745,12 @@ class RelayParser ( Parser ):
 
 
         except RecognitionException as re:
-            localctx.exception = re
+            localdevice.exception = re
             self._errHandler.reportError(self, re)
             self._errHandler.recover(self, re)
         finally:
             self.exitRule()
-        return localctx
+        return localdevice
 
 
     class AttrSeqContext(ParserRuleContext):
@@ -2780,11 +2780,11 @@ class RelayParser ( Parser ):
 
     def attrSeq(self):
 
-        localctx = RelayParser.AttrSeqContext(self, self._ctx, self.state)
-        self.enterRule(localctx, 48, self.RULE_attrSeq)
+        localdevice = RelayParser.AttrSeqContext(self, self._device, self.state)
+        self.enterRule(localdevice, 48, self.RULE_attrSeq)
         self._la = 0 # Token type
         try:
-            self.enterOuterAlt(localctx, 1)
+            self.enterOuterAlt(localdevice, 1)
             self.state = 387
             self.attr()
             self.state = 392
@@ -2800,12 +2800,12 @@ class RelayParser ( Parser ):
                 _la = self._input.LA(1)
 
         except RecognitionException as re:
-            localctx.exception = re
+            localdevice.exception = re
             self._errHandler.reportError(self, re)
             self._errHandler.recover(self, re)
         finally:
             self.exitRule()
-        return localctx
+        return localdevice
 
 
     class AttrContext(ParserRuleContext):
@@ -2835,10 +2835,10 @@ class RelayParser ( Parser ):
 
     def attr(self):
 
-        localctx = RelayParser.AttrContext(self, self._ctx, self.state)
-        self.enterRule(localctx, 50, self.RULE_attr)
+        localdevice = RelayParser.AttrContext(self, self._device, self.state)
+        self.enterRule(localdevice, 50, self.RULE_attr)
         try:
-            self.enterOuterAlt(localctx, 1)
+            self.enterOuterAlt(localdevice, 1)
             self.state = 395
             self.match(RelayParser.CNAME)
             self.state = 396
@@ -2846,12 +2846,12 @@ class RelayParser ( Parser ):
             self.state = 397
             self.expr(0)
         except RecognitionException as re:
-            localctx.exception = re
+            localdevice.exception = re
             self._errHandler.reportError(self, re)
             self._errHandler.recover(self, re)
         finally:
             self.exitRule()
-        return localctx
+        return localdevice
 
 
     class TypeExprContext(ParserRuleContext):
@@ -2865,16 +2865,16 @@ class RelayParser ( Parser ):
             return RelayParser.RULE_typeExpr
 
      
-        def copyFrom(self, ctx:ParserRuleContext):
-            super().copyFrom(ctx)
+        def copyFrom(self, device:ParserRuleContext):
+            super().copyFrom(device)
 
 
 
     class TypeParenContext(TypeExprContext):
 
-        def __init__(self, parser, ctx:ParserRuleContext): # actually a RelayParser.TypeExprContext
+        def __init__(self, parser, device:ParserRuleContext): # actually a RelayParser.TypeExprContext
             super().__init__(parser)
-            self.copyFrom(ctx)
+            self.copyFrom(device)
 
         def typeExpr(self):
             return self.getTypedRuleContext(RelayParser.TypeExprContext,0)
@@ -2889,9 +2889,9 @@ class RelayParser ( Parser ):
 
     class TupleTypeContext(TypeExprContext):
 
-        def __init__(self, parser, ctx:ParserRuleContext): # actually a RelayParser.TypeExprContext
+        def __init__(self, parser, device:ParserRuleContext): # actually a RelayParser.TypeExprContext
             super().__init__(parser)
-            self.copyFrom(ctx)
+            self.copyFrom(device)
 
         def typeExpr(self, i:int=None):
             if i is None:
@@ -2909,9 +2909,9 @@ class RelayParser ( Parser ):
 
     class TypeCallTypeContext(TypeExprContext):
 
-        def __init__(self, parser, ctx:ParserRuleContext): # actually a RelayParser.TypeExprContext
+        def __init__(self, parser, device:ParserRuleContext): # actually a RelayParser.TypeExprContext
             super().__init__(parser)
-            self.copyFrom(ctx)
+            self.copyFrom(device)
 
         def generalIdent(self):
             return self.getTypedRuleContext(RelayParser.GeneralIdentContext,0)
@@ -2929,9 +2929,9 @@ class RelayParser ( Parser ):
 
     class TypeIdentTypeContext(TypeExprContext):
 
-        def __init__(self, parser, ctx:ParserRuleContext): # actually a RelayParser.TypeExprContext
+        def __init__(self, parser, device:ParserRuleContext): # actually a RelayParser.TypeExprContext
             super().__init__(parser)
-            self.copyFrom(ctx)
+            self.copyFrom(device)
 
         def generalIdent(self):
             return self.getTypedRuleContext(RelayParser.GeneralIdentContext,0)
@@ -2946,9 +2946,9 @@ class RelayParser ( Parser ):
 
     class IncompleteTypeContext(TypeExprContext):
 
-        def __init__(self, parser, ctx:ParserRuleContext): # actually a RelayParser.TypeExprContext
+        def __init__(self, parser, device:ParserRuleContext): # actually a RelayParser.TypeExprContext
             super().__init__(parser)
-            self.copyFrom(ctx)
+            self.copyFrom(device)
 
 
         def accept(self, visitor:ParseTreeVisitor):
@@ -2960,9 +2960,9 @@ class RelayParser ( Parser ):
 
     class TensorTypeContext(TypeExprContext):
 
-        def __init__(self, parser, ctx:ParserRuleContext): # actually a RelayParser.TypeExprContext
+        def __init__(self, parser, device:ParserRuleContext): # actually a RelayParser.TypeExprContext
             super().__init__(parser)
-            self.copyFrom(ctx)
+            self.copyFrom(device)
 
         def shapeList(self):
             return self.getTypedRuleContext(RelayParser.ShapeListContext,0)
@@ -2980,9 +2980,9 @@ class RelayParser ( Parser ):
 
     class FuncTypeContext(TypeExprContext):
 
-        def __init__(self, parser, ctx:ParserRuleContext): # actually a RelayParser.TypeExprContext
+        def __init__(self, parser, device:ParserRuleContext): # actually a RelayParser.TypeExprContext
             super().__init__(parser)
-            self.copyFrom(ctx)
+            self.copyFrom(device)
 
         def typeExpr(self, i:int=None):
             if i is None:
@@ -3004,16 +3004,16 @@ class RelayParser ( Parser ):
 
     def typeExpr(self):
 
-        localctx = RelayParser.TypeExprContext(self, self._ctx, self.state)
-        self.enterRule(localctx, 52, self.RULE_typeExpr)
+        localdevice = RelayParser.TypeExprContext(self, self._device, self.state)
+        self.enterRule(localdevice, 52, self.RULE_typeExpr)
         self._la = 0 # Token type
         try:
             self.state = 450
             self._errHandler.sync(self)
-            la_ = self._interp.adaptivePredict(self._input,47,self._ctx)
+            la_ = self._interp.adaptivePredict(self._input,47,self._device)
             if la_ == 1:
-                localctx = RelayParser.TupleTypeContext(self, localctx)
-                self.enterOuterAlt(localctx, 1)
+                localdevice = RelayParser.TupleTypeContext(self, localdevice)
+                self.enterOuterAlt(localdevice, 1)
                 self.state = 399
                 self.match(RelayParser.T__5)
                 self.state = 400
@@ -3021,8 +3021,8 @@ class RelayParser ( Parser ):
                 pass
 
             elif la_ == 2:
-                localctx = RelayParser.TypeParenContext(self, localctx)
-                self.enterOuterAlt(localctx, 2)
+                localdevice = RelayParser.TypeParenContext(self, localdevice)
+                self.enterOuterAlt(localdevice, 2)
                 self.state = 401
                 self.match(RelayParser.T__5)
                 self.state = 402
@@ -3032,8 +3032,8 @@ class RelayParser ( Parser ):
                 pass
 
             elif la_ == 3:
-                localctx = RelayParser.TupleTypeContext(self, localctx)
-                self.enterOuterAlt(localctx, 3)
+                localdevice = RelayParser.TupleTypeContext(self, localdevice)
+                self.enterOuterAlt(localdevice, 3)
                 self.state = 405
                 self.match(RelayParser.T__5)
                 self.state = 406
@@ -3045,8 +3045,8 @@ class RelayParser ( Parser ):
                 pass
 
             elif la_ == 4:
-                localctx = RelayParser.TupleTypeContext(self, localctx)
-                self.enterOuterAlt(localctx, 4)
+                localdevice = RelayParser.TupleTypeContext(self, localdevice)
+                self.enterOuterAlt(localdevice, 4)
                 self.state = 410
                 self.match(RelayParser.T__5)
                 self.state = 411
@@ -3070,8 +3070,8 @@ class RelayParser ( Parser ):
                 pass
 
             elif la_ == 5:
-                localctx = RelayParser.TypeCallTypeContext(self, localctx)
-                self.enterOuterAlt(localctx, 5)
+                localdevice = RelayParser.TypeCallTypeContext(self, localdevice)
+                self.enterOuterAlt(localdevice, 5)
                 self.state = 420
                 self.generalIdent()
                 self.state = 421
@@ -3079,15 +3079,15 @@ class RelayParser ( Parser ):
                 pass
 
             elif la_ == 6:
-                localctx = RelayParser.TypeIdentTypeContext(self, localctx)
-                self.enterOuterAlt(localctx, 6)
+                localdevice = RelayParser.TypeIdentTypeContext(self, localdevice)
+                self.enterOuterAlt(localdevice, 6)
                 self.state = 423
                 self.generalIdent()
                 pass
 
             elif la_ == 7:
-                localctx = RelayParser.TensorTypeContext(self, localctx)
-                self.enterOuterAlt(localctx, 7)
+                localdevice = RelayParser.TensorTypeContext(self, localdevice)
+                self.enterOuterAlt(localdevice, 7)
                 self.state = 424
                 self.match(RelayParser.T__26)
                 self.state = 425
@@ -3103,8 +3103,8 @@ class RelayParser ( Parser ):
                 pass
 
             elif la_ == 8:
-                localctx = RelayParser.FuncTypeContext(self, localctx)
-                self.enterOuterAlt(localctx, 8)
+                localdevice = RelayParser.FuncTypeContext(self, localdevice)
+                self.enterOuterAlt(localdevice, 8)
                 self.state = 431
                 self.match(RelayParser.T__17)
                 self.state = 433
@@ -3146,20 +3146,20 @@ class RelayParser ( Parser ):
                 pass
 
             elif la_ == 9:
-                localctx = RelayParser.IncompleteTypeContext(self, localctx)
-                self.enterOuterAlt(localctx, 9)
+                localdevice = RelayParser.IncompleteTypeContext(self, localdevice)
+                self.enterOuterAlt(localdevice, 9)
                 self.state = 449
                 self.match(RelayParser.T__3)
                 pass
 
 
         except RecognitionException as re:
-            localctx.exception = re
+            localdevice.exception = re
             self._errHandler.reportError(self, re)
             self._errHandler.recover(self, re)
         finally:
             self.exitRule()
-        return localctx
+        return localdevice
 
 
     class TypeParamListContext(ParserRuleContext):
@@ -3189,11 +3189,11 @@ class RelayParser ( Parser ):
 
     def typeParamList(self):
 
-        localctx = RelayParser.TypeParamListContext(self, self._ctx, self.state)
-        self.enterRule(localctx, 54, self.RULE_typeParamList)
+        localdevice = RelayParser.TypeParamListContext(self, self._device, self.state)
+        self.enterRule(localdevice, 54, self.RULE_typeParamList)
         self._la = 0 # Token type
         try:
-            self.enterOuterAlt(localctx, 1)
+            self.enterOuterAlt(localdevice, 1)
             self.state = 452
             self.match(RelayParser.T__7)
             self.state = 453
@@ -3213,12 +3213,12 @@ class RelayParser ( Parser ):
             self.state = 461
             self.match(RelayParser.T__8)
         except RecognitionException as re:
-            localctx.exception = re
+            localdevice.exception = re
             self._errHandler.reportError(self, re)
             self._errHandler.recover(self, re)
         finally:
             self.exitRule()
-        return localctx
+        return localdevice
 
 
     class ShapeListContext(ParserRuleContext):
@@ -3248,15 +3248,15 @@ class RelayParser ( Parser ):
 
     def shapeList(self):
 
-        localctx = RelayParser.ShapeListContext(self, self._ctx, self.state)
-        self.enterRule(localctx, 56, self.RULE_shapeList)
+        localdevice = RelayParser.ShapeListContext(self, self._device, self.state)
+        self.enterRule(localdevice, 56, self.RULE_shapeList)
         self._la = 0 # Token type
         try:
             self.state = 476
             self._errHandler.sync(self)
-            la_ = self._interp.adaptivePredict(self._input,50,self._ctx)
+            la_ = self._interp.adaptivePredict(self._input,50,self._device)
             if la_ == 1:
-                self.enterOuterAlt(localctx, 1)
+                self.enterOuterAlt(localdevice, 1)
                 self.state = 463
                 self.match(RelayParser.T__5)
                 self.state = 464
@@ -3264,7 +3264,7 @@ class RelayParser ( Parser ):
                 pass
 
             elif la_ == 2:
-                self.enterOuterAlt(localctx, 2)
+                self.enterOuterAlt(localdevice, 2)
                 self.state = 465
                 self.match(RelayParser.T__5)
                 self.state = 466
@@ -3288,19 +3288,19 @@ class RelayParser ( Parser ):
                 pass
 
             elif la_ == 3:
-                self.enterOuterAlt(localctx, 3)
+                self.enterOuterAlt(localdevice, 3)
                 self.state = 475
                 self.shape()
                 pass
 
 
         except RecognitionException as re:
-            localctx.exception = re
+            localdevice.exception = re
             self._errHandler.reportError(self, re)
             self._errHandler.recover(self, re)
         finally:
             self.exitRule()
-        return localctx
+        return localdevice
 
 
     class MetaContext(ParserRuleContext):
@@ -3329,10 +3329,10 @@ class RelayParser ( Parser ):
 
     def meta(self):
 
-        localctx = RelayParser.MetaContext(self, self._ctx, self.state)
-        self.enterRule(localctx, 58, self.RULE_meta)
+        localdevice = RelayParser.MetaContext(self, self._device, self.state)
+        self.enterRule(localdevice, 58, self.RULE_meta)
         try:
-            self.enterOuterAlt(localctx, 1)
+            self.enterOuterAlt(localdevice, 1)
             self.state = 478
             self.match(RelayParser.T__27)
             self.state = 479
@@ -3348,12 +3348,12 @@ class RelayParser ( Parser ):
             self.state = 484
             self.match(RelayParser.T__8)
         except RecognitionException as re:
-            localctx.exception = re
+            localdevice.exception = re
             self._errHandler.reportError(self, re)
             self._errHandler.recover(self, re)
         finally:
             self.exitRule()
-        return localctx
+        return localdevice
 
 
     class ShapeContext(ParserRuleContext):
@@ -3367,16 +3367,16 @@ class RelayParser ( Parser ):
             return RelayParser.RULE_shape
 
      
-        def copyFrom(self, ctx:ParserRuleContext):
-            super().copyFrom(ctx)
+        def copyFrom(self, device:ParserRuleContext):
+            super().copyFrom(device)
 
 
 
     class ParensShapeContext(ShapeContext):
 
-        def __init__(self, parser, ctx:ParserRuleContext): # actually a RelayParser.ShapeContext
+        def __init__(self, parser, device:ParserRuleContext): # actually a RelayParser.ShapeContext
             super().__init__(parser)
-            self.copyFrom(ctx)
+            self.copyFrom(device)
 
         def shape(self):
             return self.getTypedRuleContext(RelayParser.ShapeContext,0)
@@ -3391,9 +3391,9 @@ class RelayParser ( Parser ):
 
     class MetaShapeContext(ShapeContext):
 
-        def __init__(self, parser, ctx:ParserRuleContext): # actually a RelayParser.ShapeContext
+        def __init__(self, parser, device:ParserRuleContext): # actually a RelayParser.ShapeContext
             super().__init__(parser)
-            self.copyFrom(ctx)
+            self.copyFrom(device)
 
         def meta(self):
             return self.getTypedRuleContext(RelayParser.MetaContext,0)
@@ -3408,9 +3408,9 @@ class RelayParser ( Parser ):
 
     class IntShapeContext(ShapeContext):
 
-        def __init__(self, parser, ctx:ParserRuleContext): # actually a RelayParser.ShapeContext
+        def __init__(self, parser, device:ParserRuleContext): # actually a RelayParser.ShapeContext
             super().__init__(parser)
-            self.copyFrom(ctx)
+            self.copyFrom(device)
 
         def NAT(self):
             return self.getToken(RelayParser.NAT, 0)
@@ -3425,21 +3425,21 @@ class RelayParser ( Parser ):
 
     def shape(self):
 
-        localctx = RelayParser.ShapeContext(self, self._ctx, self.state)
-        self.enterRule(localctx, 60, self.RULE_shape)
+        localdevice = RelayParser.ShapeContext(self, self._device, self.state)
+        self.enterRule(localdevice, 60, self.RULE_shape)
         try:
             self.state = 492
             self._errHandler.sync(self)
             token = self._input.LA(1)
             if token in [RelayParser.T__27]:
-                localctx = RelayParser.MetaShapeContext(self, localctx)
-                self.enterOuterAlt(localctx, 1)
+                localdevice = RelayParser.MetaShapeContext(self, localdevice)
+                self.enterOuterAlt(localdevice, 1)
                 self.state = 486
                 self.meta()
                 pass
             elif token in [RelayParser.T__5]:
-                localctx = RelayParser.ParensShapeContext(self, localctx)
-                self.enterOuterAlt(localctx, 2)
+                localdevice = RelayParser.ParensShapeContext(self, localdevice)
+                self.enterOuterAlt(localdevice, 2)
                 self.state = 487
                 self.match(RelayParser.T__5)
                 self.state = 488
@@ -3448,8 +3448,8 @@ class RelayParser ( Parser ):
                 self.match(RelayParser.T__6)
                 pass
             elif token in [RelayParser.NAT]:
-                localctx = RelayParser.IntShapeContext(self, localctx)
-                self.enterOuterAlt(localctx, 3)
+                localdevice = RelayParser.IntShapeContext(self, localdevice)
+                self.enterOuterAlt(localdevice, 3)
                 self.state = 491
                 self.match(RelayParser.NAT)
                 pass
@@ -3457,12 +3457,12 @@ class RelayParser ( Parser ):
                 raise NoViableAltException(self)
 
         except RecognitionException as re:
-            localctx.exception = re
+            localdevice.exception = re
             self._errHandler.reportError(self, re)
             self._errHandler.recover(self, re)
         finally:
             self.exitRule()
-        return localctx
+        return localdevice
 
 
     class BodyContext(ParserRuleContext):
@@ -3489,10 +3489,10 @@ class RelayParser ( Parser ):
 
     def body(self):
 
-        localctx = RelayParser.BodyContext(self, self._ctx, self.state)
-        self.enterRule(localctx, 62, self.RULE_body)
+        localdevice = RelayParser.BodyContext(self, self._device, self.state)
+        self.enterRule(localdevice, 62, self.RULE_body)
         try:
-            self.enterOuterAlt(localctx, 1)
+            self.enterOuterAlt(localdevice, 1)
             self.state = 494
             self.match(RelayParser.T__11)
             self.state = 495
@@ -3500,12 +3500,12 @@ class RelayParser ( Parser ):
             self.state = 496
             self.match(RelayParser.T__12)
         except RecognitionException as re:
-            localctx.exception = re
+            localdevice.exception = re
             self._errHandler.reportError(self, re)
             self._errHandler.recover(self, re)
         finally:
             self.exitRule()
-        return localctx
+        return localdevice
 
 
     class ScalarContext(ParserRuleContext):
@@ -3519,16 +3519,16 @@ class RelayParser ( Parser ):
             return RelayParser.RULE_scalar
 
      
-        def copyFrom(self, ctx:ParserRuleContext):
-            super().copyFrom(ctx)
+        def copyFrom(self, device:ParserRuleContext):
+            super().copyFrom(device)
 
 
 
     class ScalarFloatContext(ScalarContext):
 
-        def __init__(self, parser, ctx:ParserRuleContext): # actually a RelayParser.ScalarContext
+        def __init__(self, parser, device:ParserRuleContext): # actually a RelayParser.ScalarContext
             super().__init__(parser)
-            self.copyFrom(ctx)
+            self.copyFrom(device)
 
         def FLOAT(self):
             return self.getToken(RelayParser.FLOAT, 0)
@@ -3542,9 +3542,9 @@ class RelayParser ( Parser ):
 
     class ScalarBoolContext(ScalarContext):
 
-        def __init__(self, parser, ctx:ParserRuleContext): # actually a RelayParser.ScalarContext
+        def __init__(self, parser, device:ParserRuleContext): # actually a RelayParser.ScalarContext
             super().__init__(parser)
-            self.copyFrom(ctx)
+            self.copyFrom(device)
 
         def BOOL_LIT(self):
             return self.getToken(RelayParser.BOOL_LIT, 0)
@@ -3558,9 +3558,9 @@ class RelayParser ( Parser ):
 
     class ScalarIntContext(ScalarContext):
 
-        def __init__(self, parser, ctx:ParserRuleContext): # actually a RelayParser.ScalarContext
+        def __init__(self, parser, device:ParserRuleContext): # actually a RelayParser.ScalarContext
             super().__init__(parser)
-            self.copyFrom(ctx)
+            self.copyFrom(device)
 
         def NAT(self):
             return self.getToken(RelayParser.NAT, 0)
@@ -3575,27 +3575,27 @@ class RelayParser ( Parser ):
 
     def scalar(self):
 
-        localctx = RelayParser.ScalarContext(self, self._ctx, self.state)
-        self.enterRule(localctx, 64, self.RULE_scalar)
+        localdevice = RelayParser.ScalarContext(self, self._device, self.state)
+        self.enterRule(localdevice, 64, self.RULE_scalar)
         try:
             self.state = 501
             self._errHandler.sync(self)
             token = self._input.LA(1)
             if token in [RelayParser.FLOAT]:
-                localctx = RelayParser.ScalarFloatContext(self, localctx)
-                self.enterOuterAlt(localctx, 1)
+                localdevice = RelayParser.ScalarFloatContext(self, localdevice)
+                self.enterOuterAlt(localdevice, 1)
                 self.state = 498
                 self.match(RelayParser.FLOAT)
                 pass
             elif token in [RelayParser.NAT]:
-                localctx = RelayParser.ScalarIntContext(self, localctx)
-                self.enterOuterAlt(localctx, 2)
+                localdevice = RelayParser.ScalarIntContext(self, localdevice)
+                self.enterOuterAlt(localdevice, 2)
                 self.state = 499
                 self.match(RelayParser.NAT)
                 pass
             elif token in [RelayParser.BOOL_LIT]:
-                localctx = RelayParser.ScalarBoolContext(self, localctx)
-                self.enterOuterAlt(localctx, 3)
+                localdevice = RelayParser.ScalarBoolContext(self, localdevice)
+                self.enterOuterAlt(localdevice, 3)
                 self.state = 500
                 self.match(RelayParser.BOOL_LIT)
                 pass
@@ -3603,12 +3603,12 @@ class RelayParser ( Parser ):
                 raise NoViableAltException(self)
 
         except RecognitionException as re:
-            localctx.exception = re
+            localdevice.exception = re
             self._errHandler.reportError(self, re)
             self._errHandler.recover(self, re)
         finally:
             self.exitRule()
-        return localctx
+        return localdevice
 
 
     class IdentContext(ParserRuleContext):
@@ -3647,48 +3647,48 @@ class RelayParser ( Parser ):
 
     def ident(self):
 
-        localctx = RelayParser.IdentContext(self, self._ctx, self.state)
-        self.enterRule(localctx, 66, self.RULE_ident)
+        localdevice = RelayParser.IdentContext(self, self._device, self.state)
+        self.enterRule(localdevice, 66, self.RULE_ident)
         try:
             self.state = 507
             self._errHandler.sync(self)
-            la_ = self._interp.adaptivePredict(self._input,53,self._ctx)
+            la_ = self._interp.adaptivePredict(self._input,53,self._device)
             if la_ == 1:
-                self.enterOuterAlt(localctx, 1)
+                self.enterOuterAlt(localdevice, 1)
                 self.state = 503
                 self.generalIdent()
                 pass
 
             elif la_ == 2:
-                self.enterOuterAlt(localctx, 2)
+                self.enterOuterAlt(localdevice, 2)
                 self.state = 504
                 self.globalVar()
                 pass
 
             elif la_ == 3:
-                self.enterOuterAlt(localctx, 3)
+                self.enterOuterAlt(localdevice, 3)
                 self.state = 505
                 self.localVar()
                 pass
 
             elif la_ == 4:
-                self.enterOuterAlt(localctx, 4)
+                self.enterOuterAlt(localdevice, 4)
                 self.state = 506
                 self.graphVar()
                 pass
 
 
         except RecognitionException as re:
-            localctx.exception = re
+            localdevice.exception = re
             self._errHandler.reportError(self, re)
             self._errHandler.recover(self, re)
         finally:
             self.exitRule()
-        return localctx
+        return localdevice
 
 
 
-    def sempred(self, localctx:RuleContext, ruleIndex:int, predIndex:int):
+    def sempred(self, localdevice:RuleContext, ruleIndex:int, predIndex:int):
         if self._predicates == None:
             self._predicates = dict()
         self._predicates[7] = self.expr_sempred
@@ -3696,35 +3696,35 @@ class RelayParser ( Parser ):
         if pred is None:
             raise Exception("No predicate with index:" + str(ruleIndex))
         else:
-            return pred(localctx, predIndex)
+            return pred(localdevice, predIndex)
 
-    def expr_sempred(self, localctx:ExprContext, predIndex:int):
+    def expr_sempred(self, localdevice:ExprContext, predIndex:int):
             if predIndex == 0:
-                return self.precpred(self._ctx, 19)
+                return self.precpred(self._device, 19)
          
 
             if predIndex == 1:
-                return self.precpred(self._ctx, 18)
+                return self.precpred(self._device, 18)
          
 
             if predIndex == 2:
-                return self.precpred(self._ctx, 17)
+                return self.precpred(self._device, 17)
          
 
             if predIndex == 3:
-                return self.precpred(self._ctx, 16)
+                return self.precpred(self._device, 16)
          
 
             if predIndex == 4:
-                return self.precpred(self._ctx, 6)
+                return self.precpred(self._device, 6)
          
 
             if predIndex == 5:
-                return self.precpred(self._ctx, 21)
+                return self.precpred(self._device, 21)
          
 
             if predIndex == 6:
-                return self.precpred(self._ctx, 8)
+                return self.precpred(self._device, 8)
          
 
 

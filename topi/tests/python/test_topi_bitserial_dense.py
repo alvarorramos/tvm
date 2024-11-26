@@ -55,10 +55,10 @@ def verify_bitserial_dense(batch, in_dim, out_dim, activation_bits, weight_bits,
         return a_np, b_np, c_np
     a_np, b_np, c_np = get_ref_data()
 
-    ctx = tvm.cpu(0)
-    a = tvm.nd.array(a_np, ctx)
-    b = tvm.nd.array(b_np, ctx)
-    c = tvm.nd.array(np.zeros(get_const_tuple(C.shape), dtype=C.dtype), ctx)
+    device = tvm.cpu(0)
+    a = tvm.nd.array(a_np, device)
+    b = tvm.nd.array(b_np, device)
+    c = tvm.nd.array(np.zeros(get_const_tuple(C.shape), dtype=C.dtype), device)
     func = tvm.build(s, [A, B, C], "llvm")
     func(a, b, c)
     tvm.testing.assert_allclose(c.asnumpy(), c_np, rtol=1e-5)

@@ -377,12 +377,12 @@ class CoProcInstDepDetector : public IRVisitor {
   void Visit_(const AttrStmt* op) final {
     if (op->attr_key == attr::coproc_scope &&
         op->node.same_as(coproc_axis_)) {
-      const IntImm* ctx_id = op->value.as<IntImm>();
-      CHECK(ctx_id != nullptr);
+      const IntImm* device_id = op->value.as<IntImm>();
+      CHECK(device_id != nullptr);
       curr_state_.clear();
       curr_state_.node = op->body.get();
-      curr_state_.enter_ctx.insert(ctx_id->value);
-      curr_state_.exit_ctx.insert(ctx_id->value);
+      curr_state_.enter_device.insert(device_id->value);
+      curr_state_.exit_device.insert(device_id->value);
       UpdateState();
     } else {
       IRVisitor::Visit_(op);
@@ -402,8 +402,8 @@ class CoProcInstDepDetector : public IRVisitor {
       InjectSync(last_state_, first_state_,
                  &(curr_state_.exit_push),
                  &(curr_state_.enter_pop));
-      curr_state_.enter_ctx = first_state_.enter_ctx;
-      curr_state_.exit_ctx = last_state_.exit_ctx;
+      curr_state_.enter_device = first_state_.enter_device;
+      curr_state_.exit_device = last_state_.exit_device;
     }
     std::swap(first_state_, temp_first);
     std::swap(last_state_, temp_last);
@@ -423,12 +423,12 @@ class CoProcInstDepDetector : public IRVisitor {
         curr_state.node = op;
         MatchFixEnterPop(first_state_);
         MatchFixExitPush(last_state_);
-        curr_state.enter_ctx.insert(
-            first_state_.enter_ctx.begin(),
-            first_state_.enter_ctx.end());
-        curr_state.exit_ctx.insert(
-            last_state_.exit_ctx.begin(),
-            last_state_.exit_ctx.end());
+        curr_state.enter_device.insert(
+            first_state_.enter_device.begin(),
+            first_state_.enter_device.end());
+        curr_state.exit_device.insert(
+            last_state_.exit_device.begin(),
+            last_state_.exit_device.end());
       }
       first_state_.clear();
       last_state_.clear();
@@ -439,12 +439,12 @@ class CoProcInstDepDetector : public IRVisitor {
         curr_state.node = op;
         MatchFixEnterPop(first_state_);
         MatchFixExitPush(last_state_);
-        curr_state.enter_ctx.insert(
-            first_state_.enter_ctx.begin(),
-            first_state_.enter_ctx.end());
-        curr_state.exit_ctx.insert(
-            last_state_.exit_ctx.begin(),
-            last_state_.exit_ctx.end());
+        curr_state.enter_device.insert(
+            first_state_.enter_device.begin(),
+            first_state_.enter_device.end());
+        curr_state.exit_device.insert(
+            last_state_.exit_device.begin(),
+            last_state_.exit_device.end());
       }
     }
     // update in the trace.
@@ -467,9 +467,9 @@ class CoProcInstDepDetector : public IRVisitor {
     // The statement of the state.
     const Node* node{nullptr};
     // Set of all possible contexts in the entering moment.
-    std::unordered_set<int> enter_ctx;
+    std::unordered_set<int> enter_device;
     // Set of all possible contexts in the exit moment.
-    std::unordered_set<int> exit_ctx;
+    std::unordered_set<int> exit_device;
     // existing pop performed at enter
     std::vector<std::pair<int, int> > enter_pop;
     // existing push peformed at exit
@@ -477,8 +477,8 @@ class CoProcInstDepDetector : public IRVisitor {
     // clear the state
     void clear() {
       node = nullptr;
-      enter_ctx.clear();
-      exit_ctx.clear();
+      enter_device.clear();
+      exit_device.clear();
       enter_pop.clear();
       exit_push.clear();
     }
@@ -495,9 +495,9 @@ class CoProcInstDepDetector : public IRVisitor {
     next_enter_pop->clear();
     // quick path
     if (prev.exit_push.size() == 0 && next.enter_pop.size() == 0 &&
-        prev.exit_ctx.size() == 1 && next.enter_ctx.size() == 1) {
-      int from = *prev.exit_ctx.begin();
-      int to = *next.enter_ctx.begin();
+        prev.exit_device.size() == 1 && next.enter_device.size() == 1) {
+      int from = *prev.exit_device.begin();
+      int to = *next.enter_device.begin();
       if (from != to) {
         insert_after_[prev.node].emplace_back(MakePush(from, to));
         insert_before_[next.node].emplace_back(MakePop(from, to));
@@ -510,8 +510,8 @@ class CoProcInstDepDetector : public IRVisitor {
     std::vector<std::pair<int, int> > vpush = prev.exit_push;
     std::vector<std::pair<int, int> > vpop = next.enter_pop;
     std::vector<std::pair<int, int> > pending;
-    for (int from : prev.exit_ctx) {
-      for (int to : next.enter_ctx) {
+    for (int from : prev.exit_device) {
+      for (int to : next.enter_device) {
         if (from != to) {
           pending.emplace_back(std::make_pair(from, to));
         }

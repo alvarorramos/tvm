@@ -81,9 +81,9 @@ def _wrap_arg_func(return_f, type_code):
         return return_f(x)
     return _wrap_func
 
-def _ctx_to_int64(ctx):
+def _device_to_int64(device):
     """Pack context into int64 in native endian"""
-    data = struct.pack("=ii", ctx.device_type, ctx.device_id)
+    data = struct.pack("=ii", device.device_type, device.device_id)
     return struct.unpack("=q", data)[0]
 
 

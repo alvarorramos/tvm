@@ -29,10 +29,10 @@ public class NDArray extends NDArrayBase {
   private final TVMType dtype;
   private final TVMContext context;
 
-  NDArray(long handle, boolean isView, TVMType dtype, TVMContext ctx) {
+  NDArray(long handle, boolean isView, TVMType dtype, TVMContext device) {
     super(handle, isView);
     this.dtype = dtype;
-    this.context = ctx;
+    this.context = device;
   }
 
   @Override protected void finalize() throws Throwable {
@@ -367,7 +367,7 @@ public class NDArray extends NDArrayBase {
    * Get the context of current array.
    * @return the context.
    */
-  public TVMContext ctx() {
+  public TVMContext device() {
     return context;
   }
 
@@ -375,15 +375,15 @@ public class NDArray extends NDArrayBase {
    * Create an empty array given shape, type and device.
    * @param shape The shape of the array.
    * @param dtype The data type of the array.
-   * @param ctx The context of the array.
+   * @param device The context of the array.
    * @return The array tvm supported.
    */
-  public static NDArray empty(long[] shape, TVMType dtype, TVMContext ctx) {
+  public static NDArray empty(long[] shape, TVMType dtype, TVMContext device) {
     Base.RefLong refHandle = new Base.RefLong();
     Base.checkCall(Base._LIB.tvmArrayAlloc(
         shape, dtype.typeCode, dtype.bits, dtype.lanes,
-        ctx.deviceType, ctx.deviceId, refHandle));
-    return new NDArray(refHandle.value, false, dtype, ctx);
+        device.deviceType, device.deviceId, refHandle));
+    return new NDArray(refHandle.value, false, dtype, device);
   }
 
   /**
@@ -408,11 +408,11 @@ public class NDArray extends NDArrayBase {
   /**
    * Create an empty float32 array given shape and device.
    * @param shape The shape of the array.
-   * @param ctx The context of the array.
+   * @param device The context of the array.
    * @return The array tvm supported.
    */
-  public static NDArray empty(long[] shape, TVMContext ctx) {
-    return empty(shape, new TVMType("float32", 1), ctx);
+  public static NDArray empty(long[] shape, TVMContext device) {
+    return empty(shape, new TVMType("float32", 1), device);
   }
 
   private static ByteBuffer wrapBytes(byte[] bytes) {

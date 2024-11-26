@@ -32,12 +32,12 @@ def benchmark_execution(mod,
                         out_shape=(1, 1000),
                         dtype='float32',
                         model="unknown"):
-    def get_graph_runtime_output(mod, data, params, target, ctx,
+    def get_graph_runtime_output(mod, data, params, target, device,
                                  dtype='float32', number=2, repeat=20):
         with relay.build_config(opt_level=3):
             graph, lib, params = relay.build(mod, target, params=params)
 
-        m = graph_runtime.create(graph, lib, ctx)
+        m = graph_runtime.create(graph, lib, device)
         # set inputs
         m.set_input("data", data)
         m.set_input(**params)
@@ -46,8 +46,8 @@ def benchmark_execution(mod,
 
         if measure:
             print("Evaluate graph runtime inference cost of {} on "
-                  "{}".format(model, repr(ctx)))
-            ftimer = m.module.time_evaluator("run", ctx, number=1, repeat=20)
+                  "{}".format(model, repr(device)))
+            ftimer = m.module.time_evaluator("run", device, number=1, repeat=20)
             # Measure in millisecond.
             prof_res = np.array(ftimer().results) * 1000
             print("Mean graph runtime inference time (std dev): %.2f ms (%.2f ms)" %
@@ -55,18 +55,18 @@ def benchmark_execution(mod,
 
         return out.asnumpy()
 
-    def get_vm_output(mod, data, params, target, ctx, dtype='float32',
+    def get_vm_output(mod, data, params, target, device, dtype='float32',
                       number=2, repeat=20):
         with relay.build_config(opt_level=3):
             exe = vm.compile(mod, target, params=params)
             rly_vm = vm.VirtualMachine(exe)
-            rly_vm.init(ctx)
+            rly_vm.init(device)
             result = rly_vm.run(data)
 
         if measure:
             print("Evaluate vm inference cost of {} on {}".format(model,
-                                                                  repr(ctx)))
-            ftimer = rly_vm.mod.time_evaluator("invoke", ctx, number=number,
+                                                                  repr(device)))
+            ftimer = rly_vm.mod.time_evaluator("invoke", device, number=number,
                                                repeat=repeat)
             # Measure in millisecond.
             prof_res = np.array(ftimer("main", _obj.Tensor(data)).results) * 1000
@@ -78,12 +78,12 @@ def benchmark_execution(mod,
     # random input
     data = np.random.uniform(size=data_shape).astype(dtype)
     target = "llvm"
-    ctx = tvm.cpu(0)
+    device = tvm.cpu(0)
 
     tvm_out = get_graph_runtime_output(mod, tvm.nd.array(data.astype(dtype)),
-                                       params, target, ctx, dtype)
+                                       params, target, device, dtype)
     vm_out = get_vm_output(mod, tvm.nd.array(data.astype(dtype)), params,
-                           target, ctx, dtype)
+                           target, device, dtype)
     tvm.testing.assert_allclose(vm_out, tvm_out, rtol=1e-5, atol=1e-5)
 
 

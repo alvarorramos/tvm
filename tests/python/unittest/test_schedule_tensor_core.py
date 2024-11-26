@@ -196,14 +196,14 @@ def test_tensor_core_batch_matmal():
 
     func = tvm.build(s, [A, B, C], 'cuda')
 
-    ctx = tvm.gpu(0)
+    device = tvm.gpu(0)
     a_np = np.random.uniform(size=(batch_size, nn, ll, 32, 16)).astype(A.dtype)
     b_np = np.random.uniform(size=(batch_size, ll, mm, 16, 8)).astype(B.dtype)
-    a = tvm.nd.array(a_np, ctx)
-    b = tvm.nd.array(b_np, ctx)
-    c = tvm.nd.array(np.zeros((batch_size, nn, mm, 32, 8), dtype=C.dtype), ctx)
+    a = tvm.nd.array(a_np, device)
+    b = tvm.nd.array(b_np, device)
+    c = tvm.nd.array(np.zeros((batch_size, nn, mm, 32, 8), dtype=C.dtype), device)
     func(a, b, c)
-    evaluator = func.time_evaluator(func.entry_name, ctx, number=3)
+    evaluator = func.time_evaluator(func.entry_name, device, number=3)
     print('gemm with tensor core: %f ms' % (evaluator(a, b, c).mean * 1e3))
 
     if VERIFY:
@@ -360,13 +360,13 @@ def test_tensor_core_batch_conv():
 
     func = tvm.build(s, [A, W, Conv], 'cuda')
 
-    ctx = tvm.gpu(0)
+    device = tvm.gpu(0)
     a_np = np.random.uniform(size=data_shape).astype(A.dtype)
     w_np = np.random.uniform(size=kernel_shape).astype(W.dtype)
-    a = tvm.nd.array(a_np, ctx)
-    w = tvm.nd.array(w_np, ctx)
-    c = tvm.nd.array(np.zeros(output_shape, dtype=Conv.dtype), ctx)
-    evaluator = func.time_evaluator(func.entry_name, ctx, number=3)
+    a = tvm.nd.array(a_np, device)
+    w = tvm.nd.array(w_np, device)
+    c = tvm.nd.array(np.zeros(output_shape, dtype=Conv.dtype), device)
+    evaluator = func.time_evaluator(func.entry_name, device, number=3)
     print('conv2d with tensor core: %f ms' % (evaluator(a, w, c).mean * 1e3))
 
     if VERIFY:

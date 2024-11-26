@@ -190,10 +190,10 @@ The returned module, which can be thought of as a combination of a compiled func
 
 ::
 
-   ctx = tvm.context(target, 0)
-   a = tvm.nd.array(np.random.uniform(size=n).astype(A.dtype), ctx)
-   b = tvm.nd.array(np.random.uniform(size=n).astype(B.dtype), ctx)
-   c = tvm.nd.array(np.zeros(n, dtype=C.dtype), ctx)
+   device = tvm.context(target, 0)
+   a = tvm.nd.array(np.random.uniform(size=n).astype(A.dtype), device)
+   b = tvm.nd.array(np.random.uniform(size=n).astype(B.dtype), device)
+   c = tvm.nd.array(np.zeros(n, dtype=C.dtype), device)
    fadd(a, b, c)
    output = c.asnumpy()
 

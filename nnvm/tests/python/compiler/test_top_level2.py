@@ -22,14 +22,14 @@ import topi
 import topi.testing
 import nnvm.symbol as sym
 import nnvm.compiler
-from nnvm.testing.config import ctx_list
+from nnvm.testing.config import device_list
 
 
 def test_conv2d():
     def run_test_conv2d(sym, dtype, dshape, kshape, oshape, shape_dict, padding):
-        for target, ctx in ctx_list():
+        for target, device in device_list():
             graph, lib, _ = nnvm.compiler.build(sym, target, shape_dict)
-            m = graph_runtime.create(graph, lib, ctx)
+            m = graph_runtime.create(graph, lib, device)
             data = tvm.nd.array(np.random.uniform(size=dshape).astype(dtype))
             kernel = tvm.nd.array(np.random.uniform(size=kshape).astype(dtype))
             bias = tvm.nd.array(np.random.uniform(size=kshape[0]).astype(dtype))
@@ -77,9 +77,9 @@ def test_mixed_precision():
     oshape = (1, 10, 18, 18)
     shape_dict = {"x": dshape}
     dtype_dict = {"x": dtype}
-    for target, ctx in ctx_list():
+    for target, device in device_list():
         graph, lib, _ = nnvm.compiler.build(y, target, shape_dict, dtype_dict)
-        m = graph_runtime.create(graph, lib, ctx)
+        m = graph_runtime.create(graph, lib, device)
         data = tvm.nd.array(np.random.uniform(-127, 127, size=dshape).astype(dtype))
         kernel = tvm.nd.array(np.random.uniform(-127, 127, size=kshape).astype(dtype))
         m.run(x=data, y_weight=kernel)
@@ -100,9 +100,9 @@ def test_dilated_conv2d():
     kshape = (10, 3, 3, 3)
     oshape = (1, 10, 14, 14)
     shape_dict = {"x": dshape}
-    for target, ctx in ctx_list():
+    for target, device in device_list():
         graph, lib, _ = nnvm.compiler.build(y, target, shape_dict)
-        m = graph_runtime.create(graph, lib, ctx)
+        m = graph_runtime.create(graph, lib, device)
         data = tvm.nd.array(np.random.uniform(size=dshape).astype(dtype))
         bias = tvm.nd.array(np.random.uniform(size=kshape[0]).astype(dtype))
         kernel_np = np.random.uniform(size=kshape).astype(dtype)
@@ -125,9 +125,9 @@ def test_grouped_conv2d_nchw():
     kshape = (32, 1, 3, 3)
     oshape = (1, 32, 18, 18)
     shape_dict = {"x": dshape}
-    for target, ctx in ctx_list():
+    for target, device in device_list():
         graph, lib, _ = nnvm.compiler.build(y, target, shape_dict)
-        m = graph_runtime.create(graph, lib, ctx)
+        m = graph_runtime.create(graph, lib, device)
         data = tvm.nd.array(np.random.uniform(size=dshape).astype(dtype))
         kernel = tvm.nd.array(np.random.uniform(size=kshape).astype(dtype))
         bias = tvm.nd.array(np.random.uniform(size=kshape[0]).astype(dtype))
@@ -147,9 +147,9 @@ def test_grouped_conv2d_nhwc():
     kshape = (3, 3, 32, 1)
     oshape = (1, 18, 18, 32)
     shape_dict = {"x": dshape}
-    for target, ctx in ctx_list():
+    for target, device in device_list():
         graph, lib, _ = nnvm.compiler.build(y, target, shape_dict)
-        m = graph_runtime.create(graph, lib, ctx)
+        m = graph_runtime.create(graph, lib, device)
         data = tvm.nd.array(np.random.uniform(size=dshape).astype(dtype))
         kernel = tvm.nd.array(np.random.uniform(size=kshape).astype(dtype))
         bias = tvm.nd.array(np.random.uniform(size=kshape[2]).astype(dtype))
@@ -170,9 +170,9 @@ def test_conv2d_transpose():
     kshape = (3, 10, 3, 3)
     oshape = (1, 10, 37, 37)
     shape_dict = {"x": dshape}
-    for target, ctx in ctx_list():
+    for target, device in device_list():
         graph, lib, _ = nnvm.compiler.build(y, target, shape_dict)
-        m = graph_runtime.create(graph, lib, ctx)
+        m = graph_runtime.create(graph, lib, device)
         data = tvm.nd.array(np.random.uniform(size=dshape).astype(dtype))
         kernel = tvm.nd.array(np.random.uniform(size=kshape).astype(dtype))
         bias = tvm.nd.array(np.random.uniform(size=kshape[1]).astype(dtype))
@@ -194,9 +194,9 @@ def test_max_pool2d():
     dshape = (1, 3, 28, 28)
     oshape = (1, 3, 14, 14)
     shape_dict = {"x": dshape}
-    for target, ctx in ctx_list():
+    for target, device in device_list():
         graph, lib, _ = nnvm.compiler.build(y, target, shape_dict)
-        m = graph_runtime.create(graph, lib, ctx)
+        m = graph_runtime.create(graph, lib, device)
         data = tvm.nd.array(np.random.uniform(size=dshape).astype(dtype))
         m.run(x=data)
         out = m.get_output(0, tvm.nd.empty(oshape, dtype))
@@ -211,9 +211,9 @@ def test_avg_pool2d():
     dshape = (1, 3, 28, 28)
     oshape = (1, 3, 14, 14)
     shape_dict = {"x": dshape}
-    for target, ctx in ctx_list():
+    for target, device in device_list():
         graph, lib, _ = nnvm.compiler.build(y, target, shape_dict)
-        m = graph_runtime.create(graph, lib, ctx)
+        m = graph_runtime.create(graph, lib, device)
         data = tvm.nd.array(np.random.uniform(size=dshape).astype(dtype))
         m.run(x=data)
         out = m.get_output(0, tvm.nd.empty(oshape, dtype))
@@ -247,9 +247,9 @@ def test_avg_pool2d_no_count_pad():
                                    axis=(2,3)) / np.maximum(pad_count, 1)
     b_np = np.maximum(b_np, 0.0)
     shape_dict = {"x": (n, ic, ih, iw)}
-    for target, ctx in ctx_list():
+    for target, device in device_list():
         graph, lib, _ = nnvm.compiler.build(y, target, shape_dict)
-        m = graph_runtime.create(graph, lib, ctx)
+        m = graph_runtime.create(graph, lib, device)
         data = tvm.nd.array(a_np)
         m.run(x=data)
         out = m.get_output(0, tvm.nd.empty((n, oc, oh, ow), dtype))
@@ -263,9 +263,9 @@ def test_global_max_pool2d():
     dshape = (1, 1024, 7, 7)
     oshape = (1, 1024, 1, 1)
     shape_dict = {"x": dshape}
-    for target, ctx in ctx_list():
+    for target, device in device_list():
         graph, lib, _ = nnvm.compiler.build(y, target, shape_dict)
-        m = graph_runtime.create(graph, lib, ctx)
+        m = graph_runtime.create(graph, lib, device)
         data = tvm.nd.array(np.random.uniform(size=dshape).astype(dtype))
         m.run(x=data)
         out = m.get_output(0, tvm.nd.empty(oshape, dtype))
@@ -280,9 +280,9 @@ def test_global_avg_pool2d():
     dshape = (1, 1024, 7, 7)
     oshape = (1, 1024, 1, 1)
     shape_dict = {"x": dshape}
-    for target, ctx in ctx_list():
+    for target, device in device_list():
         graph, lib, _ = nnvm.compiler.build(y, target, shape_dict)
-        m = graph_runtime.create(graph, lib, ctx)
+        m = graph_runtime.create(graph, lib, device)
         data = tvm.nd.array(np.random.uniform(size=dshape).astype(dtype))
         m.run(x=data)
         out = m.get_output(0, tvm.nd.empty(oshape, dtype))
@@ -298,9 +298,9 @@ def test_upsampling_nearest_neighbor():
     dshape = (1, 16, 32, 32)
     oshape = (1, 16, 32*scale, 32*scale)
     shape_dict = {"x": dshape}
-    for target, ctx in ctx_list():
+    for target, device in device_list():
         graph, lib, _ = nnvm.compiler.build(y, target, shape_dict)
-        m = graph_runtime.create(graph, lib, ctx)
+        m = graph_runtime.create(graph, lib, device)
         a_np = np.random.uniform(size=dshape).astype(dtype)
         data = tvm.nd.array(a_np)
         m.run(x=data)
@@ -317,9 +317,9 @@ def test_upsampling_bilinear():
     oshape = (1, 4, 32*scale, 32*scale)
     shape_dict = {"x": dshape}
     dtype_dict = {"x": dtype}
-    for target, ctx in ctx_list():
+    for target, device in device_list():
         graph, lib, _ = nnvm.compiler.build(y, target, shape_dict, dtype_dict)
-        m = graph_runtime.create(graph, lib, ctx)
+        m = graph_runtime.create(graph, lib, device)
         a_np = np.random.uniform(size=dshape).astype(dtype)
         data = tvm.nd.array(a_np)
         m.run(x=data)
@@ -335,9 +335,9 @@ def test_resize_bilinear():
     oshape = (1, 60, 60, 4)
     shape_dict = {"x": dshape}
     dtype_dict = {"x": dtype}
-    for target, ctx in ctx_list():
+    for target, device in device_list():
         graph, lib, _ = nnvm.compiler.build(y, target, shape_dict, dtype_dict)
-        m = graph_runtime.create(graph, lib, ctx)
+        m = graph_runtime.create(graph, lib, device)
         a_np = np.random.uniform(size=dshape).astype(dtype)
         data = tvm.nd.array(a_np)
         m.run(x=data)

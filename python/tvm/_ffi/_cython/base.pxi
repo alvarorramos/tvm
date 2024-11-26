@@ -51,7 +51,7 @@ cdef extern from "tvm/runtime/c_runtime_api.h":
 
     ctypedef struct DLTensor:
         void* data
-        DLDevice ctx
+        DLDevice device
         int ndim
         DLDataType dtype
         int64_t* shape
@@ -60,7 +60,7 @@ cdef extern from "tvm/runtime/c_runtime_api.h":
 
     ctypedef struct DLManagedTensor:
         DLTensor dl_tensor
-        void* manager_ctx
+        void* manager_device
         void (*deleter)(DLManagedTensor* self)
 
     ctypedef struct TVMValue:
@@ -69,7 +69,7 @@ cdef extern from "tvm/runtime/c_runtime_api.h":
         void* v_handle
         const char* v_str
         DLDataType v_type
-        DLDevice v_ctx
+        DLDevice v_device
 
 ctypedef int64_t tvm_index_t
 ctypedef DLTensor* DLTensorHandle
@@ -81,7 +81,7 @@ ctypedef void* ObjectHandle
 
 ctypedef struct TVMNDArrayContainer:
     DLTensor dl_tensor
-    void* manager_ctx
+    void* manager_device
     void (*deleter)(DLManagedTensor* self)
     int32_t array_type_info
 
@@ -118,7 +118,7 @@ cdef extern from "tvm/runtime/c_runtime_api.h":
     int TVMArrayAlloc(tvm_index_t* shape,
                       tvm_index_t ndim,
                       DLDataType dtype,
-                      DLDevice ctx,
+                      DLDevice device,
                       DLTensorHandle* out)
     int TVMArrayFree(DLTensorHandle handle)
     int TVMArrayCopyFromTo(DLTensorHandle src,

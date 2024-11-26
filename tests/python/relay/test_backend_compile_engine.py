@@ -41,11 +41,11 @@ def test_compile_engine():
 
     # Test JIT target
     for target in ["llvm"]:
-        ctx = tvm.context(target)
-        if ctx.exist:
+        device = tvm.context(target)
+        if device.exist:
             f = engine.jit(get_func((10,)), target)
-            x = tvm.nd.array(np.ones(10).astype("float32"), ctx=ctx)
-            y = tvm.nd.empty((10,), ctx=ctx)
+            x = tvm.nd.array(np.ones(10).astype("float32"), device=device)
+            y = tvm.nd.empty((10,), device=device)
             f(x, y)
             tvm.testing.assert_allclose(
                 y.asnumpy(), x.asnumpy() * 3)

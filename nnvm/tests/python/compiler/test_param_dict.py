@@ -78,12 +78,12 @@ def test_bigendian_rpc_param():
         a = np.random.randint(0, 256, size=shape).astype(dtype)
         a[:] = 1
         params = {"x" : a}
-        ctx = remote.cpu(0)
-        m = graph_runtime.create(graph, lib, ctx)
+        device = remote.cpu(0)
+        m = graph_runtime.create(graph, lib, device)
         # uses save param_dict
         m.load_params(nnvm.compiler.save_param_dict(params))
         m.run()
-        out = m.get_output(0, tvm.nd.empty(shape, dtype=dtype, ctx=ctx))
+        out = m.get_output(0, tvm.nd.empty(shape, dtype=dtype, device=device))
         tvm.testing.assert_allclose(a + 1, out.asnumpy())
 
     print("Test RPC connection to PowerPC...")

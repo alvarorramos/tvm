@@ -85,7 +85,7 @@ class PyVariableUsage(ast.NodeVisitor):
         if node.id in fors:
             return
         # The loop variable cannot be overwritten when iteration
-        _internal_assert(not isinstance(node.ctx, ast.Store) or node.id not in fors, \
+        _internal_assert(not isinstance(node.device, ast.Store) or node.id not in fors, \
                          "Iter var cannot be overwritten")
 
         if node.id not in self.status.keys():
@@ -97,14 +97,14 @@ class PyVariableUsage(ast.NodeVisitor):
                     raise ValueError("Only support capturing constant values in closure")
                 return
 
-            _internal_assert(isinstance(node.ctx, ast.Store), \
+            _internal_assert(isinstance(node.device, ast.Store), \
                              'Undeclared variable %s' % node.id)
             if self.aug_assign_:
                 raise ValueError('"First store" cannot be an AugAssign')
             self.status[node.id] = (node, self.scope_level[-1], set())
         else:
             decl, loop, usage = self.status[node.id]
-            usage.add(type(node.ctx))
+            usage.add(type(node.device))
             _internal_assert(loop in self.scope_level,
                              "%s is used out of the scope it is defined!" % node.id)
             self.status[node.id] = (decl, loop, usage)

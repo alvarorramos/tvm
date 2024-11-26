@@ -69,9 +69,9 @@ def verify_pool(n, ic, ih, kh, sh, padding, pool_type, ceil_mode):
         print("Running on target: %s" % device)
         with tvm.target.create(device):
             s = topi.generic.schedule_pool(B)
-        ctx = tvm.context(device, 0)
-        a = tvm.nd.array(a_np, ctx)
-        b = tvm.nd.array(np.zeros(get_const_tuple(B.shape), dtype=dtype), ctx)
+        device = tvm.context(device, 0)
+        a = tvm.nd.array(a_np, device)
+        b = tvm.nd.array(np.zeros(get_const_tuple(B.shape), dtype=dtype), device)
         print(tvm.lower(s, [A, B], simple_mode=True))
 
         f = tvm.build(s, [A, B], device)
@@ -109,9 +109,9 @@ def verify_global_pool(n, c, h, w, pool_type):
         print("Running on target: %s" % device)
         with tvm.target.create(device):
             s = topi.generic.schedule_global_pool(B)
-        ctx = tvm.context(device, 0)
-        a = tvm.nd.array(a_np, ctx)
-        b = tvm.nd.array(np.zeros(get_const_tuple(B.shape), dtype=B.dtype), ctx)
+        device = tvm.context(device, 0)
+        a = tvm.nd.array(a_np, device)
+        b = tvm.nd.array(np.zeros(get_const_tuple(B.shape), dtype=B.dtype), device)
         f = tvm.build(s, [A, B], device)
         f(a, b)
         tvm.testing.assert_allclose(b.asnumpy(), b_np, rtol=1e-5)

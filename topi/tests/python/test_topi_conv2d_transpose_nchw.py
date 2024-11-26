@@ -45,8 +45,8 @@ def verify_conv2d_transpose_nchw(batch, in_channel, in_size, num_filter, kernel,
     a_np, w_np, b_np, c_np = get_ref_data()
 
     def check_device(device):
-        ctx = tvm.context(device, 0)
-        if not ctx.exist:
+        device = tvm.context(device, 0)
+        if not device.exist:
             print("Skip because %s is not enabled" % device)
             return
         print("Running on target: %s" % device)
@@ -55,10 +55,10 @@ def verify_conv2d_transpose_nchw(batch, in_channel, in_size, num_filter, kernel,
             C = topi.nn.relu(B)
             s1 = topi.generic.schedule_conv2d_transpose_nchw([B])
             s2 = topi.generic.schedule_conv2d_transpose_nchw([C])
-        a = tvm.nd.array(a_np, ctx)
-        w = tvm.nd.array(w_np, ctx)
-        b = tvm.nd.array(np.zeros(get_const_tuple(B.shape), dtype=B.dtype), ctx)
-        c = tvm.nd.array(np.zeros(get_const_tuple(C.shape), dtype=C.dtype), ctx)
+        a = tvm.nd.array(a_np, device)
+        w = tvm.nd.array(w_np, device)
+        b = tvm.nd.array(np.zeros(get_const_tuple(B.shape), dtype=B.dtype), device)
+        c = tvm.nd.array(np.zeros(get_const_tuple(C.shape), dtype=C.dtype), device)
 
         func1 = tvm.build(s1, [A, W, B], device)
         func2 = tvm.build(s2, [A, W, C], device)

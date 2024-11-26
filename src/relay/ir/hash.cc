@@ -212,7 +212,7 @@ class RelayHashHandler:
     size_t hash = std::hash<uint8_t>()(array->dtype.code);
     hash = Combine(hash, std::hash<uint8_t>()(array->dtype.bits));
     hash = Combine(hash, std::hash<uint16_t>()(array->dtype.lanes));
-    CHECK_EQ(array->ctx.device_type, kDLCPU) << "can only compare CPU tensor";
+    CHECK_EQ(array->device.device_type, kDLCPU) << "can only compare CPU tensor";
     size_t data_size = runtime::GetDataSize(*array.operator->());
     uint8_t * data = reinterpret_cast<uint8_t*>(array->data);
     for (size_t i = 0; i < data_size; i++) {

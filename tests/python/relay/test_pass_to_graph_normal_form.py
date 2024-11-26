@@ -32,8 +32,8 @@ def check_eval(expr, args, expected_result, mod=None, rtol=1e-07):
     if mod is None:
         mod = relay.Module()
 
-    ctx = tvm.context("llvm", 0)
-    intrp = create_executor(mod=mod, ctx=ctx, target="llvm")
+    device = tvm.context("llvm", 0)
+    intrp = create_executor(mod=mod, device=device, target="llvm")
 
     result = intrp.evaluate(expr)(*args)
     np.testing.assert_allclose(result.asnumpy(), expected_result, rtol=rtol)

@@ -178,7 +178,7 @@ public class MainActivity extends AppCompatActivity {
             }
 
             // create java tvm context
-            TVMContext tvmCtx = EXE_GPU ? TVMContext.opencl() : TVMContext.cpu();
+            TVMContext tvmdevice = EXE_GPU ? TVMContext.opencl() : TVMContext.cpu();
 
             // tvm module for compiled functions
             Module modelLib = Module.load(libCacheFilePath);
@@ -187,8 +187,8 @@ public class MainActivity extends AppCompatActivity {
             Function runtimeCreFun = Function.getFunction("tvm.graph_runtime.create");
             TVMValue runtimeCreFunRes = runtimeCreFun.pushArg(modelGraph)
                     .pushArg(modelLib)
-                    .pushArg(tvmCtx.deviceType)
-                    .pushArg(tvmCtx.deviceId)
+                    .pushArg(tvmdevice.deviceType)
+                    .pushArg(tvmdevice.deviceId)
                     .invoke();
             graphRuntimeModule = runtimeCreFunRes.asModule();
 

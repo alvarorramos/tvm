@@ -36,13 +36,13 @@ namespace tvm {
 namespace runtime {
 class CPUDeviceAPI final : public DeviceAPI {
  public:
-  void SetDevice(TVMContext ctx) final {}
-  void GetAttr(TVMContext ctx, DeviceAttrKind kind, TVMRetValue* rv) final {
+  void SetDevice(TVMContext device) final {}
+  void GetAttr(TVMContext device, DeviceAttrKind kind, TVMRetValue* rv) final {
     if (kind == kExist) {
       *rv = 1;
     }
   }
-  void* AllocDataSpace(TVMContext ctx,
+  void* AllocDataSpace(TVMContext device,
                        size_t nbytes,
                        size_t alignment,
                        TVMType type_hint) final {
@@ -61,7 +61,7 @@ class CPUDeviceAPI final : public DeviceAPI {
     return ptr;
   }
 
-  void FreeDataSpace(TVMContext ctx, void* ptr) final {
+  void FreeDataSpace(TVMContext device, void* ptr) final {
 #if _MSC_VER
     _aligned_free(ptr);
 #else
@@ -74,8 +74,8 @@ class CPUDeviceAPI final : public DeviceAPI {
                       void* to,
                       size_t to_offset,
                       size_t size,
-                      TVMContext ctx_from,
-                      TVMContext ctx_to,
+                      TVMContext device_from,
+                      TVMContext device_to,
                       TVMType type_hint,
                       TVMStreamHandle stream) final {
     memcpy(static_cast<char*>(to) + to_offset,
@@ -83,11 +83,11 @@ class CPUDeviceAPI final : public DeviceAPI {
            size);
   }
 
-  void StreamSync(TVMContext ctx, TVMStreamHandle stream) final {
+  void StreamSync(TVMContext device, TVMStreamHandle stream) final {
   }
 
-  void* AllocWorkspace(TVMContext ctx, size_t size, TVMType type_hint) final;
-  void FreeWorkspace(TVMContext ctx, void* data) final;
+  void* AllocWorkspace(TVMContext device, size_t size, TVMType type_hint) final;
+  void FreeWorkspace(TVMContext device, void* data) final;
 
   static const std::shared_ptr<CPUDeviceAPI>& Global() {
     static std::shared_ptr<CPUDeviceAPI> inst =
@@ -101,15 +101,15 @@ struct CPUWorkspacePool : public WorkspacePool {
       WorkspacePool(kDLCPU, CPUDeviceAPI::Global()) {}
 };
 
-void* CPUDeviceAPI::AllocWorkspace(TVMContext ctx,
+void* CPUDeviceAPI::AllocWorkspace(TVMContext device,
                                    size_t size,
                                    TVMType type_hint) {
   return dmlc::ThreadLocalStore<CPUWorkspacePool>::Get()
-      ->AllocWorkspace(ctx, size);
+      ->AllocWorkspace(device, size);
 }
 
-void CPUDeviceAPI::FreeWorkspace(TVMContext ctx, void* data) {
-  dmlc::ThreadLocalStore<CPUWorkspacePool>::Get()->FreeWorkspace(ctx, data);
+void CPUDeviceAPI::FreeWorkspace(TVMContext device, void* data) {
+  dmlc::ThreadLocalStore<CPUWorkspacePool>::Get()->FreeWorkspace(device, data);
 }
 
 TVM_REGISTER_GLOBAL("device_api.cpu")

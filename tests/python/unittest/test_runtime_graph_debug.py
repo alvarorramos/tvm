@@ -112,7 +112,7 @@ def test_graph_simple():
         server = rpc.Server("localhost")
         remote = rpc.connect(server.host, server.port)
         temp = util.tempdir()
-        ctx = remote.cpu(0)
+        device = remote.cpu(0)
         path_dso = temp.relpath("dev_lib.so")
         mlib.export_library(path_dso)
         remote.upload(path_dso)
@@ -123,8 +123,8 @@ def test_graph_simple():
             print("Skip because debug graph_runtime not enabled")
             return
         a = np.random.uniform(size=(n,)).astype(A.dtype)
-        mod.run(x=tvm.nd.array(a, ctx))
-        out = tvm.nd.empty((n,), ctx=ctx)
+        mod.run(x=tvm.nd.array(a, device))
+        out = tvm.nd.empty((n,), device=device)
         out = mod.get_output(0, out)
         np.testing.assert_equal(out.asnumpy(), a + 1)
 

@@ -117,10 +117,10 @@ class PassContextNode : public RelayNode {
  *
  * \code
  *
- *  auto new_ctx = PassContext::Create();
- *  ctx->opt_level = 2;
- *  ctx->fallback_device = kDLCPU;
- *  With<PassContext> scope(ctx);
+ *  auto new_device = PassContext::Create();
+ *  device->opt_level = 2;
+ *  device->fallback_device = kDLCPU;
+ *  With<PassContext> scope(device);
  *  // pass context in effect.
  *
  * \endcode
@@ -241,12 +241,12 @@ class PassNode : public RelayNode {
    * \brief Transform mod using a functor under a given pass context.
    *
    * \param mod The module that an optimization pass runs on.
-   * \param pass_ctx The pass context that can provide information for the optimization.
+   * \param pass_device The pass context that can provide information for the optimization.
    *
    * \return The transformed module.
    */
   virtual Module operator()(const Module& mod,
-                            const PassContext& pass_ctx) const = 0;
+                            const PassContext& pass_device) const = 0;
 
   void VisitAttrs(tvm::AttrVisitor* v) {}
 
@@ -272,15 +272,15 @@ class Pass : public NodeRef {
    * \brief Transform mod using a functor under a given pass context.
    *
    * \param mod The module that an optimization pass runs on.
-   * \param pass_ctx The pass context that can provide information for the optimization.
+   * \param pass_device The pass context that can provide information for the optimization.
    *
    * \return The transformed module.
    */
   Module operator()(const Module& mod,
-                    const PassContext& pass_ctx) const {
+                    const PassContext& pass_device) const {
     const PassNode* node = operator->();
     CHECK(node != nullptr);
-    return node->operator()(mod, pass_ctx);
+    return node->operator()(mod, pass_device);
   }
 
   TVM_DEFINE_NODE_REF_METHODS(Pass, NodeRef, PassNode);

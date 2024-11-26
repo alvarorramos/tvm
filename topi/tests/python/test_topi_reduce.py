@@ -68,8 +68,8 @@ def verify_reduce_map_ele(in_shape, axis, keepdims, type="sum", dtype="float32")
         raise NotImplementedError
 
     def check_device(device):
-        ctx = tvm.context(device, 0)
-        if not ctx.exist:
+        device = tvm.context(device, 0)
+        if not device.exist:
             print("Skip because %s is not enabled" % device)
             return
         print("Running on target: %s" % device)
@@ -100,8 +100,8 @@ def verify_reduce_map_ele(in_shape, axis, keepdims, type="sum", dtype="float32")
             out_npy = _my_npy_argmin(in_npy_map, axis=axis, keepdims=keepdims)
         else:
             raise NotImplementedError
-        data_tvm = tvm.nd.array(in_npy, ctx=ctx)
-        out_tvm = tvm.nd.empty(shape=out_npy.shape, ctx=ctx, dtype=out_dtype)
+        data_tvm = tvm.nd.array(in_npy, device=device)
+        out_tvm = tvm.nd.empty(shape=out_npy.shape, device=device, dtype=out_dtype)
         for _ in range(1):
             foo(data_tvm, out_tvm)
         if type == "argmax" or type == "argmin":

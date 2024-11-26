@@ -349,7 +349,7 @@ f = remote.load_module("vadd.o")
 #
 
 # Get the remote device context
-ctx = remote.ext_dev(0)
+device = remote.ext_dev(0)
 
 # Initialize the A and B arrays randomly in the int range of (-128, 128]
 A_orig = np.random.randint(
@@ -364,9 +364,9 @@ B_packed = B_orig.reshape(
     o, env.BATCH, m, env.BLOCK_OUT).transpose((0, 2, 1, 3))
 
 # Format the input/output arrays with tvm.nd.array to the DLPack standard
-A_nd = tvm.nd.array(A_packed, ctx)
-B_nd = tvm.nd.array(B_packed, ctx)
-C_nd = tvm.nd.array(np.zeros((o, m, env.BATCH, env.BLOCK_OUT)).astype(C.dtype), ctx)
+A_nd = tvm.nd.array(A_packed, device)
+B_nd = tvm.nd.array(B_packed, device)
+C_nd = tvm.nd.array(np.zeros((o, m, env.BATCH, env.BLOCK_OUT)).astype(C.dtype), device)
 
 # Invoke the module to perform the computation
 f(A_nd, B_nd, C_nd)

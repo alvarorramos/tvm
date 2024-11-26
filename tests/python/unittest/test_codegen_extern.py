@@ -56,11 +56,11 @@ def test_add_pipeline():
         C = C_gpu if target in ['opencl', 'cuda'] else C_cpu
         # build and invoke the kernel.
         f = tvm.build(s, [A, C], target)
-        ctx = tvm.context(target, 0)
+        device = tvm.context(target, 0)
         # launch the kernel.
         n = nn
-        a = tvm.nd.array(np.random.uniform(size=n).astype(A.dtype), ctx)
-        c = tvm.nd.array(np.zeros(n, dtype=C.dtype), ctx)
+        a = tvm.nd.array(np.random.uniform(size=n).astype(A.dtype), device)
+        c = tvm.nd.array(np.zeros(n, dtype=C.dtype), device)
         f(a, c)
         tvm.testing.assert_allclose(c.asnumpy(), a.asnumpy() + 1)
 
@@ -89,11 +89,11 @@ def test_pack_buffer_simple():
             return
         # build and invoke the kernel.
         f = tvm.build(s, [A, C], target)
-        ctx = tvm.cpu(0)
+        device = tvm.cpu(0)
         # launch the kernel.
         n = nn
-        a = tvm.nd.array(np.random.uniform(size=n).astype(A.dtype), ctx)
-        c = tvm.nd.array(np.zeros(n, dtype=C.dtype), ctx)
+        a = tvm.nd.array(np.random.uniform(size=n).astype(A.dtype), device)
+        c = tvm.nd.array(np.zeros(n, dtype=C.dtype), device)
 
         f(a, c)
         tvm.testing.assert_allclose(
@@ -119,11 +119,11 @@ def test_pack_buffer_intermediate():
             return
         # build and invoke the kernel.
         f = tvm.build(s, [A, C], target)
-        ctx = tvm.cpu(0)
+        device = tvm.cpu(0)
         # launch the kernel.
         n = nn
-        a = tvm.nd.array(np.random.uniform(size=n).astype(A.dtype), ctx)
-        c = tvm.nd.array(np.zeros(n, dtype=C.dtype), ctx)
+        a = tvm.nd.array(np.random.uniform(size=n).astype(A.dtype), device)
+        c = tvm.nd.array(np.zeros(n, dtype=C.dtype), device)
 
         @tvm.register_func
         def my_extern_array_func2(aa, bb):

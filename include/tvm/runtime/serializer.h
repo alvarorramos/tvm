@@ -50,16 +50,16 @@ struct Handler<DLDataType> {
 
 template<>
 struct Handler<DLDevice> {
-  inline static void Write(Stream *strm, const DLDevice& ctx) {
-    int32_t device_type = static_cast<int32_t>(ctx.device_type);
+  inline static void Write(Stream *strm, const DLDevice& device) {
+    int32_t device_type = static_cast<int32_t>(device.device_type);
     Handler<int32_t>::Write(strm, device_type);
-    Handler<int32_t>::Write(strm, ctx.device_id);
+    Handler<int32_t>::Write(strm, device.device_id);
   }
-  inline static bool Read(Stream *strm, DLDevice* ctx) {
+  inline static bool Read(Stream *strm, DLDevice* device) {
     int32_t device_type = 0;
     if (!Handler<int32_t>::Read(strm, &(device_type))) return false;
-    ctx->device_type = static_cast<DLDeviceType>(device_type);
-    if (!Handler<int32_t>::Read(strm, &(ctx->device_id))) return false;
+    device->device_type = static_cast<DLDeviceType>(device_type);
+    if (!Handler<int32_t>::Read(strm, &(device->device_id))) return false;
     return true;
   }
 };

@@ -380,7 +380,7 @@ remote.upload(temp.relpath("conv2d.o"))
 f = remote.load_module("conv2d.o")
 
 # Get the remote device context
-ctx = remote.ext_dev(0)
+device = remote.ext_dev(0)
 
 # Initialize the data and kernel arrays randomly in the int range
 # of (-128, 128] in NCHW layout
@@ -408,9 +408,9 @@ kernel_packed = kernel_np.reshape(out_channels // env.BLOCK_OUT,
                                   kernel_w).transpose((0, 2, 4, 5, 1, 3))
 
 # Format the input/output arrays with tvm.nd.array to the DLPack standard
-data_nd = tvm.nd.array(data_packed, ctx)
-kernel_nd = tvm.nd.array(kernel_packed, ctx)
-res_nd = tvm.nd.array(np.zeros(output_shape).astype(res.dtype), ctx)
+data_nd = tvm.nd.array(data_packed, device)
+kernel_nd = tvm.nd.array(kernel_packed, device)
+res_nd = tvm.nd.array(np.zeros(output_shape).astype(res.dtype), device)
 
 # Clear stats
 if env.TARGET in ["sim", "tsim"]:

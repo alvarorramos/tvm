@@ -83,9 +83,9 @@ with nnvm.compiler.build_config(opt_level=3):
 # ---------------------------------------------
 # The process is no different from other example
 from tvm.contrib import graph_runtime
-ctx = tvm.gpu(0)
+device = tvm.gpu(0)
 dtype = 'float32'
-m = graph_runtime.create(graph, lib, ctx)
+m = graph_runtime.create(graph, lib, device)
 # set inputs
 m.set_input(input_name, tvm.nd.array(x.astype(dtype)))
 m.set_input(**params)

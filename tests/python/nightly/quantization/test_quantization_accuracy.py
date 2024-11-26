@@ -35,9 +35,9 @@ def get_val_data(model_name,
     rec_val = os.path.expanduser(rec_val)
     mean_rgb = [123.68, 116.779, 103.939]
     std_rgb = [58.393, 57.12, 57.375]
-    def batch_fn(batch, ctx):
-        data = gluon.utils.split_and_load(batch.data[0], ctx_list=ctx, batch_axis=0)
-        label = gluon.utils.split_and_load(batch.label[0], ctx_list=ctx, batch_axis=0)
+    def batch_fn(batch, device):
+        data = gluon.utils.split_and_load(batch.data[0], device_list=device, batch_axis=0)
+        label = gluon.utils.split_and_load(batch.label[0], device_list=device, batch_axis=0)
         return data, label
 
     img_size = 299 if model_name == 'inceptionv3' else 224
@@ -81,11 +81,11 @@ def get_model(model_name, batch_size, qconfig, target=None, original=False, simu
     return qfunc
 
 
-def eval_acc(model, dataset, batch_fn, target=tvm.target.cuda(), ctx=tvm.gpu(), log_interval=100):
+def eval_acc(model, dataset, batch_fn, target=tvm.target.cuda(), device=tvm.gpu(), log_interval=100):
     with relay.build_config(opt_level=3):
         graph, lib, params = relay.build(model, target)
     # create runtime module
-    m = tvm.contrib.graph_runtime.create(graph, lib, ctx)
+    m = tvm.contrib.graph_runtime.create(graph, lib, device)
     m.set_input(**params)
 
     # setup evaluaiton metric

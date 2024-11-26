@@ -24,7 +24,7 @@ from tvm.relay import ExprFunctor
 from tvm.relay import Function, Call
 from tvm.relay import analysis
 from tvm.relay import transform as _transform
-from tvm.relay.testing import ctx_list
+from tvm.relay.testing import device_list
 
 
 def run_infer_type(expr):
@@ -96,7 +96,7 @@ class OptTester():
         pass
 
     @staticmethod
-    def transform(node, ctx=None):
+    def transform(node, device=None):
         """Perform optimization on node."""
         if isinstance(node, relay.Module):
             # Add a function to the module and return an updated module.
@@ -133,11 +133,11 @@ def test_module_pass():
     pass_name = "module_pass_test"
     opt_level = 0
     opt_tester = OptTester(mod)
-    pass_ctx = None
+    pass_device = None
 
     @_transform.module_pass(opt_level=opt_level, name=pass_name)
-    def transform(expr, ctx):
-        return opt_tester.transform(expr, ctx)
+    def transform(expr, device):
+        return opt_tester.transform(expr, device)
 
     def test_pass_registration():
         mod_pass = transform
@@ -147,8 +147,8 @@ def test_module_pass():
         assert pass_info.opt_level == opt_level
 
     def test_pass_registration_no_decorator():
-        def direct_transform(expr, ctx):
-            return opt_tester.transform(expr, ctx)
+        def direct_transform(expr, device):
+            return opt_tester.transform(expr, device)
         mod_pass = _transform.module_pass(direct_transform, opt_level=3)
         assert isinstance(mod_pass, _transform.ModulePass)
         pass_info = mod_pass.info
@@ -175,7 +175,7 @@ def test_module_pass():
         check_func(new_add, func)
 
         # Check the add function in the python transformed module.
-        ret = opt_tester.transform(mod, pass_ctx)
+        ret = opt_tester.transform(mod, pass_device)
         transformed_v_add = ret.get_global_var(v_add.name_hint)
         transformed_add = mod[transformed_v_add]
         check_func(new_add, transformed_add)
@@ -184,9 +184,9 @@ def test_module_pass():
         x_nd = get_rand(shape, dtype)
         y_nd = get_rand(shape, dtype)
         ref_res = x_nd.asnumpy() + y_nd.asnumpy()
-        for target, ctx in ctx_list():
-            exe1 = relay.create_executor("graph", ctx=ctx, target=target)
-            exe2 = relay.create_executor("debug", ctx=ctx, target=target)
+        for target, device in device_list():
+            exe1 = relay.create_executor("graph", device=device, target=target)
+            exe2 = relay.create_executor("debug", device=device, target=target)
             res1 = exe1.evaluate(new_add)(x_nd, y_nd)
             tvm.testing.assert_allclose(res1.asnumpy(), ref_res, rtol=1e-5)
             res2 = exe2.evaluate(new_add)(x_nd, y_nd)
@@ -204,7 +204,7 @@ def test_function_class_pass():
         def __init__(self, new_func):
             self.new_func = new_func
 
-        def transform_function(self, func, mod, ctx):
+        def transform_function(self, func, mod, device):
             return self.new_func
 
     x = relay.var("x", shape=(10, 20))
@@ -232,11 +232,11 @@ def test_function_pass():
     pass_name = "function_pass_test"
     opt_level = 1
     opt_tester = OptTester(mod)
-    pass_ctx = None
+    pass_device = None
 
     @_transform.function_pass(opt_level=opt_level, name=pass_name)
-    def transform(expr, mod, ctx):
-        return opt_tester.transform(expr, ctx)
+    def transform(expr, mod, device):
+        return opt_tester.transform(expr, device)
 
     def get_ref_log():
         ref_log = relay.Function([x], relay.log(relay.add(x, x)))
@@ -250,8 +250,8 @@ def test_function_pass():
         assert pass_info.opt_level == opt_level
 
     def test_pass_registration_no_decorator():
-        def direct_transform(expr, ctx):
-            return opt_tester.transform(expr, ctx)
+        def direct_transform(expr, device):
+            return opt_tester.transform(expr, device)
         mod_pass = _transform.function_pass(direct_transform, opt_level=0)
         assert isinstance(mod_pass, _transform.FunctionPass)
         pass_info = mod_pass.info
@@ -271,15 +271,15 @@ def test_function_pass():
         check_func(new_log, get_ref_log())
 
         # Check the log function in the python transformed function.
-        ret = opt_tester.transform(log, pass_ctx)
+        ret = opt_tester.transform(log, pass_device)
         check_func(new_log, ret)
 
         # Execute the add function.
         x_nd = get_rand(shape, dtype)
         ref_res = np.log(x_nd.asnumpy() * 2)
-        for target, ctx in ctx_list():
-            exe1 = relay.create_executor("graph", ctx=ctx, target=target)
-            exe2 = relay.create_executor("debug", ctx=ctx, target=target)
+        for target, device in device_list():
+            exe1 = relay.create_executor("graph", device=device, target=target)
+            exe2 = relay.create_executor("debug", device=device, target=target)
             res1 = exe1.evaluate(new_log)(x_nd)
             tvm.testing.assert_allclose(res1.asnumpy(), ref_res, rtol=1e-5)
             res2 = exe2.evaluate(new_log)(x_nd)
@@ -298,7 +298,7 @@ def test_module_class_pass():
             self.new_mod = new_mod
             self.replace = replace
 
-        def transform_module(self, mod, ctx):
+        def transform_module(self, mod, device):
             if self.replace:
                 return self.new_mod
             return mod
@@ -354,18 +354,18 @@ def test_sequential_pass():
 
     # Register a module pass.
     opt_tester = OptTester(mod)
-    pass_ctx = None
+    pass_device = None
 
     @_transform.module_pass(opt_level=1)
-    def mod_transform(expr, ctx):
-        return opt_tester.transform(expr, ctx)
+    def mod_transform(expr, device):
+        return opt_tester.transform(expr, device)
 
     module_pass = mod_transform
 
     # Register a function pass.
     @_transform.function_pass(opt_level=1)
-    def func_transform(expr, mod, ctx):
-        return opt_tester.transform(expr, ctx)
+    def func_transform(expr, mod, device):
+        return opt_tester.transform(expr, device)
 
     function_pass = func_transform
 
@@ -439,9 +439,9 @@ def test_sequential_pass():
         x_nd = get_rand(shape, dtype)
         y_nd = get_rand(shape, dtype)
         ref_res = np.subtract(x_nd.asnumpy() * 2, y_nd.asnumpy() * 2)
-        for target, ctx in ctx_list():
-            exe1 = relay.create_executor("graph", ctx=ctx, target=target)
-            exe2 = relay.create_executor("debug", ctx=ctx, target=target)
+        for target, device in device_list():
+            exe1 = relay.create_executor("graph", device=device, target=target)
+            exe2 = relay.create_executor("debug", device=device, target=target)
             res1 = exe1.evaluate(new_sub)(x_nd, y_nd)
             tvm.testing.assert_allclose(res1.asnumpy(), ref_res, rtol=1e-5)
             res2 = exe2.evaluate(new_sub)(x_nd, y_nd)
@@ -450,9 +450,9 @@ def test_sequential_pass():
         # Execute the updated abs function.
         x_nd = get_rand((5, 10), dtype)
         ref_res = np.abs(x_nd.asnumpy() * 2)
-        for target, ctx in ctx_list():
-            exe1 = relay.create_executor("graph", ctx=ctx, target=target)
-            exe2 = relay.create_executor("debug", ctx=ctx, target=target)
+        for target, device in device_list():
+            exe1 = relay.create_executor("graph", device=device, target=target)
+            exe2 = relay.create_executor("debug", device=device, target=target)
             res1 = exe1.evaluate(new_abs)(x_nd)
             tvm.testing.assert_allclose(res1.asnumpy(), ref_res, rtol=1e-5)
             res2 = exe2.evaluate(new_abs)(x_nd)

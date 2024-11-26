@@ -60,14 +60,14 @@ class CodeGenLLVM :
    * \brief Initialize the code generator with given context
    * \param module_name The name of the module.
    * \param tm Target machine model
-   * \param ctx The context.
+   * \param device The context.
    * \param system_lib Whether to insert system library registration.
    * \param dynamic_lookup Whether dynamically lookup runtime function
    *                       or use the runtime function table passed by caller.
    */
   virtual void Init(const std::string& module_name,
                     llvm::TargetMachine* tm,
-                    llvm::LLVMContext* ctx,
+                    llvm::LLVMContext* device,
                     bool system_lib,
                     bool dynamic_lookup);
   /*!
@@ -260,7 +260,7 @@ class CodeGenLLVM :
   // llvm target machine
   llvm::TargetMachine* target_machine_{nullptr};
   // llvm context
-  llvm::LLVMContext* ctx_{nullptr};
+  llvm::LLVMContext* device_{nullptr};
   // helpful data types
   llvm::Type* t_void_{nullptr};
   llvm::PointerType* t_void_p_{nullptr};

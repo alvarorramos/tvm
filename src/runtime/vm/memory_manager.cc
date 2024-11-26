@@ -32,9 +32,9 @@ namespace runtime {
 namespace vm {
 
 static void BufferDeleter(NDArray::Container* ptr) {
-  CHECK(ptr->manager_ctx != nullptr);
-  Buffer* buffer = reinterpret_cast<Buffer*>(ptr->manager_ctx);
-  MemoryManager::Global()->GetAllocator(buffer->ctx)->
+  CHECK(ptr->manager_device != nullptr);
+  Buffer* buffer = reinterpret_cast<Buffer*>(ptr->manager_device);
+  MemoryManager::Global()->GetAllocator(buffer->device)->
       Free(*(buffer));
   delete buffer;
   delete ptr;
@@ -50,7 +50,7 @@ void StorageObj::Deleter(NDArray::Container* ptr) {
   //
   // We decrement the object allowing for the buffer to release our
   // reference count from allocation.
-  StorageObj* storage = reinterpret_cast<StorageObj*>(ptr->manager_ctx);
+  StorageObj* storage = reinterpret_cast<StorageObj*>(ptr->manager_device);
   storage->DecRef();
   delete ptr;
 }
@@ -77,14 +77,14 @@ NDArray StorageObj::AllocNDArray(size_t offset, std::vector<int64_t> shape, DLDa
   // TODO(@jroesch): generalize later to non-overlapping allocations.
   CHECK_EQ(offset, 0u);
   VerifyDataType(dtype);
-  NDArray::Container* container = new NDArray::Container(nullptr, shape, dtype, this->buffer.ctx);
+  NDArray::Container* container = new NDArray::Container(nullptr, shape, dtype, this->buffer.device);
   container->deleter = StorageObj::Deleter;
   size_t needed_size = GetDataSize(container->dl_tensor);
   // TODO(@jroesch): generalize later to non-overlapping allocations.
   CHECK(needed_size == this->buffer.size)
     << "size mistmatch required " << needed_size << " found " << this->buffer.size;
   this->IncRef();
-  container->manager_ctx = reinterpret_cast<void*>(this);
+  container->manager_device = reinterpret_cast<void*>(this);
   container->dl_tensor.data = this->buffer.data;
   return NDArray(container);
 }
@@ -94,26 +94,26 @@ MemoryManager* MemoryManager::Global() {
   return &memory_manager;
 }
 
-Allocator* MemoryManager::GetAllocator(TVMContext ctx) {
+Allocator* MemoryManager::GetAllocator(TVMContext device) {
   std::lock_guard<std::mutex> lock(mu_);
-  if (allocators_.find(ctx) == allocators_.end()) {
-    DLOG(INFO) << "New allocator for " << DeviceName(ctx.device_type) << "("
-               << ctx.device_id << ")";
-    std::unique_ptr<Allocator> alloc(new NaiveAllocator(ctx));
-    allocators_.emplace(ctx, std::move(alloc));
+  if (allocators_.find(device) == allocators_.end()) {
+    DLOG(INFO) << "New allocator for " << DeviceName(device.device_type) << "("
+               << device.device_id << ")";
+    std::unique_ptr<Allocator> alloc(new NaiveAllocator(device));
+    allocators_.emplace(device, std::move(alloc));
   }
-  return allocators_.at(ctx).get();
+  return allocators_.at(device).get();
 }
 
-NDArray Allocator::Empty(std::vector<int64_t> shape, DLDataType dtype, DLDevice ctx) {
+NDArray Allocator::Empty(std::vector<int64_t> shape, DLDataType dtype, DLDevice device) {
   VerifyDataType(dtype);
-  NDArray::Container* container = new NDArray::Container(nullptr, shape, dtype, ctx);
+  NDArray::Container* container = new NDArray::Container(nullptr, shape, dtype, device);
   container->deleter = BufferDeleter;
   size_t size = GetDataSize(container->dl_tensor);
   size_t alignment = GetDataAlignment(container->dl_tensor);
   Buffer *buffer = new Buffer;
   *buffer = this->Alloc(size, alignment, dtype);
-  container->manager_ctx = reinterpret_cast<void*>(buffer);
+  container->manager_device = reinterpret_cast<void*>(buffer);
   container->dl_tensor.data = buffer->data;
   return NDArray(container);
 }

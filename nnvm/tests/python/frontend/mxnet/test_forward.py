@@ -21,7 +21,7 @@ import tvm
 from tvm.contrib import graph_runtime
 import nnvm.symbol as sym
 import nnvm.compiler
-from nnvm.testing.config import ctx_list
+from nnvm.testing.config import device_list
 from nnvm import frontend
 import mxnet as mx
 from mxnet import gluon
@@ -53,7 +53,7 @@ def verify_mxnet_frontend_impl(mx_symbol, data_shape=(1, 3, 224, 224), out_shape
             args, auxs = mod.get_params()
             return out, args, auxs
 
-    def get_tvm_output(symbol, x, args, auxs, target, ctx, dtype='float32'):
+    def get_tvm_output(symbol, x, args, auxs, target, device, dtype='float32'):
         if gluon_impl:
             new_sym, params = frontend.from_mxnet(symbol)
         else:
@@ -63,7 +63,7 @@ def verify_mxnet_frontend_impl(mx_symbol, data_shape=(1, 3, 224, 224), out_shape
         shape_dict = {'data': dshape}
         with nnvm.compiler.build_config(opt_level=3):
             graph, lib, params = nnvm.compiler.build(new_sym, target, shape_dict, params=params)
-        m = graph_runtime.create(graph, lib, ctx)
+        m = graph_runtime.create(graph, lib, device)
         # set inputs
         m.set_input("data", tvm.nd.array(x.astype(dtype)))
         m.set_input(**params)
@@ -76,14 +76,14 @@ def verify_mxnet_frontend_impl(mx_symbol, data_shape=(1, 3, 224, 224), out_shape
     x = np.random.uniform(size=data_shape)
     if gluon_impl:
         gluon_out, gluon_sym = get_gluon_output(name, x)
-        for target, ctx in ctx_list():
-            tvm_out = get_tvm_output(gluon_sym, x, None, None, target, ctx, dtype)
+        for target, device in device_list():
+            tvm_out = get_tvm_output(gluon_sym, x, None, None, target, device, dtype)
             tvm.testing.assert_allclose(gluon_out, tvm_out, rtol=1e-5, atol=1e-5)
     else:
         mx_out, args, auxs = get_mxnet_output(mx_symbol, x, dtype)
         assert "data" not in args
-        for target, ctx in ctx_list():
-            tvm_out = get_tvm_output(mx_symbol, x, args, auxs, target, ctx, dtype)
+        for target, device in device_list():
+            tvm_out = get_tvm_output(mx_symbol, x, args, auxs, target, device, dtype)
             tvm.testing.assert_allclose(mx_out, tvm_out, rtol=1e-5, atol=1e-5)
 
 def test_forward_mlp():
@@ -222,10 +222,10 @@ def test_forward_where():
     out_shape = dshape
     new_sym, params = frontend.from_mxnet(mx_sym, args, auxs)
     shape_dict = {'cond': dshape, 'x': dshape, 'y': dshape}
-    for target, ctx in ctx_list():
+    for target, device in device_list():
         with nnvm.compiler.build_config(opt_level=3):
             graph, lib, params = nnvm.compiler.build(new_sym, target, shape_dict, params=params)
-        m = graph_runtime.create(graph, lib, ctx)
+        m = graph_runtime.create(graph, lib, device)
         # set inputs
         m.set_input("cond", tvm.nd.array(np_cond))
         m.set_input("x", tvm.nd.array(np_x))
@@ -261,10 +261,10 @@ def test_forward_maximum():
     out_shape = dshape
     new_sym, params = frontend.from_mxnet(mx_sym, args, auxs)
     shape_dict = {'a': dshape, 'b': dshape}
-    for target, ctx in ctx_list():
+    for target, device in device_list():
         with nnvm.compiler.build_config(opt_level=3):
             graph, lib, params = nnvm.compiler.build(new_sym, target, shape_dict, params=params)
-        m = graph_runtime.create(graph, lib, ctx)
+        m = graph_runtime.create(graph, lib, device)
         # set inputs
         m.set_input("a", tvm.nd.array(np_a))
         m.set_input("b", tvm.nd.array(np_b))
@@ -292,10 +292,10 @@ def test_forward_minimum():
     out_shape = dshape
     new_sym, params = frontend.from_mxnet(mx_sym, args, auxs)
     shape_dict = {'a': dshape, 'b': dshape}
-    for target, ctx in ctx_list():
+    for target, device in device_list():
         with nnvm.compiler.build_config(opt_level=3):
             graph, lib, params = nnvm.compiler.build(new_sym, target, shape_dict, params=params)
-        m = graph_runtime.create(graph, lib, ctx)
+        m = graph_runtime.create(graph, lib, device)
         # set inputs
         m.set_input("a", tvm.nd.array(np_a))
         m.set_input("b", tvm.nd.array(np_b))

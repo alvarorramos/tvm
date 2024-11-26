@@ -38,7 +38,7 @@ class SDAccelWorkspace final : public OpenCLWorkspace {
  public:
   // override OpenCL device API
   void Init() final;
-  bool IsOpenCLDevice(TVMContext ctx) final;
+  bool IsOpenCLDevice(TVMContext device) final;
   OpenCLThreadEntry* GetThreadEntry() final;
   // get the global workspace
   static const std::shared_ptr<OpenCLWorkspace>& Global();

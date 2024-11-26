@@ -339,8 +339,8 @@ class AlphaEqualHandler:
     } else {
       auto ldt = lhs->dtype;
       auto rdt = rhs->dtype;
-      CHECK_EQ(lhs->ctx.device_type, kDLCPU) << "can only compare CPU tensor";
-      CHECK_EQ(rhs->ctx.device_type, kDLCPU) << "can only compare CPU tensor";
+      CHECK_EQ(lhs->device.device_type, kDLCPU) << "can only compare CPU tensor";
+      CHECK_EQ(rhs->device.device_type, kDLCPU) << "can only compare CPU tensor";
       if (ldt.code == rdt.code && ldt.lanes == rdt.lanes && ldt.bits == rdt.bits) {
         size_t data_size = runtime::GetDataSize(*lhs.operator->());
         return std::memcmp(lhs->data, rhs->data, data_size) == 0;

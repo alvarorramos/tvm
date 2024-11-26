@@ -339,8 +339,8 @@ with relay.build_config(opt_level=0): # Currently only support opt_level=0
     graph, lib, params = relay.build(func, target, params=params)
 
 # Generate graph runtime
-ctx = tvm.context(target, 0)
-m = graph_runtime.create(graph, lib, ctx)
+device = tvm.context(target, 0)
+m = graph_runtime.create(graph, lib, device)
 m.set_input(**params)
 
 ######################################################################

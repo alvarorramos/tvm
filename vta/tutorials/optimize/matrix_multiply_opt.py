@@ -329,7 +329,7 @@ remote.upload(temp.relpath("gemm.o"))
 f = remote.load_module("gemm.o")
 
 # Get the remote device context
-ctx = remote.ext_dev(0)
+device = remote.ext_dev(0)
 
 # Initialize the data and weight arrays randomly in the int range of (-128, 128]
 data_np = np.random.randint(
@@ -348,9 +348,9 @@ weight_packed = weight_np.reshape(out_channels // env.BLOCK_OUT,
                                   env.BLOCK_IN).transpose((0, 2, 1, 3))
 
 # Format the input/output arrays with tvm.nd.array to the DLPack standard
-data_nd = tvm.nd.array(data_packed, ctx)
-weight_nd = tvm.nd.array(weight_packed, ctx)
-res_nd = tvm.nd.array(np.zeros(output_shape).astype(res.dtype), ctx)
+data_nd = tvm.nd.array(data_packed, device)
+weight_nd = tvm.nd.array(weight_packed, device)
+res_nd = tvm.nd.array(np.zeros(output_shape).astype(res.dtype), device)
 
 # Clear stats
 if env.TARGET in ["sim", "tsim"]:

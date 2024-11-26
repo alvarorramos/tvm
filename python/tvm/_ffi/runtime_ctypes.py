@@ -263,7 +263,7 @@ class TVMContext(ctypes.Structure):
 class TVMArray(ctypes.Structure):
     """TVMValue in C API"""
     _fields_ = [("data", ctypes.c_void_p),
-                ("ctx", TVMContext),
+                ("device", TVMContext),
                 ("ndim", ctypes.c_int),
                 ("dtype", TVMType),
                 ("shape", ctypes.POINTER(tvm_shape_index_t)),
@@ -275,7 +275,7 @@ TVMArrayHandle = ctypes.POINTER(TVMArray)
 class TVMNDArrayContainer(ctypes.Structure):
     """TVM NDArray::Container"""
     _fields_ = [("dl_tensor", TVMArray),
-                ("manager_ctx", ctypes.c_void_p),
+                ("manager_device", ctypes.c_void_p),
                 ("deleter", ctypes.c_void_p),
                 ("array_type_info", ctypes.c_int32)]
 

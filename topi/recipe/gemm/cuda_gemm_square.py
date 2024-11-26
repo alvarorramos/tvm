@@ -119,8 +119,8 @@ def test_gemm():
     s[BB].double_buffer()
     # correctness
     def check_device(device):
-        ctx = tvm.context(device, 0)
-        if not ctx.exist:
+        device = tvm.context(device, 0)
+        if not device.exist:
             print("Skip because %s is not enabled" % device)
             return
         print("Device %s" % device)
@@ -129,9 +129,9 @@ def test_gemm():
         n, m, l = nn, nn, nn
         a_np = np.random.uniform(size=(n, l)).astype(A.dtype)
         b_np = np.random.uniform(size=(m, l)).astype(B.dtype)
-        a = tvm.nd.array(a_np, ctx)
-        b = tvm.nd.array(b_np, ctx)
-        c = tvm.nd.array(np.zeros((n, m), dtype=C.dtype), ctx)
+        a = tvm.nd.array(a_np, device)
+        b = tvm.nd.array(b_np, device)
+        c = tvm.nd.array(np.zeros((n, m), dtype=C.dtype), device)
         for i in range(2):
             f(a, b, c)
         tvm.testing.assert_allclose(
@@ -139,7 +139,7 @@ def test_gemm():
 
         num_flops = 2 * nn * nn * nn
         num_runs = 10
-        timer_f = f.time_evaluator(f.entry_name, ctx, number=num_runs)
+        timer_f = f.time_evaluator(f.entry_name, device, number=num_runs)
         t = timer_f(a, b, c).mean
         GFLOPS = num_flops / (t * 1e3) / 1e6
         print("average time cost of %d runs = %g ms, %g GFLOPS." % (num_runs, t * 1e3, GFLOPS))

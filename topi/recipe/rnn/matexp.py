@@ -131,7 +131,7 @@ def rnn_matexp():
                 auto_unroll_max_step=128,
                 unroll_explicit=False):
             f = tvm.build(s, [s_scan, Whh], target)
-        ctx = tvm.gpu(0) if target == "cuda" else tvm.cl(0)
+        device = tvm.gpu(0) if target == "cuda" else tvm.cl(0)
         # launch the kernel.
         res_np = np.zeros(
             (n_num_step, n_batch_size, n_num_hidden)).astype("float32")
@@ -139,15 +139,15 @@ def rnn_matexp():
         Whh_np[:] = 2.0 / n_num_hidden
         Whh_np[:, n_num_hidden//2:] = 0
 
-        res_a = tvm.nd.array(res_np, ctx)
-        Whh_a = tvm.nd.array(Whh_np, ctx)
+        res_a = tvm.nd.array(res_np, device)
+        Whh_a = tvm.nd.array(Whh_np, device)
         # Skip first pass as it is compilation
         f(res_a, Whh_a)
-        ctx.sync()
+        device.sync()
         # measure time cost of second step.
         tstart = time.time()
         f(res_a, Whh_a)
-        ctx.sync()
+        device.sync()
         tgap = time.time() - tstart
         print("Time cost=%g" % tgap)
         # correctness

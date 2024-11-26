@@ -85,28 +85,28 @@ def test_depthwise_conv2d_nchw():
         if not tvm.module.enabled(device):
             print("Skip because %s is not enabled" % device)
             return
-        ctx = tvm.context(device, 0)
+        device = tvm.context(device, 0)
         # Build the kernel
         f1 = tvm.build(s1, [Input, Filter, DepthwiseConv2d], device)
         f2 = tvm.build(s2, [Input, Filter, Scale, Shift, ScaleShift], device)
         f3 = tvm.build(s3, [Input, Filter, Scale, Shift, Relu], device)
         # Prepare data
-        input_tvm = tvm.nd.array(input_np, ctx)
-        filter_tvm = tvm.nd.array(filter_np, ctx)
-        scale_tvm = tvm.nd.array(scale_np, ctx)
-        shift_tvm = tvm.nd.array(shift_np, ctx)
+        input_tvm = tvm.nd.array(input_np, device)
+        filter_tvm = tvm.nd.array(filter_np, device)
+        scale_tvm = tvm.nd.array(scale_np, device)
+        shift_tvm = tvm.nd.array(shift_np, device)
 
-        depthwise_conv2d_tvm = tvm.nd.array(np.zeros(shape=get_const_tuple(DepthwiseConv2d.shape),dtype=DepthwiseConv2d.dtype), ctx)
-        scale_shift_tvm = tvm.nd.array(np.zeros(shape=get_const_tuple(ScaleShift.shape), dtype=ScaleShift.dtype), ctx)
-        relu_tvm = tvm.nd.array(np.zeros(shape=get_const_tuple(Relu.shape), dtype=Relu.dtype), ctx)
+        depthwise_conv2d_tvm = tvm.nd.array(np.zeros(shape=get_const_tuple(DepthwiseConv2d.shape),dtype=DepthwiseConv2d.dtype), device)
+        scale_shift_tvm = tvm.nd.array(np.zeros(shape=get_const_tuple(ScaleShift.shape), dtype=ScaleShift.dtype), device)
+        relu_tvm = tvm.nd.array(np.zeros(shape=get_const_tuple(Relu.shape), dtype=Relu.dtype), device)
         # Measure time cost of kernel 1 (depthwise_conv2d)
-        timer_1 = f1.time_evaluator(f1.entry_name, ctx, number=1000)
+        timer_1 = f1.time_evaluator(f1.entry_name, device, number=1000)
         tcost_1 = timer_1(input_tvm, filter_tvm, depthwise_conv2d_tvm).mean
         # Measure time cost of kernel 2 (depthwise_conv2d + scale_shift)
-        timer_2 = f2.time_evaluator(f2.entry_name, ctx, number=1000)
+        timer_2 = f2.time_evaluator(f2.entry_name, device, number=1000)
         tcost_2 = timer_2(input_tvm, filter_tvm, scale_tvm, shift_tvm, scale_shift_tvm).mean
         # Measure time cost of kernel 3 (depthwise_conv2d + scale_shift + relu)
-        timer_3 = f3.time_evaluator(f3.entry_name, ctx, number=1000)
+        timer_3 = f3.time_evaluator(f3.entry_name, device, number=1000)
         tcost_3 = timer_3(input_tvm, filter_tvm, scale_tvm, shift_tvm, relu_tvm).mean
         print("Input shape = " + str(get_const_tuple(Input.shape)))
         print("Filter shape = " + str(get_const_tuple(Filter.shape)))
@@ -175,27 +175,27 @@ def test_depthwise_conv2d_nhwc():
         if not tvm.module.enabled(device):
             print("Skip because %s is not enabled" % device)
             return
-        ctx = tvm.context(device, 0)
+        device = tvm.context(device, 0)
         # Build the kernel
         f1 = tvm.build(s1, [Input, Filter, DepthwiseConv2d], device)
         f2 = tvm.build(s2, [Input, Filter, Scale, Shift, ScaleShift], device)
         f3 = tvm.build(s3, [Input, Filter, Scale, Shift, Relu], device)
         # Prepare data
-        input_tvm = tvm.nd.array(input_np, ctx)
-        filter_tvm = tvm.nd.array(filter_np, ctx)
-        scale_tvm = tvm.nd.array(scale_np, ctx)
-        shift_tvm = tvm.nd.array(shift_np, ctx)
-        depthwise_conv2d_tvm = tvm.nd.array(np.zeros(shape=get_const_tuple(DepthwiseConv2d.shape),dtype=DepthwiseConv2d.dtype), ctx)
-        scale_shift_tvm = tvm.nd.array(np.zeros(shape=get_const_tuple(ScaleShift.shape), dtype=ScaleShift.dtype), ctx)
-        relu_tvm = tvm.nd.array(np.zeros(shape=get_const_tuple(Relu.shape), dtype=Relu.dtype), ctx)
+        input_tvm = tvm.nd.array(input_np, device)
+        filter_tvm = tvm.nd.array(filter_np, device)
+        scale_tvm = tvm.nd.array(scale_np, device)
+        shift_tvm = tvm.nd.array(shift_np, device)
+        depthwise_conv2d_tvm = tvm.nd.array(np.zeros(shape=get_const_tuple(DepthwiseConv2d.shape),dtype=DepthwiseConv2d.dtype), device)
+        scale_shift_tvm = tvm.nd.array(np.zeros(shape=get_const_tuple(ScaleShift.shape), dtype=ScaleShift.dtype), device)
+        relu_tvm = tvm.nd.array(np.zeros(shape=get_const_tuple(Relu.shape), dtype=Relu.dtype), device)
         # Measure time cost of kernel 1 (depthwise_conv2d)
-        timer_1 = f1.time_evaluator(f1.entry_name, ctx, number=1000)
+        timer_1 = f1.time_evaluator(f1.entry_name, device, number=1000)
         tcost_1 = timer_1(input_tvm, filter_tvm, depthwise_conv2d_tvm).mean
         # Measure time cost of kernel 2 (depthwise_conv2d + scale_shift)
-        timer_2 = f2.time_evaluator(f2.entry_name, ctx, number=1000)
+        timer_2 = f2.time_evaluator(f2.entry_name, device, number=1000)
         tcost_2 = timer_2(input_tvm, filter_tvm, scale_tvm, shift_tvm, scale_shift_tvm).mean
         # Measure time cost of kernel 3 (depthwise_conv2d + scale_shift + relu)
-        timer_3 = f3.time_evaluator(f3.entry_name, ctx, number=1000)
+        timer_3 = f3.time_evaluator(f3.entry_name, device, number=1000)
         tcost_3 = timer_3(input_tvm, filter_tvm, scale_tvm, shift_tvm, relu_tvm).mean
         print("Input shape = " + str(get_const_tuple(Input.shape)))
         print("Filter shape = " + str(get_const_tuple(Filter.shape)))

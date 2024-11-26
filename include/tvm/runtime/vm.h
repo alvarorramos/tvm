@@ -729,7 +729,7 @@ class VirtualMachine : public runtime::ModuleNode {
   /*! \brief The function name to inputs mapping. */
   std::unordered_map<std::string, std::vector<ObjectRef>> inputs_;
   /*! \brief The set of TVM contexts the VM is currently executing on. */
-  std::vector<TVMContext> ctxs_;
+  std::vector<TVMContext> devices_;
 
   /*! \brief Push a call frame on to the call stack. */
   void PushFrame(Index arg_count, Index ret_pc, const VMFunction& vm_func);

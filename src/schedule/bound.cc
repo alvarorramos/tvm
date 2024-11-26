@@ -74,15 +74,15 @@ bool NeedRelax(const IterVar& iv,
 
 // infer storage scope, if not given
 StorageScope InferStorageScope(
-    const Stage& stage, const GraphContext& ctx) {
+    const Stage& stage, const GraphContext& device) {
   if (stage->scope.length() != 0) {
     return StorageScope::make(stage->scope);
   }
   int max_rank = -1;
-  for (IterVar iv : ctx.attach_path.at(stage->op)) {
-    auto it = ctx.bind_map.find(iv);
+  for (IterVar iv : device.attach_path.at(stage->op)) {
+    auto it = device.bind_map.find(iv);
     const std::string& tag = (
-        it != ctx.bind_map.end() ? it->second->thread_tag : iv->thread_tag);
+        it != device.bind_map.end() ? it->second->thread_tag : iv->thread_tag);
     if (tag != "pipeline" && tag.length() != 0) {
       max_rank = std::max(max_rank, ThreadScope::make(tag).rank);
     }
@@ -94,7 +94,7 @@ StorageScope InferStorageScope(
 
 
 void InferRootBound(const Stage& stage,
-                    const GraphContext& ctx,
+                    const GraphContext& device,
                     std::unordered_map<IterVar, Range>* rmap) {
   CHECK_NE(stage->attach_type, kInline)
       << "call schedule.normalize before scheduleops";
@@ -119,8 +119,8 @@ void InferRootBound(const Stage& stage,
   for (int i = 0; i < stage->op->num_outputs(); ++i) {
     Tensor t = stage->op.output(i);
     tmap.emplace(t, TensorDom(static_cast<int>(t.ndim())));
-    auto it = ctx.feed_graph.find(t);
-    if (it != ctx.feed_graph.end()) {
+    auto it = device.feed_graph.find(t);
+    if (it != device.feed_graph.end()) {
       for (const Operation& op : it->second) {
         consumers.insert(op);
       }
@@ -129,20 +129,20 @@ void InferRootBound(const Stage& stage,
     }
   }
   // storage scope.
-  runtime::StorageScope scope = InferStorageScope(stage, ctx);
+  runtime::StorageScope scope = InferStorageScope(stage, device);
   // Bound prop by other consumers.
   // - Compute bound by relaxation rules: NeedRelax
   //   - For normal index, use relative location of loop nest./
   //   - For thread index, use the thread scope.
   //
-  Array<IterVar> stage_attach = ctx.attach_path.at(stage->op);
+  Array<IterVar> stage_attach = device.attach_path.at(stage->op);
   // The parent set.
   for (const Operation& op : consumers) {
     std::unordered_map<const Variable*, IntSet> relax_set;
     std::unordered_map<IterVar, IntSet> up_state;
     bool found_attach = false;
-    CHECK(ctx.op2stage_.count(op.get()));
-    const Stage& op_stage = ctx.op2stage_.at(op.get());
+    CHECK(device.op2stage_.count(op.get()));
+    const Stage& op_stage = device.op2stage_.at(op.get());
     // Consumer nest
     for (size_t i = op_stage->leaf_iter_vars.size(); i != 0; --i) {
       IterVar iv = op_stage->leaf_iter_vars[i - 1];
@@ -154,12 +154,12 @@ void InferRootBound(const Stage& stage,
       const Range& vrange = it->second;
       if (is_one(vrange->extent)) {
         up_state[iv] = IntSet::single_point(vrange->min);
-      } else if (!NeedRelax(iv, found_attach, ctx.bind_map, scope)) {
+      } else if (!NeedRelax(iv, found_attach, device.bind_map, scope)) {
         CHECK(is_zero(vrange->min))
             << "InferBound requires every leaf iter var's min equals 0, "
             << " call schedule.normalize to achieve this. ";
-        if (ctx.bind_map.count(iv)) {
-          up_state[iv] = IntSet::single_point(ctx.bind_map.at(iv)->var);
+        if (device.bind_map.count(iv)) {
+          up_state[iv] = IntSet::single_point(device.bind_map.at(iv)->var);
         } else {
           up_state[iv] = IntSet::single_point(iv->var);
         }
@@ -168,7 +168,7 @@ void InferRootBound(const Stage& stage,
       }
     }
     // Consumer's attach nest
-    for (IterVar iv : ctx.attach_path.at(op)) {
+    for (IterVar iv : device.attach_path.at(op)) {
       if (stage_attach.size() != 0 && iv == stage_attach[0]) {
         found_attach = true;
       }
@@ -176,10 +176,10 @@ void InferRootBound(const Stage& stage,
       CHECK(is_zero(vrange->min))
           << "InferBound requires every leaf iter var's min equals 0, "
           << "call schedule.normalize to achieve this.";
-      if (NeedRelax(iv, found_attach, ctx.bind_map, scope)) {
+      if (NeedRelax(iv, found_attach, device.bind_map, scope)) {
         relax_set[iv->var.get()] = IntSet::range(vrange);
-        if (ctx.bind_map.count(iv)) {
-          relax_set[ctx.bind_map.at(iv)->var.get()] = IntSet::range(vrange);
+        if (device.bind_map.count(iv)) {
+          relax_set[device.bind_map.at(iv)->var.get()] = IntSet::range(vrange);
         }
       }
     }
@@ -212,30 +212,30 @@ void InferRootBound(const Stage& stage,
 
 Map<IterVar, Range> InferBound(const Schedule& sch) {
   // Prepare context
-  GraphContext ctx;
+  GraphContext device;
   Array<Operation> roots;
   arith::Analyzer analyzer;
 
   for (Operation op : sch->outputs) {
     roots.push_back(sch->stage_map[op]->op);
   }
-  ctx.feed_graph = CreateFeedGraph(CreateReadGraph(roots));
+  device.feed_graph = CreateFeedGraph(CreateReadGraph(roots));
 
   for (Stage stage : sch->stages) {
     for (auto kv : stage->iter_var_attrs) {
       if (kv.second->bind_thread.defined()) {
-        CHECK(!ctx.bind_map.count(kv.first));
-        ctx.bind_map[kv.first] = kv.second->bind_thread;
+        CHECK(!device.bind_map.count(kv.first));
+        device.bind_map[kv.first] = kv.second->bind_thread;
       }
     }
-    ctx.op2stage_[stage->op.get()] = stage;
+    device.op2stage_[stage->op.get()] = stage;
   }
-  ctx.attach_path = CreateAttachPath(sch);
+  device.attach_path = CreateAttachPath(sch);
   // Run inference.
   std::unordered_map<IterVar, Range> ret;
   for (size_t i = sch->stages.size(); i != 0; --i) {
     const Stage& stage = sch->stages[i - 1];
-    InferRootBound(stage, ctx, &ret);
+    InferRootBound(stage, device, &ret);
 
     // bind bound of root iter vars.
     for (auto iv :  stage->op->root_iter_vars()) {

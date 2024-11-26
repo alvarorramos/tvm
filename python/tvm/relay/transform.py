@@ -718,8 +718,8 @@ def _wrap_class_module_pass(pass_cls, pass_info):
             inst = pass_cls(*args, **kwargs)
             # it is important not to capture self to
             # avoid a cyclic dependency
-            def _pass_func(mod, ctx):
-                return inst.transform_module(mod, ctx)
+            def _pass_func(mod, device):
+                return inst.transform_module(mod, device)
             self.__init_handle_by_constructor__(
                 _transform.MakeModulePass, _pass_func, pass_info)
             self._inst = inst
@@ -782,10 +782,10 @@ def module_pass(pass_func=None, opt_level=None, name=None, required=None):
                 self.cse = relay.transform.EliminateCommonSubexpr()
                 self.const_fold = relay.transform.FoldConstant()
 
-            def transform_module(self, mod, ctx):
-                mod = self.cse(mod, ctx)
+            def transform_module(self, mod, device):
+                mod = self.cse(mod, device)
                 if self.enable_fold:
-                    mod = self.const_fold(mod, ctx)
+                    mod = self.const_fold(mod, device)
                 return mod
 
         # create an instance of customized pipeline
@@ -800,7 +800,7 @@ def module_pass(pass_func=None, opt_level=None, name=None, required=None):
     .. code-block:: python
 
         @relay.transform.module_pass(opt_level=2)
-        def transform(mod, ctx):
+        def transform(mod, device):
             tp = relay.TensorType((10,), "float32")
             x = relay.var("x", tp)
             gv = relay.GlobalVar("var")
@@ -850,8 +850,8 @@ def _wrap_class_function_pass(pass_cls, pass_info):
             inst = pass_cls(*args, **kwargs)
             # it is important not to capture self to
             # avoid a cyclic dependency
-            def _pass_func(func, mod, ctx):
-                return inst.transform_function(func, mod, ctx)
+            def _pass_func(func, mod, device):
+                return inst.transform_function(func, mod, device)
             self.__init_handle_by_constructor__(
                 _transform.MakeFunctionPass, _pass_func, pass_info)
             self._inst = inst
@@ -910,7 +910,7 @@ def function_pass(pass_func=None, opt_level=None, name=None, required=None):
             def __init__(self, new_func):
                 self.new_func = new_func
 
-            def transform_function(self, func, mod, ctx):
+            def transform_function(self, func, mod, device):
                 # just for demo purposes
                 # transform func to new_func
                 return self.new_func
@@ -931,7 +931,7 @@ def function_pass(pass_func=None, opt_level=None, name=None, required=None):
     .. code-block:: python
 
         @relay.transform.function_pass(opt_level=2)
-        def transform(func, mod, ctx):
+        def transform(func, mod, device):
             # my transformations here.
             return func
 
@@ -991,7 +991,7 @@ class ChangeBatch:
         self.data = data
         self.batch_size = batch_size
 
-    def transform_function(self, func, mod, ctx):
+    def transform_function(self, func, mod, device):
         func = relay.Function(func.params, func.body, None, func.type_params, func.attrs)
         change_batch = self
         class ChangeBatchMutator(tvm.relay.ExprMutator):

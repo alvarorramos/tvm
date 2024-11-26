@@ -129,7 +129,7 @@ else:
     remote = rpc.LocalSession()
 
 # Get execution context from remote
-ctx = remote.ext_dev(0) if device == "vta" else remote.cpu(0)
+device = remote.ext_dev(0) if device == "vta" else remote.cpu(0)
 
 ######################################################################
 # Build the inference graph runtime
@@ -208,7 +208,7 @@ with autotvm.tophub.context(target):
     lib = remote.load_module("graphlib.o")
 
     # Graph runtime
-    m = graph_runtime.create(graph, lib, ctx)
+    m = graph_runtime.create(graph, lib, device)
 
 ######################################################################
 # Perform image classification inference
@@ -245,7 +245,7 @@ m.set_input('data', image)
 # More on: https://docs.tvm.ai/api/python/module.html#tvm.module.Module.time_evaluator
 num = 4 # number of times we run module for a single measurement
 rep = 3 # number of measurements (we derive std dev from this)
-timer = m.module.time_evaluator("run", ctx, number=num, repeat=rep)
+timer = m.module.time_evaluator("run", device, number=num, repeat=rep)
 
 if env.TARGET in ["sim", "tsim"]:
     simulator.clear_stats()

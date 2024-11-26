@@ -37,15 +37,15 @@ class MicroDeviceAPI final : public DeviceAPI {
   /*! \brief constructor */
   MicroDeviceAPI() { }
 
-  void SetDevice(TVMContext ctx) final {}
+  void SetDevice(TVMContext device) final {}
 
-  void GetAttr(TVMContext ctx, DeviceAttrKind kind, TVMRetValue* rv) final {
+  void GetAttr(TVMContext device, DeviceAttrKind kind, TVMRetValue* rv) final {
     if (kind == kExist) {
       *rv = 1;
     }
   }
 
-  void* AllocDataSpace(TVMContext ctx,
+  void* AllocDataSpace(TVMContext device,
                        size_t nbytes,
                        size_t alignment,
                        TVMType type_hint) final {
@@ -58,7 +58,7 @@ class MicroDeviceAPI final : public DeviceAPI {
     return static_cast<void*>(dev_space);
   }
 
-  void FreeDataSpace(TVMContext ctx, void* ptr) final {
+  void FreeDataSpace(TVMContext device, void* ptr) final {
     MicroDevSpace* dev_space = static_cast<MicroDevSpace*>(ptr);
     dev_space->session->FreeInSection(
       SectionKind::kHeap, DevBaseOffset(reinterpret_cast<std::uintptr_t>(dev_space->data)));
@@ -70,11 +70,11 @@ class MicroDeviceAPI final : public DeviceAPI {
                       void* to,
                       size_t to_offset,
                       size_t size,
-                      TVMContext ctx_from,
-                      TVMContext ctx_to,
+                      TVMContext device_from,
+                      TVMContext device_to,
                       TVMType type_hint,
                       TVMStreamHandle stream) final {
-    std::tuple<int, int> type_from_to(ctx_from.device_type, ctx_to.device_type);
+    std::tuple<int, int> type_from_to(device_from.device_type, device_to.device_type);
     if (type_from_to == std::make_tuple(kDLMicroDev, kDLMicroDev)) {
       // Copying from the device to the device.
 
@@ -84,7 +84,7 @@ class MicroDeviceAPI final : public DeviceAPI {
           << "attempt to copy data between different micro sessions ("
           << from_space->session.get()
           << " != " << to_space->session.get() << ")";
-      CHECK(ctx_from.device_id == ctx_to.device_id)
+      CHECK(device_from.device_id == device_to.device_id)
         << "can only copy between the same micro device";
       ObjectPtr<MicroSession>& session = from_space->session;
       const std::shared_ptr<LowLevelDevice>& lld = session->low_level_device();
@@ -120,10 +120,10 @@ class MicroDeviceAPI final : public DeviceAPI {
     }
   }
 
-  void StreamSync(TVMContext ctx, TVMStreamHandle stream) final {
+  void StreamSync(TVMContext device, TVMStreamHandle stream) final {
   }
 
-  void* AllocWorkspace(TVMContext ctx, size_t size, TVMType type_hint) final {
+  void* AllocWorkspace(TVMContext device, size_t size, TVMType type_hint) final {
     ObjectPtr<MicroSession>& session = MicroSession::Current();
 
     void* data = session->AllocateInSection(SectionKind::kWorkspace, size).cast_to<void*>();
@@ -134,7 +134,7 @@ class MicroDeviceAPI final : public DeviceAPI {
     return static_cast<void*>(dev_space);
   }
 
-  void FreeWorkspace(TVMContext ctx, void* data) final {
+  void FreeWorkspace(TVMContext device, void* data) final {
     MicroDevSpace* dev_space = static_cast<MicroDevSpace*>(data);
     ObjectPtr<MicroSession>& session = dev_space->session;
     session->FreeInSection(SectionKind::kWorkspace,

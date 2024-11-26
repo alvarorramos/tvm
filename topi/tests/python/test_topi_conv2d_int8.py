@@ -69,11 +69,11 @@ def verify_conv2d_NCHWc_int8(batch, in_channel, in_size, num_filter, kernel, str
     a_np, w_np, b_np, c_np = get_ref_data()
 
     def check_device(device):
-        ctx = tvm.context(device, 0)
-        if not ctx.exist:
+        device = tvm.context(device, 0)
+        if not device.exist:
             print("Skip because %s is not enabled" % device)
             return
-        if device == "cuda" and not tvm.contrib.nvcc.have_int8(ctx.compute_version):
+        if device == "cuda" and not tvm.contrib.nvcc.have_int8(device.compute_version):
             print("Skip because int8 intrinsics are not available")
             return
 
@@ -87,10 +87,10 @@ def verify_conv2d_NCHWc_int8(batch, in_channel, in_size, num_filter, kernel, str
                 C = topi.nn.relu(C)
             s = topi.generic.schedule_conv2d_nchw([C])
 
-        a = tvm.nd.array(a_np, ctx)
-        w = tvm.nd.array(w_np, ctx)
-        b = tvm.nd.array(b_np, ctx)
-        c = tvm.nd.array(np.zeros(get_const_tuple(C.shape), dtype=C.dtype), ctx)
+        a = tvm.nd.array(a_np, device)
+        w = tvm.nd.array(w_np, device)
+        b = tvm.nd.array(b_np, device)
+        c = tvm.nd.array(np.zeros(get_const_tuple(C.shape), dtype=C.dtype), device)
         if add_bias:
             tvm.build(s, [A, W, bias, C], device, name="relu_%d_%d_%d_%d_%d_%d_%d_%d" % (batch, in_channel, in_size, num_filter, kernel, stride, padding, dilation))
             func = tvm.build(s, [A, W, bias, C], device, name="relu_%d_%d_%d_%d_%d_%d_%d_%d" % (batch, in_channel, in_size, num_filter, kernel, stride, padding, dilation))

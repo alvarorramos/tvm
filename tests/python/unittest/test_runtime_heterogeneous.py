@@ -117,7 +117,7 @@ def test_simplex_data_transferring():
     """
     host = "cpu"
     target_host = "llvm"
-    host_ctx = tvm.context(host)
+    host_device = tvm.context(host)
     if not tvm.module.enabled(target_host):
         print("Skip test because llvm is not enabled.")
         return
@@ -127,8 +127,8 @@ def test_simplex_data_transferring():
             print("Skip test because {} is not enabled.".format(target_device))
             return
 
-        device_ctx = tvm.context(device)
-        graph = get_simplex_graph(host_ctx.device_type, device_ctx.device_type)
+        device_device = tvm.context(device)
+        graph = get_simplex_graph(host_device.device_type, device_device.device_type)
         shape = (4,)
 
         # Create module for add whose target is the device.
@@ -157,8 +157,8 @@ def test_simplex_data_transferring():
 
         target_flist = {target_device: [lower_add], target_host: [lower_sub]}
         mhost = tvm.build(target_flist, target_host=target_host)
-        ctx = [host_ctx, device_ctx]
-        mod = graph_runtime.create(graph, mhost, ctx)
+        device = [host_device, device_device]
+        mod = graph_runtime.create(graph, mhost, device)
         params = {}
         params["A"] = tensor_a = np.random.uniform(
             size=shape).astype(tensor_a.dtype)
@@ -305,7 +305,7 @@ def test_duplex_data_transferring():
     """
     host = "cpu"
     target_host = "llvm"
-    host_ctx = tvm.context(host)
+    host_device = tvm.context(host)
     if not tvm.module.enabled(target_host):
         print("Skip test because llvm is not enabled.")
         return
@@ -315,8 +315,8 @@ def test_duplex_data_transferring():
             print("Skip test because {} is not enabled.".format(target_device))
             return
 
-        device_ctx = tvm.context(device)
-        graph = get_duplex_graph(host_ctx.device_type, device_ctx.device_type)
+        device_device = tvm.context(device)
+        graph = get_duplex_graph(host_device.device_type, device_device.device_type)
         shape = (4,)
 
         # Insert copy nodes for data transferring between add and sub nodes.
@@ -356,7 +356,7 @@ def test_duplex_data_transferring():
         target_flist = {target_device: [lower_add0, lower_add1], target_host:
                         [lower_sub]}
         mhost = tvm.build(target_flist, target_host=target_host)
-        ctx = [host_ctx, device_ctx]
+        device = [host_device, device_device]
         params = {}
         params["A"] = tensor_a = np.random.uniform(
             size=shape).astype(tensor_a.dtype)
@@ -368,7 +368,7 @@ def test_duplex_data_transferring():
             size=shape).astype(tensor_d.dtype)
 
         def check_verify():
-            mod = graph_runtime.create(graph, mhost, ctx)
+            mod = graph_runtime.create(graph, mhost, device)
             mod.set_input(**params)
             mod.run()
             out = mod.get_output(0, tvm.nd.empty(shape))
@@ -383,7 +383,7 @@ def test_duplex_data_transferring():
                 out_file.write(graph)
             loaded_lib = tvm.module.load(path_lib)
             loaded_graph = open(temp.relpath("deploy.json")).read()
-            mod = graph_runtime.create(loaded_graph, loaded_lib, ctx)
+            mod = graph_runtime.create(loaded_graph, loaded_lib, device)
             mod.set_input(**params)
             mod.run()
             out = mod.get_output(0, tvm.nd.empty(shape))

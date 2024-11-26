@@ -39,9 +39,9 @@ def verify_lrn(shape, size, axis, bias, alpha, beta):
                 s = topi.generic.schedule_lrn([B])
             else:
                 s = topi.cuda.schedule_lrn([B])
-        ctx = tvm.context(device, 0)
-        a = tvm.nd.array(a_np, ctx)
-        b = tvm.nd.array(np.zeros(get_const_tuple(B.shape), dtype=dtype), ctx)
+        device = tvm.context(device, 0)
+        a = tvm.nd.array(a_np, device)
+        b = tvm.nd.array(np.zeros(get_const_tuple(B.shape), dtype=dtype), device)
         f = tvm.build(s, [A, B], device)
         f(a, b)
         tvm.testing.assert_allclose(b.asnumpy(), b_np, rtol=1e-5)

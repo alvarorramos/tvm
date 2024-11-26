@@ -20,7 +20,7 @@ import tvm
 import numpy as np
 from tvm import relay
 from tvm.relay.scope_builder import ScopeBuilder
-from tvm.relay.testing.config import ctx_list
+from tvm.relay.testing.config import device_list
 from tvm.relay.prelude import Prelude
 import pytest
 
@@ -37,13 +37,13 @@ def check_result(args, expected_result, mod=None):
     expected_result:
         The expected result of running the expression.
     """
-    for target, ctx in ctx_list():
-        vm = relay.create_executor('vm', ctx=ctx, target=target, mod=mod)
+    for target, device in device_list():
+        vm = relay.create_executor('vm', device=device, target=target, mod=mod)
 
         rts_result = vm.evaluate()(*args)
         tvm.testing.assert_allclose(expected_result, rts_result.asnumpy())
 
-def veval(f, *args, ctx=tvm.cpu(), target="llvm"):
+def veval(f, *args, device=tvm.cpu(), target="llvm"):
     if isinstance(f, relay.Expr):
         mod = relay.Module()
         mod["main"] = f
@@ -52,7 +52,7 @@ def veval(f, *args, ctx=tvm.cpu(), target="llvm"):
         mod = f
     exe = relay.vm.compile(mod, target)
     vm = relay.vm.VirtualMachine(exe)
-    vm.init(ctx)
+    vm.init(device)
     return vm.invoke("main", *args)
 
 def vmobj_to_list(o):

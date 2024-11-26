@@ -34,10 +34,10 @@ def test_local_multi_stage():
 
     f = tvm.build(s, [A, C], "opengl", name="multi_stage")
 
-    ctx = tvm.opengl(0)
+    device = tvm.opengl(0)
     n = 10
-    a = tvm.nd.array(np.random.uniform(size=(n,)).astype(A.dtype), ctx)
-    c = tvm.nd.array(np.random.uniform(size=(n,)).astype(B.dtype), ctx)
+    a = tvm.nd.array(np.random.uniform(size=(n,)).astype(A.dtype), device)
+    c = tvm.nd.array(np.random.uniform(size=(n,)).astype(B.dtype), device)
     f(a, c)
 
     tvm.testing.assert_allclose(c.asnumpy(), (a.asnumpy() + 1) * 2)

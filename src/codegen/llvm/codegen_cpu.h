@@ -39,7 +39,7 @@ class CodeGenCPU : public CodeGenLLVM {
  public:
   void Init(const std::string& module_name,
             llvm::TargetMachine* tm,
-            llvm::LLVMContext* ctx,
+            llvm::LLVMContext* device,
             bool system_lib,
             bool dynamic_lookup) override;
   void AddFunction(const LoweredFunc& f) override;
@@ -54,7 +54,7 @@ class CodeGenCPU : public CodeGenLLVM {
  protected:
   void AddStartupFunction() final;
   // meta data
-  llvm::MDNode* md_tbaa_ctx_ptr_{nullptr};
+  llvm::MDNode* md_tbaa_device_ptr_{nullptr};
   // TVM related data types
   llvm::Type* t_tvm_shape_index_{nullptr};
   llvm::Type* t_tvm_func_handle_{nullptr};
@@ -120,7 +120,7 @@ class CodeGenCPU : public CodeGenLLVM {
   // return the end block after the check
   llvm::BasicBlock* CheckCallSuccess(llvm::Value* retcode);
   // Context for injection lookup
-  llvm::GlobalVariable* gv_mod_ctx_{nullptr};
+  llvm::GlobalVariable* gv_mod_device_{nullptr};
   llvm::GlobalVariable* gv_tvm_func_call_{nullptr};
   llvm::GlobalVariable* gv_tvm_get_func_from_env_{nullptr};
   llvm::GlobalVariable* gv_tvm_api_set_last_error_{nullptr};

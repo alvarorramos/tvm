@@ -119,7 +119,7 @@ inline Expr MulAndDiv(Expr data, float s1, float s2, DataType dtype,
 
 Expr QuantizeRealize(const Call& ref_call,
                      const Array<Expr>& new_args,
-                     const NodeRef& ctx) {
+                     const NodeRef& device) {
   const QConfig& cfg = QConfig::Current();
   // do not handle data type cast
   const auto param = ref_call->attrs.as<SimulatedQuantizeAttrs>();
@@ -195,7 +195,7 @@ RELAY_REGISTER_OP("relay.op.annotation.simulated_quantize")
 
 Expr Conv2dRealize(const Call& ref_call,
                    const Array<Expr>& new_args,
-                   const NodeRef& ctx) {
+                   const NodeRef& device) {
   const QConfig& cfg = QConfig::Current();
   CHECK_EQ(new_args.size(), 2);
   if (!new_args[0]->IsInstance<TempExprNode>() && !new_args[1]->IsInstance<TempExprNode>()) {
@@ -231,7 +231,7 @@ RELAY_REGISTER_OP("nn.conv2d")
 
 Expr DenseRealize(const Call& ref_call,
                   const Array<Expr>& new_args,
-                  const NodeRef& ctx) {
+                  const NodeRef& device) {
   const QConfig& cfg = QConfig::Current();
   CHECK_EQ(new_args.size(), 2);
   if (!new_args[0]->IsInstance<TempExprNode>() || !new_args[1]->IsInstance<TempExprNode>()) {
@@ -265,7 +265,7 @@ RELAY_REGISTER_OP("nn.dense")
 
 Expr MulRealize(const Call& ref_call,
                 const Array<Expr>& new_args,
-                const NodeRef& ctx) {
+                const NodeRef& device) {
   const QConfig& cfg = QConfig::Current();
   CHECK_EQ(new_args.size(), 2);
   if (new_args[0].as<QRealizeIntExprNode>() && new_args[1].as<QRealizeIntExprNode>()) {
@@ -363,7 +363,7 @@ Array<Expr> UnifyDTypeScale(const Array<Expr>& ref_args, const Array<Expr>& args
 
 Expr AddRealize(const Call& ref_call,
                 const Array<Expr>& new_args,
-                const NodeRef& ctx) {
+                const NodeRef& device) {
   CHECK_EQ(new_args.size(), 2);
   if (new_args[0].as<QRealizeIntExprNode>() && new_args[1].as<QRealizeIntExprNode>()) {
     DataType dtype;
@@ -382,7 +382,7 @@ RELAY_REGISTER_OP("add")
 
 Expr ClipRealize(const Call& ref_call,
                  const Array<Expr>& new_args,
-                 const NodeRef& ctx) {
+                 const NodeRef& device) {
   CHECK_EQ(new_args.size(), 1);
   if (const auto* n = new_args[0].as<QRealizeIntExprNode>()) {
     const auto ref_attrs = ref_call->attrs.as<ClipAttrs>();
@@ -405,7 +405,7 @@ RELAY_REGISTER_OP("clip")
 
 Expr ConcatenateRealize(const Call& ref_call,
                         const Array<Expr>& new_args,
-                        const NodeRef& ctx) {
+                        const NodeRef& device) {
   CHECK_EQ(new_args.size(), 1);
   CHECK_EQ(ref_call->args.size(), 1);
 
@@ -437,7 +437,7 @@ RELAY_REGISTER_OP("concatenate")
 /* \brief forward the original operator */
 Expr IdentityRealize(const Call& ref_call,
                      const Array<Expr>& new_args,
-                     const NodeRef& ctx) {
+                     const NodeRef& device) {
   CHECK_EQ(new_args.size(), 1);
   if (const auto* n = new_args[0].as<QRealizeIntExprNode>()) {
     Expr ret = ForwardOp(ref_call, {n->data});
@@ -459,7 +459,7 @@ RELAY_REGISTER_OP("annotation.stop_fusion")
 /* \brief for unary operators which requantize its input to dtype_nbit */
 Expr CastDtypeInputRealize(const Call& ref_call,
                            const Array<Expr>& new_args,
-                           const NodeRef& ctx) {
+                           const NodeRef& device) {
   const QConfig& cfg = QConfig::Current();
   CHECK_EQ(new_args.size(), 1);
   if (const auto* n = new_args[0].as<QRealizeIntExprNode>()) {
@@ -477,7 +477,7 @@ RELAY_REGISTER_OP("nn.max_pool2d")
 
 Expr AvgPoolRealize(const Call& ref_call,
                     const Array<Expr>& new_args,
-                    const NodeRef& ctx) {
+                    const NodeRef& device) {
   const QConfig& cfg = QConfig::Current();
   CHECK_EQ(new_args.size(), 1);
   if (const auto* n = new_args[0].as<QRealizeIntExprNode>()) {
@@ -500,7 +500,7 @@ RELAY_REGISTER_OP("nn.global_avg_pool2d")
 
 Expr CastHintRealize(const Call& ref_call,
                      const Array<Expr>& new_args,
-                     const NodeRef& ctx) {
+                     const NodeRef& device) {
   const auto param = ref_call->attrs.as<CastHintAttrs>();
   CHECK_EQ(new_args.size(), 1);
   if (const auto* n = new_args[0].as<QRealizeIntExprNode>()) {

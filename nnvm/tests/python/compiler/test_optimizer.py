@@ -20,11 +20,11 @@ import nnvm
 import nnvm.compiler.optimizer as optimizer
 import nnvm.compiler.lr_scheduler as lr_scheduler
 
-from nnvm.testing.config import ctx_list
+from nnvm.testing.config import device_list
 from tvm.contrib import graph_runtime
 
 
-def helper(symbol, inputs, params, update_func, run_times, target, ctx, dtype="float32"):
+def helper(symbol, inputs, params, update_func, run_times, target, device, dtype="float32"):
     ishapes = {}
     np_inputs = {}
     params_dict = {}
@@ -36,7 +36,7 @@ def helper(symbol, inputs, params, update_func, run_times, target, ctx, dtype="f
         params_dict.update({name: np_inputs[name]})
 
     graph, lib, rt_params = nnvm.compiler.build(symbol, target, shape=ishapes)
-    m = graph_runtime.create(graph, lib, ctx)
+    m = graph_runtime.create(graph, lib, device)
     m.set_input(**np_inputs)
     m.set_input(**rt_params)
     for _ in range(run_times):
@@ -47,7 +47,7 @@ def helper(symbol, inputs, params, update_func, run_times, target, ctx, dtype="f
 
 
 def test_sgd():
-    for target, ctx in ctx_list():
+    for target, device in device_list():
         data = nnvm.sym.Variable("data")
         weight = nnvm.sym.Variable("weight")
         out = nnvm.sym.elemwise_mul(data, weight ** 2)
@@ -79,12 +79,12 @@ def test_sgd():
             weight_1 = weight_0 - base_lr * (lr_factor ** 2) * (gradient_1 + wd * weight_0)
             return weight_1
 
-        helper(opt_sym, inputs, params, update_func, 2, target, ctx)
+        helper(opt_sym, inputs, params, update_func, 2, target, device)
 
 
 
 def test_adam():
-    for target, ctx in ctx_list():
+    for target, device in device_list():
         data = nnvm.sym.Variable("data")
         weight = nnvm.sym.Variable("weight")
         out = nnvm.sym.elemwise_mul(data, weight ** 2)
@@ -127,7 +127,7 @@ def test_adam():
             weight_1 = weight_0 - lr_1 * (m_1 / (np.sqrt(v_1) + epsilon) + wd * weight_0)
             return weight_1
 
-        helper(opt_sym, inputs, params, update_func, 2, target, ctx)
+        helper(opt_sym, inputs, params, update_func, 2, target, device)
 
 if __name__ == "__main__":
     test_sgd()

@@ -40,9 +40,9 @@ class CodeGenNVPTX : public CodeGenLLVM {
     CodeGenLLVM::AddFunctionInternal(f, true);
     // annotate as kernel function
     module_->getOrInsertNamedMetadata("nvvm.annotations")
-        ->addOperand(llvm::MDNode::get(*ctx_, {
+        ->addOperand(llvm::MDNode::get(*device_, {
               llvm::ValueAsMetadata::get(function_),
-              llvm::MDString::get(*ctx_, "kernel"),
+              llvm::MDString::get(*device_, "kernel"),
               llvm::ValueAsMetadata::get(ConstInt32(1)) }));
   }
 
@@ -172,15 +172,15 @@ class CodeGenNVPTX : public CodeGenLLVM {
 };
 
 inline int DetectCUDAComputeVersion() {
-  TVMContext tvm_ctx;
-  tvm_ctx.device_type = kDLGPU;
-  tvm_ctx.device_id = 0;
+  TVMContext tvm_device;
+  tvm_device.device_type = kDLGPU;
+  tvm_device.device_id = 0;
   TVMRetValue val;
-  tvm::runtime::DeviceAPI::Get(tvm_ctx)->GetAttr(
-      tvm_ctx, tvm::runtime::kExist, &val);
+  tvm::runtime::DeviceAPI::Get(tvm_device)->GetAttr(
+      tvm_device, tvm::runtime::kExist, &val);
   if (val.operator int() == 1) {
-    tvm::runtime::DeviceAPI::Get(tvm_ctx)->GetAttr(
-        tvm_ctx, tvm::runtime::kComputeVersion, &val);
+    tvm::runtime::DeviceAPI::Get(tvm_device)->GetAttr(
+        tvm_device, tvm::runtime::kComputeVersion, &val);
     std::string version = val;
     std::istringstream is(version);
     double ver;
@@ -202,8 +202,8 @@ runtime::Module BuildNVPTX(Array<LoweredFunc> funcs, std::string target) {
          << target.substr(5, target.length() - 5);
   std::unique_ptr<llvm::TargetMachine> tm = GetLLVMTargetMachine(config.str());
   std::unique_ptr<CodeGenNVPTX> cg(new CodeGenNVPTX());
-  std::unique_ptr<llvm::LLVMContext> ctx(new llvm::LLVMContext());
-  cg->Init(funcs[0]->name, tm.get(), ctx.get(), false, false);
+  std::unique_ptr<llvm::LLVMContext> device(new llvm::LLVMContext());
+  cg->Init(funcs[0]->name, tm.get(), device.get(), false, false);
   for (LoweredFunc f :  funcs) {
     cg->AddFunction(f);
   }
@@ -214,7 +214,7 @@ runtime::Module BuildNVPTX(Array<LoweredFunc> funcs, std::string target) {
     std::string path = (*flibdevice_path)(compute_ver);
     if (path.length() != 0) {
       llvm::SMDiagnostic err;
-      std::unique_ptr<llvm::Module> mlib = llvm::parseIRFile(path, err, *ctx);
+      std::unique_ptr<llvm::Module> mlib = llvm::parseIRFile(path, err, *device);
       if (mlib.get() == nullptr) {
         std::string msg = err.getMessage();
         LOG(FATAL) << "Fail to load bitcode file " << path << "\n"

@@ -40,17 +40,17 @@ def verify_batch_matmul(batch, M, N, K):
     a_np, b_np, c_np = get_ref_data()
 
     def check_device(device):
-        ctx = tvm.context(device, 0)
-        if not ctx.exist:
+        device = tvm.context(device, 0)
+        if not device.exist:
             print("Skip because %s is not enabled" % device)
             return
         print("Running on target: %s" % device)
         with tvm.target.create(device):
             out = topi.nn.batch_matmul(x, y)
             s = topi.generic.schedule_batch_matmul([out])
-        a = tvm.nd.array(a_np, ctx)
-        b = tvm.nd.array(b_np, ctx)
-        c = tvm.nd.array(np.zeros(get_const_tuple(out.shape), dtype=dtype), ctx)
+        a = tvm.nd.array(a_np, device)
+        b = tvm.nd.array(b_np, device)
+        c = tvm.nd.array(np.zeros(get_const_tuple(out.shape), dtype=dtype), device)
         f = tvm.build(s, [x, y, out], device, name="dense")
         f(a, b, c)
         tvm.testing.assert_allclose(c.asnumpy(), c_np, rtol=1e-5)

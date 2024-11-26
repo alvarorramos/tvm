@@ -58,7 +58,7 @@ class RPCWrappedFunc {
   // deleter of RPC remote array
   static void RemoteNDArrayDeleter(NDArray::Container* ptr) {
     RemoteSpace* space = static_cast<RemoteSpace*>(ptr->dl_tensor.data);
-    space->sess->CallRemote(RPCCode::kNDArrayFree, ptr->manager_ctx);
+    space->sess->CallRemote(RPCCode::kNDArrayFree, ptr->manager_device);
     delete space;
     delete ptr;
   }
@@ -67,7 +67,7 @@ class RPCWrappedFunc {
                                    DLTensor* tensor,
                                    void* nd_handle) {
     NDArray::Container* data = new NDArray::Container();
-    data->manager_ctx = nd_handle;
+    data->manager_device = nd_handle;
     data->deleter = RemoteNDArrayDeleter;
     RemoteSpace* space = new RemoteSpace();
     space->sess = sess;
@@ -81,10 +81,10 @@ class RPCWrappedFunc {
     data->dl_tensor.ndim = static_cast<int>(data->shape_.size());
     // setup dtype
     data->dl_tensor.dtype = tensor->dtype;
-    // setup ctx, encode as remote session
-    data->dl_tensor.ctx.device_id = tensor->ctx.device_id;
-    data->dl_tensor.ctx.device_type = static_cast<DLDeviceType>(
-        static_cast<int>(tensor->ctx.device_type) +
+    // setup device, encode as remote session
+    data->dl_tensor.device.device_id = tensor->device.device_id;
+    data->dl_tensor.device.device_type = static_cast<DLDeviceType>(
+        static_cast<int>(tensor->device.device_type) +
         kRPCSessMask * (sess->table_index() + 1));
     // check strides.
     CHECK(tensor->strides == nullptr);
@@ -140,13 +140,13 @@ class RPCModuleNode final : public ModuleNode {
   }
 
   PackedFunc GetTimeEvaluator(const std::string& name,
-                              TVMContext ctx,
+                              TVMContext device,
                               int number,
                               int repeat,
                               int min_repeat_ms) {
     RPCFuncHandle handle = GetFuncHandle(name);
     if (handle == nullptr) return PackedFunc();
-    handle = sess_->GetTimeEvaluator(handle, ctx, number, repeat, min_repeat_ms);
+    handle = sess_->GetTimeEvaluator(handle, device, number, repeat, min_repeat_ms);
     return WrapRemote(handle);
   }
 
@@ -215,15 +215,15 @@ TVM_REGISTER_GLOBAL("module._RPCTimeEvaluator")
 .set_body([](TVMArgs args, TVMRetValue* rv) {
     Module m = args[0];
     std::string tkey = m->type_key();
-    TVMContext ctx;
-    ctx.device_type = static_cast<DLDeviceType>(args[2].operator int());
-    ctx.device_id = args[3];
+    TVMContext device;
+    device.device_type = static_cast<DLDeviceType>(args[2].operator int());
+    device.device_id = args[3];
     if (tkey == "rpc") {
       *rv = static_cast<RPCModuleNode*>(m.operator->())
-          ->GetTimeEvaluator(args[1], ctx, args[4], args[5], args[6]);
+          ->GetTimeEvaluator(args[1], device, args[4], args[5], args[6]);
     } else {
       *rv = WrapTimeEvaluator(
-          m.GetFunction(args[1], false), ctx, args[4], args[5], args[6]);
+          m.GetFunction(args[1], false), device, args[4], args[5], args[6]);
     }
   });
 

@@ -17,7 +17,7 @@
 import numpy as np
 import tvm
 from tvm.contrib import graph_runtime
-from tvm.relay.testing.config import ctx_list
+from tvm.relay.testing.config import device_list
 from tvm import relay
 from model_zoo import c2_squeezenet, c2_resnet50, c2_vgg19
 from caffe2.python import workspace, core
@@ -28,7 +28,7 @@ from collections import namedtuple
 def get_tvm_output(model,
                    input_data,
                    target,
-                   ctx,
+                   device,
                    output_shape,
                    output_dtype='float32'):
     """ Generic function to execute and get tvm output"""
@@ -45,7 +45,7 @@ def get_tvm_output(model,
     with relay.build_config(opt_level=3):
         graph, lib, params = relay.build(mod, target, params=params)
 
-    m = graph_runtime.create(graph, lib, ctx)
+    m = graph_runtime.create(graph, lib, device)
 
     # set inputs
     m.set_input(input_names, tvm.nd.array(input_data.astype(input_data.dtype)))
@@ -83,8 +83,8 @@ def verify_caffe2_forward_impl(model, data_shape, out_shape):
     dtype = 'float32'
     data = np.random.uniform(size=data_shape).astype(dtype)
     c2_out = get_caffe2_output(model, data, dtype)
-    for target, ctx in ctx_list():
-        tvm_out = get_tvm_output(model, data, target, ctx, out_shape, dtype)
+    for target, device in device_list():
+        tvm_out = get_tvm_output(model, data, target, device, out_shape, dtype)
         tvm.testing.assert_allclose(c2_out, tvm_out, rtol=1e-5, atol=1e-5)
 
 

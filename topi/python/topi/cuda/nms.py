@@ -741,10 +741,10 @@ def non_max_suppression_gpu(data, valid_count, max_output_size=-1,
         np_valid_count = np.array([4])
         s = topi.generic.schedule_nms(out)
         f = tvm.build(s, [data, valid_count, out], "cuda")
-        ctx = tvm.gpu(0)
-        tvm_data = tvm.nd.array(np_data, ctx)
-        tvm_valid_count = tvm.nd.array(np_valid_count, ctx)
-        tvm_out = tvm.nd.array(np.zeros(dshape, dtype=data.dtype), ctx)
+        device = tvm.gpu(0)
+        tvm_data = tvm.nd.array(np_data, device)
+        tvm_valid_count = tvm.nd.array(np_valid_count, device)
+        tvm_out = tvm.nd.array(np.zeros(dshape, dtype=data.dtype), device)
         f(tvm_data, tvm_valid_count, tvm_out)
     """
     batch_size = data.shape[0]

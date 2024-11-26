@@ -306,13 +306,13 @@ def deploy_local():
     module.load_params(loaded_params)
 
     image = transform_image(download_image())
-    input_data = tvm.nd.array(image.astype("float32"), ctx=tvm.opengl(0))
+    input_data = tvm.nd.array(image.astype("float32"), device=tvm.opengl(0))
 
     module.set_input("data", input_data)
     module.run()
 
     # Retrieve the output.
-    out = module.get_output(0, tvm.nd.empty(out_shape, ctx=tvm.opengl(0)))
+    out = module.get_output(0, tvm.nd.empty(out_shape, device=tvm.opengl(0)))
     top1 = np.argmax(out.asnumpy())
     synset = download_synset()
     print('TVM prediction top-1:', top1, synset[top1])
@@ -395,17 +395,17 @@ def deploy_rpc():
     rlib = fhost
     print("- Remote library loaded!")
 
-    ctx = remote.opengl(0)
+    device = remote.opengl(0)
 
     # Upload the parameters.
     print("Uploading parameters...")
-    rparams = {k: tvm.nd.array(v, ctx) for k, v in params.items()}
+    rparams = {k: tvm.nd.array(v, device) for k, v in params.items()}
     print("- Parameters uploaded!")
 
     # Create the remote runtime module.
     print("Running remote module...")
     from tvm.contrib import graph_runtime
-    module = graph_runtime.create(graph, rlib, ctx)
+    module = graph_runtime.create(graph, rlib, device)
 
     # Set parameter.
     module.set_input(**rparams)
@@ -418,7 +418,7 @@ def deploy_rpc():
     module.run()
     print("- Remote module execution completed!")
 
-    out = module.get_output(0, out=tvm.nd.empty(out_shape, ctx=ctx))
+    out = module.get_output(0, out=tvm.nd.empty(out_shape, device=device))
     # Print first 10 elements of output.
     print(out.asnumpy()[0][0:10])
 

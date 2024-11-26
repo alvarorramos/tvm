@@ -161,7 +161,7 @@ def calibrate(dataset=None):
     ret: Function
         The module pass function.
     """
-    def wrapped_func(mod, ctx): # pylint: disable=unused-argument
+    def wrapped_func(mod, device): # pylint: disable=unused-argument
         """make transform.module pass happy"""
         cfg = quantize.current_qconfig()
 

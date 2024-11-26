@@ -89,7 +89,7 @@ macro_rules! TVMPODValue {
                         DLDataTypeCode_kDLFloat => Float($value.v_float64),
                         TVMTypeCode_kNull => Null,
                         TVMTypeCode_kTVMType => Type($value.v_type),
-                        TVMTypeCode_kTVMContext => Context($value.v_ctx),
+                        TVMTypeCode_kTVMContext => Context($value.v_device),
                         TVMTypeCode_kHandle => Handle($value.v_handle),
                         TVMTypeCode_kArrayHandle => ArrayHandle($value.v_handle as TVMArrayHandle),
                         TVMTypeCode_kObjectHandle => ObjectHandle($value.v_handle),
@@ -110,7 +110,7 @@ macro_rules! TVMPODValue {
                     Float(val) => (TVMValue { v_float64: *val }, DLDataTypeCode_kDLFloat),
                     Null => (TVMValue{ v_int64: 0 },TVMTypeCode_kNull),
                     Type(val) => (TVMValue { v_type: *val }, TVMTypeCode_kTVMType),
-                    Context(val) => (TVMValue { v_ctx: val.clone() }, TVMTypeCode_kTVMContext),
+                    Context(val) => (TVMValue { v_device: val.clone() }, TVMTypeCode_kTVMContext),
                     String(val) => {
                         (
                             TVMValue { v_handle: val.as_ptr() as *mut c_void },

@@ -152,7 +152,7 @@ class Module(ModuleBase):
             kwargs.update({'options': opts})
         fcompile(file_name, files, **kwargs)
 
-    def time_evaluator(self, func_name, ctx, number=10, repeat=1, min_repeat_ms=0):
+    def time_evaluator(self, func_name, device, number=10, repeat=1, min_repeat_ms=0):
         """Get an evaluator that measures time cost of running function.
 
         Parameters
@@ -160,7 +160,7 @@ class Module(ModuleBase):
         func_name: str
             The name of the function in the module.
 
-        ctx: TVMContext
+        device: TVMContext
             The context we should run this function on.
 
         number: int
@@ -195,7 +195,7 @@ class Module(ModuleBase):
         """
         try:
             feval = _RPCTimeEvaluator(
-                self, func_name, ctx.device_type, ctx.device_id, number, repeat, min_repeat_ms)
+                self, func_name, device.device_type, device.device_id, number, repeat, min_repeat_ms)
 
             def evaluator(*args):
                 """Internal wrapped evaluator."""

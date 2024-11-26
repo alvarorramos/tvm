@@ -58,9 +58,9 @@ class EnclaveContext {
   }
 
   static SGXModuleNode* GetModule() {
-    SGXModuleNode* ctx = Context()->mod_;
-    CHECK(ctx != nullptr) << "No current enclave context";
-    return ctx;
+    SGXModuleNode* device = Context()->mod_;
+    CHECK(device != nullptr) << "No current enclave context";
+    return device;
   }
 
  private:
@@ -79,7 +79,7 @@ class SGXModuleNode : public ModuleNode {
  public:
   ~SGXModuleNode() {
     if (eid_) {
-      sgx::EnclaveContext ctx(this);
+      sgx::EnclaveContext device(this);
       sgx_destroy_enclave(eid_);
     }
   }
@@ -101,7 +101,7 @@ class SGXModuleNode : public ModuleNode {
     TVM_SGX_CHECKED_CALL(sgx_create_enclave(
         enclave_file.c_str(), SGX_DEBUG_FLAG, &token, &token_updated, &eid_, NULL));
 
-    sgx::EnclaveContext ctx(this);
+    sgx::EnclaveContext device(this);
     TVMRetValue rv;
     TVM_SGX_CHECKED_CALL(tvm_ecall_init(eid_, &rv));
 
@@ -127,7 +127,7 @@ class SGXModuleNode : public ModuleNode {
     if (exported == exports_.end()) return PackedFunc();
     int func_id = exported->second;
     return PackedFunc([this, func_id](TVMArgs args, TVMRetValue* rv) {
-        sgx::EnclaveContext ctx(this);
+        sgx::EnclaveContext device(this);
         TVMValue ret_value;
         int ret_type_code;
         TVM_SGX_CHECKED_CALL(tvm_ecall_packed_func(eid_, func_id,
@@ -225,15 +225,15 @@ TVM_REGISTER_GLOBAL("__sgx_reserve_space__")
   size_t num_bytes = args[0];
   size_t alignment = args[1];
 
-  static TVMContext ctx = { kDLCPU, 0 };
+  static TVMContext device = { kDLCPU, 0 };
   static thread_local void* buf = nullptr;
   static thread_local size_t buf_size = 0;
   static thread_local size_t buf_align = 0;
 
   if (buf_size >= num_bytes && buf_align >= alignment) *rv = nullptr;
 
-  DeviceAPI::Get(ctx)->FreeDataSpace(ctx, buf);
-  buf = DeviceAPI::Get(ctx)->AllocDataSpace(ctx, num_bytes, alignment, {});
+  DeviceAPI::Get(device)->FreeDataSpace(device, buf);
+  buf = DeviceAPI::Get(device)->AllocDataSpace(device, num_bytes, alignment, {});
   buf_size = num_bytes;
   buf_align = alignment;
 

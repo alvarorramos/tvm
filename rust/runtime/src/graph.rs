@@ -222,7 +222,7 @@ impl<'m, 't> GraphExecutor<'m, 't> {
                 let storage = storages[storage_id].view();
                 Tensor {
                     data: mem::replace(&mut storages[storage_id], storage),
-                    ctx: TVMContext::default(),
+                    device: TVMContext::default(),
                     dtype: dtype,
                     size: shape.iter().product::<i64>() as usize,
                     shape: shape,
@@ -385,7 +385,7 @@ named!(
 
 // Parses a TVMContext
 named!(
-  tvm_ctx<&[u8], TVMContext>,
+  tvm_device<&[u8], TVMContext>,
   do_parse!(
     device_type: le_u32 >>
     device_id: le_i32 >>
@@ -410,7 +410,7 @@ named!(
     do_parse!(
         take!(8)
             >> bits!(tag_bits!(u64, 64, 0))
-            >> ctx: tvm_ctx
+            >> device: tvm_device
             >> ndim: le_u32
             >> dtype: data_type
             >> shape: count!(map!(le_i64, |sz| sz as i64), ndim as usize)
@@ -418,7 +418,7 @@ named!(
             >> data: take!(length)
             >> (Tensor {
                 data: Storage::from(data),
-                ctx: ctx,
+                device: device,
                 dtype: dtype,
                 size: shape.iter().product::<i64>() as usize,
                 shape: shape,

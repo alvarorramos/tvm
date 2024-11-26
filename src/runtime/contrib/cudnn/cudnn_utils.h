@@ -65,7 +65,7 @@ struct ConvEntry {
   cudnnTensorDescriptor_t output_desc;
   cudnnConvolutionFwdAlgo_t fwd_algo;
   // cudnnMathType_t math_type;
-  TVMContext ctx;
+  TVMContext device;
   runtime::DeviceAPI *cuda_api;
   void *workspace{nullptr};
   size_t workspace_size{0};

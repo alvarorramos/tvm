@@ -21,7 +21,7 @@ from tvm.contrib import graph_runtime
 import topi
 import nnvm.symbol as sym
 import nnvm.compiler
-from nnvm.testing.config import ctx_list
+from nnvm.testing.config import device_list
 from nnvm.testing.check_computation import check_function
 
 def verify_transpose(dshape, axes):
@@ -32,9 +32,9 @@ def verify_transpose(dshape, axes):
         y = sym.transpose(x)
     y = y + 1
     dtype = "float32"
-    for target, ctx in ctx_list():
+    for target, device in device_list():
         graph, lib, _ = nnvm.compiler.build(y, target, {"x": dshape})
-        m = graph_runtime.create(graph, lib, ctx)
+        m = graph_runtime.create(graph, lib, device)
         # set input
         data = tvm.nd.array(np.random.uniform(size=dshape).astype(dtype))
         m.run(x=data)
@@ -46,12 +46,12 @@ def verify_reduce_explicit(dshape, data, result, fsym, oshape=None, otype='float
     """ Verify reduce operations by comparign its result with `result` """
     x = sym.Variable("x")
     y = fsym(x + 0, **kwargs)
-    for target, ctx in ctx_list():
+    for target, device in device_list():
         # TODO(yuruofei): remove when cuda reduce schedule is done
         if target == 'cuda' and fsym == sym.mean:
             continue
         graph, lib, _ = nnvm.compiler.build(y, target, {"x": dshape})
-        m = graph_runtime.create(graph, lib, ctx)
+        m = graph_runtime.create(graph, lib, device)
         # set input
         m.run(x=data)
         # oshape set to None means do not test the shape-correctness
@@ -76,10 +76,10 @@ def verify_collapse(dshape, target_shape, fnp):
     t = sym.Variable("t", shape=target_shape)
     y = sym.collapse_sum(x, t)
     dtype = "float32"
-    for target, ctx in ctx_list():
+    for target, device in device_list():
         graph, lib, _ = nnvm.compiler.build(y, target,
                                             {"x": dshape, "t": target_shape})
-        m = graph_runtime.create(graph, lib, ctx)
+        m = graph_runtime.create(graph, lib, device)
         data = np.random.uniform(size=dshape).astype(dtype)
         m.run(x=data)
         out = m.get_output(0, tvm.nd.empty(target_shape))
@@ -159,10 +159,10 @@ def verify_flip(ishape, axis):
     x_np = np.random.uniform(size=ishape).astype(dtype)
     res = np.flip(x_np, axis) + 1
 
-    for target, ctx in ctx_list():
+    for target, device in device_list():
         # set input
         graph, lib, _ = nnvm.compiler.build(y, target, {"x": ishape})
-        m = graph_runtime.create(graph, lib, ctx)
+        m = graph_runtime.create(graph, lib, device)
         m.run(x=x_np)
         out = m.get_output(0, tvm.nd.empty(res.shape))
         tvm.testing.assert_allclose(out.asnumpy(), res, atol=1e-5, rtol=1e-5)
@@ -182,9 +182,9 @@ def verify_reshape(dshape, oshape):
     y = sym.reshape(x, shape=oshape)
     y = y + 1
     dtype = "float32"
-    for target, ctx in ctx_list():
+    for target, device in device_list():
         graph, lib, _ = nnvm.compiler.build(y, target, {"x": dshape})
-        m = graph_runtime.create(graph, lib, ctx)
+        m = graph_runtime.create(graph, lib, device)
         # set input
         data = tvm.nd.array(np.random.uniform(size=dshape).astype(dtype))
         m.run(x=data)
@@ -443,12 +443,12 @@ def test_full():
     shape = (3, 4, 5)
     value = 7
     dtype = "float32"
-    for target, ctx in ctx_list():
+    for target, device in device_list():
         data = sym.Variable("data", dtype=dtype)
         # full_like
         s = sym.full_like(data=data, fill_value=value, name="s")
         graph, lib, _ = nnvm.compiler.build(s, target, {"data": shape})
-        m = graph_runtime.create(graph, lib, ctx)
+        m = graph_runtime.create(graph, lib, device)
         m.run(data=np.random.uniform(size=shape).astype(dtype))
         out = m.get_output(0, tvm.nd.empty(shape, dtype=dtype))
         tvm.testing.assert_allclose(
@@ -458,7 +458,7 @@ def test_full():
         # ones_like
         s = sym.ones_like(data=data, fill_value=value, name="s")
         graph, lib, _ = nnvm.compiler.build(s, target, {"data": shape})
-        m = graph_runtime.create(graph, lib, ctx)
+        m = graph_runtime.create(graph, lib, device)
         m.run(data=np.random.uniform(size=shape).astype(dtype))
         out = m.get_output(0, tvm.nd.empty(shape, dtype=dtype))
         tvm.testing.assert_allclose(
@@ -468,7 +468,7 @@ def test_full():
         # zeros_like
         s = sym.zeros_like(data=data, fill_value=value, name="s")
         graph, lib, _ = nnvm.compiler.build(s, target, {"data": shape})
-        m = graph_runtime.create(graph, lib, ctx)
+        m = graph_runtime.create(graph, lib, device)
         m.run(data=np.random.uniform(size=shape).astype(dtype))
         out = m.get_output(0, tvm.nd.empty(shape, dtype=dtype))
         tvm.testing.assert_allclose(
@@ -478,7 +478,7 @@ def test_full():
         # full
         s = sym.full(shape=shape, dtype=dtype, fill_value=value, name="s")
         graph, lib, _ = nnvm.compiler.build(s, target)
-        m = graph_runtime.create(graph, lib, ctx)
+        m = graph_runtime.create(graph, lib, device)
         m.run()
         out = m.get_output(0, tvm.nd.empty(shape, dtype=dtype))
         tvm.testing.assert_allclose(
@@ -488,7 +488,7 @@ def test_full():
         # ones
         s = sym.ones(shape=shape, dtype=dtype, name="s")
         graph, lib, _ = nnvm.compiler.build(s, target)
-        m = graph_runtime.create(graph, lib, ctx)
+        m = graph_runtime.create(graph, lib, device)
         m.run()
         out = m.get_output(0, tvm.nd.empty(shape, dtype=dtype))
         tvm.testing.assert_allclose(
@@ -498,7 +498,7 @@ def test_full():
         # zeros
         s = sym.zeros(shape=shape, dtype=dtype, name="s")
         graph, lib, _ = nnvm.compiler.build(s, target)
-        m = graph_runtime.create(graph, lib, ctx)
+        m = graph_runtime.create(graph, lib, device)
         m.run()
         out = m.get_output(0, tvm.nd.empty(shape, dtype=dtype))
         tvm.testing.assert_allclose(
@@ -543,9 +543,9 @@ def verify_multibox_prior(dshape, sizes=(1,), ratios=(1,), steps=(-1, -1),
     if clip:
         np_out = np.clip(np_out, 0, 1)
 
-    for target, ctx in ctx_list():
+    for target, device in device_list():
         graph, lib, _ = nnvm.compiler.build(out, target, {"data": dshape})
-        m = graph_runtime.create(graph, lib, ctx)
+        m = graph_runtime.create(graph, lib, device)
         m.set_input("data", np.random.uniform(size=dshape).astype(dtype))
         m.run()
         tvm_out = m.get_output(0, tvm.nd.empty(np_out.shape, dtype))
@@ -577,11 +577,11 @@ def test_multibox_transform_loc():
                                  [0, 0.30000001, 0, 0, 0.22903419, 0.20435292]]])
 
     dtype = "float32"
-    for target, ctx in ctx_list():
+    for target, device in device_list():
         graph, lib, _ = nnvm.compiler.build(out, target, {"cls_prob": (batch_size, num_anchors, num_classes),
                                                           "loc_preds": (batch_size, num_anchors * 4),
                                                           "anchors": (1, num_anchors, 4)})
-        m = graph_runtime.create(graph, lib, ctx)
+        m = graph_runtime.create(graph, lib, device)
         m.set_input(**{"cls_prob": np_cls_prob.astype(dtype), "loc_preds": np_loc_preds.astype(dtype), "anchors": np_anchors.astype(dtype)})
         m.run()
         tvm_out = m.get_output(0, tvm.nd.empty(expected_np_out.shape, dtype))
@@ -605,10 +605,10 @@ def test_non_max_suppression():
                            [-1, -1, -1, -1, -1, -1], [-1, -1, -1, -1, -1, -1],
                            [-1, -1, -1, -1, -1, -1]]])
 
-    for target, ctx in ctx_list():
+    for target, device in device_list():
         graph, lib, _ = nnvm.compiler.build(out, target, {"data": dshape, "valid_count": (dshape[0],)},
                                             dtype={"data": "float32", "valid_count": "int32"})
-        m = graph_runtime.create(graph, lib, ctx)
+        m = graph_runtime.create(graph, lib, device)
         m.set_input(**{"data": np_data, "valid_count": np_valid_count})
         m.run()
         tvm_out = m.get_output(0, tvm.nd.empty(np_result.shape, "float32"))
@@ -640,10 +640,10 @@ def verify_slice_like(np_data, np_shape_like, axis=[]):
     data1 = sym.Variable("data1")
     data2 = sym.Variable("data2")
     net = sym.slice_like(data=data1, slice_like=data2, axis=axis)
-    for target, ctx in ctx_list():
+    for target, device in device_list():
         graph, lib, _ = nnvm.compiler.build(net, target, {"data1": np_data.shape,
                                                           "data2": np_shape_like.shape})
-        m = graph_runtime.create(graph, lib, ctx)
+        m = graph_runtime.create(graph, lib, device)
         m.set_input(**{"data1": np_data, "data2": np_shape_like})
         m.run()
         out = m.get_output(0, tvm.nd.empty(np_result.shape, dtype))
@@ -679,10 +679,10 @@ def verify_where(condition, x, y):
     x_var = sym.Variable("x")
     y_var = sym.Variable("y")
     net = sym.where(cond_var, x_var, y_var)
-    for target, ctx in ctx_list():
+    for target, device in device_list():
         graph, lib, _ = nnvm.compiler.build(net, target, {"condition": condition.shape,
                                                           "x": x.shape, "y": y.shape})
-        m = graph_runtime.create(graph, lib, ctx)
+        m = graph_runtime.create(graph, lib, device)
         m.set_input(**{"condition": condition, "x": x, "y": y})
         m.run()
         out = m.get_output(0, tvm.nd.empty(x.shape, dtype))
@@ -710,10 +710,10 @@ def test_argmax():
     y = sym.argmax(x, axis=1)
     target_str = "llvm"
     target = tvm.target.create(target_str)
-    ctx = tvm.context(target_str, 0)
+    device = tvm.context(target_str, 0)
     with nnvm.compiler.build_config(opt_level=2):
         graph, lib, _ = nnvm.compiler.build(y, target, {"x": dshape})
-    m = graph_runtime.create(graph, lib, ctx)
+    m = graph_runtime.create(graph, lib, device)
     data = np.random.uniform(size=dshape).astype(dtype)
     m.run(x=data)
     np_reshape = np.reshape(data, (1, 320, 640, 2))

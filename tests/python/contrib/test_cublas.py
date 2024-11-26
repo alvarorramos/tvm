@@ -34,11 +34,11 @@ def test_matmul_add():
         if not tvm.get_global_func("tvm.contrib.cublas.matmul", True):
             print("skip because extern function is not available")
             return
-        ctx = tvm.gpu(0)
+        device = tvm.gpu(0)
         f = tvm.build(s, [A, B, C], target)
-        a = tvm.nd.array(np.random.uniform(size=(n, l)).astype(A.dtype), ctx)
-        b = tvm.nd.array(np.random.uniform(size=(l, m)).astype(B.dtype), ctx)
-        c = tvm.nd.array(np.zeros((n, m), dtype=C.dtype), ctx)
+        a = tvm.nd.array(np.random.uniform(size=(n, l)).astype(A.dtype), device)
+        b = tvm.nd.array(np.random.uniform(size=(l, m)).astype(B.dtype), device)
+        c = tvm.nd.array(np.zeros((n, m), dtype=C.dtype), device)
         f(a, b, c)
         tvm.testing.assert_allclose(
             c.asnumpy(), np.dot(a.asnumpy(), b.asnumpy()), rtol=1e-5)
@@ -61,11 +61,11 @@ def test_batch_matmul():
         if not tvm.get_global_func("tvm.contrib.cublas.matmul", True):
             print("skip because extern function is not available")
             return
-        ctx = tvm.gpu(0)
+        device = tvm.gpu(0)
         f = tvm.build(s, [A, B, C], target)
-        a = tvm.nd.array(np.random.uniform(size=(j, n, l)).astype(A.dtype), ctx)
-        b = tvm.nd.array(np.random.uniform(size=(j, l, m)).astype(B.dtype), ctx)
-        c = tvm.nd.array(np.zeros((j, n, m), dtype=C.dtype), ctx)
+        a = tvm.nd.array(np.random.uniform(size=(j, n, l)).astype(A.dtype), device)
+        b = tvm.nd.array(np.random.uniform(size=(j, l, m)).astype(B.dtype), device)
+        c = tvm.nd.array(np.zeros((j, n, m), dtype=C.dtype), device)
         f(a, b, c)
         tvm.testing.assert_allclose(
             c.asnumpy(), np.matmul(a.asnumpy(), b.asnumpy()), rtol=1e-5)

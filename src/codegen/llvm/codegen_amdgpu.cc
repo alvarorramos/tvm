@@ -39,16 +39,16 @@ namespace {
 
 // calls the device api to get the max threads per block
 static inline int DetectROCMmaxThreadsPerBlock() {
-  TVMContext tvm_ctx;
-  tvm_ctx.device_type = kDLROCM;
-  tvm_ctx.device_id = 0;
-  tvm::runtime::DeviceAPI* api = tvm::runtime::DeviceAPI::Get(tvm_ctx, true);
+  TVMContext tvm_device;
+  tvm_device.device_type = kDLROCM;
+  tvm_device.device_id = 0;
+  tvm::runtime::DeviceAPI* api = tvm::runtime::DeviceAPI::Get(tvm_device, true);
   if (api != nullptr) {
     TVMRetValue val;
-    api->GetAttr(tvm_ctx, tvm::runtime::kExist, &val);
+    api->GetAttr(tvm_device, tvm::runtime::kExist, &val);
     if (val.operator int() == 1) {
-      tvm::runtime::DeviceAPI::Get(tvm_ctx)->
-        GetAttr(tvm_ctx, tvm::runtime::kMaxThreadsPerBlock, &val);
+      tvm::runtime::DeviceAPI::Get(tvm_device)->
+        GetAttr(tvm_device, tvm::runtime::kMaxThreadsPerBlock, &val);
       return val.operator int();
     }
   }
@@ -191,15 +191,15 @@ inline int DetectROCMComputeVersion(const std::string& target) {
     std::stringstream is(target.substr(pos + 4));
     if (is >> value) return value;
   }
-  TVMContext tvm_ctx;
-  tvm_ctx.device_type = kDLROCM;
-  tvm_ctx.device_id = 0;
-  tvm::runtime::DeviceAPI* api = tvm::runtime::DeviceAPI::Get(tvm_ctx, true);
+  TVMContext tvm_device;
+  tvm_device.device_type = kDLROCM;
+  tvm_device.device_id = 0;
+  tvm::runtime::DeviceAPI* api = tvm::runtime::DeviceAPI::Get(tvm_device, true);
   if (api != nullptr) {
     TVMRetValue val;
-    api->GetAttr(tvm_ctx, tvm::runtime::kExist, &val);
+    api->GetAttr(tvm_device, tvm::runtime::kExist, &val);
     if (val.operator int() == 1) {
-      tvm::runtime::DeviceAPI::Get(tvm_ctx)->GetAttr(tvm_ctx, tvm::runtime::kGcnArch, &val);
+      tvm::runtime::DeviceAPI::Get(tvm_device)->GetAttr(tvm_device, tvm::runtime::kGcnArch, &val);
       return val.operator int();
     }
   }
@@ -223,8 +223,8 @@ runtime::Module BuildAMDGPU(Array<LoweredFunc> funcs, std::string target) {
          << target.substr(4, target.length() - 4);
   std::unique_ptr<llvm::TargetMachine> tm = GetLLVMTargetMachine(config.str());
   std::unique_ptr<CodeGenAMDGPU> cg(new CodeGenAMDGPU());
-  std::unique_ptr<llvm::LLVMContext> ctx(new llvm::LLVMContext());
-  cg->Init(funcs[0]->name, tm.get(), ctx.get(), false, false);
+  std::unique_ptr<llvm::LLVMContext> device(new llvm::LLVMContext());
+  cg->Init(funcs[0]->name, tm.get(), device.get(), false, false);
   for (LoweredFunc f :  funcs) {
     cg->AddFunction(f);
   }
@@ -236,7 +236,7 @@ runtime::Module BuildAMDGPU(Array<LoweredFunc> funcs, std::string target) {
   for (auto &bitcode : bitcode_files) {
     std::string path = bitcode.as<StringImm>()->value;
     llvm::SMDiagnostic err;
-    std::unique_ptr<llvm::Module> mlib = llvm::parseIRFile(path, err, *ctx);
+    std::unique_ptr<llvm::Module> mlib = llvm::parseIRFile(path, err, *device);
     if (mlib.get() == nullptr) {
       std::string msg = err.getMessage();
       LOG(FATAL) << "Fail to load bitcode file " << path << "\n"

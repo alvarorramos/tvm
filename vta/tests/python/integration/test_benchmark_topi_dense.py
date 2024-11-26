@@ -120,13 +120,13 @@ def run_gemm(env, remote, target,
     mod.save(temp.relpath("dense.o"))
     remote.upload(temp.relpath("dense.o"))
     f = remote.load_module("dense.o")
-    ctx = remote.context(str(target))
+    device = remote.context(str(target))
 
     res_np = np.zeros(topi.util.get_const_tuple(res.shape)).astype(res.dtype)
-    data_arr = tvm.nd.array(data_np, ctx)
-    kernel_arr = tvm.nd.array(kernel_np, ctx)
-    res_arr = tvm.nd.array(res_np, ctx)
-    time_f = f.time_evaluator("dense", ctx, number=samples)
+    data_arr = tvm.nd.array(data_np, device)
+    kernel_arr = tvm.nd.array(kernel_np, device)
+    res_arr = tvm.nd.array(res_np, device)
+    time_f = f.time_evaluator("dense", device, number=samples)
 
     # In vta sim mode, collect simulator runtime statistics
     stats = {}

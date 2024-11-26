@@ -114,7 +114,7 @@ macro_rules! impl_pod_tvm_value {
 impl_pod_tvm_value!(v_int64, i64, i8, u8, i16, u16, i32, u32, i64, u64, isize, usize);
 impl_pod_tvm_value!(v_float64, f64, f32, f64);
 impl_pod_tvm_value!(v_type, TVMType);
-impl_pod_tvm_value!(v_ctx, TVMContext);
+impl_pod_tvm_value!(v_device, TVMContext);
 
 macro_rules! impl_tvm_context {
     ( $( $dev_type:ident : [ $( $dev_name:ident ),+ ] ),+ ) => {

@@ -180,11 +180,11 @@ func = tvm.build(s, [A, B, C], target="llvm", name="gemv")
 
 from topi.util import get_const_tuple
 dtype = A.dtype
-ctx = tvm.context("cpu", 0)
+device = tvm.context("cpu", 0)
 a = np.random.uniform(size=get_const_tuple(A.shape)).astype(dtype)
 b = np.random.uniform(size=get_const_tuple(B.shape)).astype(dtype)
-c = tvm.nd.array(np.zeros(get_const_tuple(C.shape), dtype=dtype), ctx)
-func(tvm.nd.array(a, ctx), tvm.nd.array(b, ctx), c)
+c = tvm.nd.array(np.zeros(get_const_tuple(C.shape), dtype=dtype), device)
+func(tvm.nd.array(a, device), tvm.nd.array(b, device), c)
 tvm.testing.assert_allclose(c.asnumpy(), np.dot(a, b.T), rtol=1e-3)
 
 ######################################################################
@@ -289,8 +289,8 @@ s[C].pragma(yo, "import_llvm", gemv_impl())
 func = tvm.build(s, [A, B, C], target="llvm", name="gemv")
 a = np.random.uniform(size=get_const_tuple(A.shape)).astype(dtype)
 b = np.random.uniform(size=get_const_tuple(B.shape)).astype(dtype)
-c = tvm.nd.array(np.zeros(get_const_tuple(C.shape), dtype=dtype), ctx)
-func(tvm.nd.array(a, ctx), tvm.nd.array(b, ctx), c)
+c = tvm.nd.array(np.zeros(get_const_tuple(C.shape), dtype=dtype), device)
+func(tvm.nd.array(a, device), tvm.nd.array(b, device), c)
 tvm.testing.assert_allclose(c.asnumpy(), np.dot(a, b.T), rtol=1e-3)
 
 ######################################################################

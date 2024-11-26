@@ -105,9 +105,9 @@ with nnvm.compiler.build_config(opt_level=2):
 # Now we can try deploying the NNVM compiled model on cpu target.
 
 # Set the cpu context
-ctx = tvm.cpu(0)
+device = tvm.cpu(0)
 # Create graph runtime
-m = graph_runtime.create(graph, lib, ctx)
+m = graph_runtime.create(graph, lib, device)
 # Set the params to runtime
 m.set_input(**params)
 

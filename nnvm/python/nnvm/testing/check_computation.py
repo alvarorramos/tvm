@@ -30,7 +30,7 @@ import nnvm
 from nnvm.compiler import graph_util
 from nnvm.compiler.graph_attr import TCODE_TO_DTYPE, DTYPE_TO_TCODE
 from nnvm.to_relay import to_relay
-from .config import ctx_list
+from .config import device_list
 
 def infer_shapes_dtypes(graph, shape=None, dtype=None, fallback_dtype=None):
     """Runs dtype and shape inference passes on a graph and returns the resulting graph
@@ -164,7 +164,7 @@ def infer_shapes_dtypes(graph, shape=None, dtype=None, fallback_dtype=None):
 
     return graph, input_shapes, input_dtypes, output_shapes, output_dtypes
 
-def graph_to_function(graph, target, ctx, shape=None, dtype=None):
+def graph_to_function(graph, target, device, shape=None, dtype=None):
     """Convert a graph to a function taking a keyword args and returning a list of results
     (both args and results are numpy arrays).
 
@@ -181,7 +181,7 @@ def graph_to_function(graph, target, ctx, shape=None, dtype=None):
     target : str or :any:`tvm.target.Target`
         The build target
 
-    ctx : TVMContext
+    device : TVMContext
         The context to deploy the module.
 
     shape : Dict[str, Tuple[int]], optional
@@ -209,7 +209,7 @@ def graph_to_function(graph, target, ctx, shape=None, dtype=None):
         raise ValueError("Input variables with no shape: {}".format(shape))
 
     compute_graph, lib, params = nnvm.compiler.build(graph, target, shape=shape, dtype=dtype)
-    module = graph_runtime.create(compute_graph, lib, ctx)
+    module = graph_runtime.create(compute_graph, lib, device)
 
     if params:
         module.set_inputs(**params)
@@ -284,7 +284,7 @@ def check_function(symbol, forward=None, backward=None, grad_input_vars=None,
         Skip compiling and running anything for these targets.
 
     only_targets : Set[str], optional
-        Test only for those targets from `ctx_list()` that are also in this set.
+        Test only for those targets from `device_list()` that are also in this set.
 
     additional_params : dict, optional
         A dict of additional parameters which will be passed to forward and backward.
@@ -435,17 +435,17 @@ def check_function(symbol, forward=None, backward=None, grad_input_vars=None,
     nothing_was_done = True
 
     # Compute and compare the results
-    for target, ctx in ctx_list():
+    for target, device in device_list():
         if exclude_targets is not None:
             if target in exclude_targets or str(target) in exclude_targets:
-                logging.info("Skipping target = %s, ctx = %s", target, ctx)
+                logging.info("Skipping target = %s, device = %s", target, device)
                 continue
         if only_targets is not None:
             if target not in only_targets and str(target) not in only_targets:
-                logging.info("Skipping target = %s, ctx = %s", target, ctx)
+                logging.info("Skipping target = %s, device = %s", target, device)
                 continue
 
-        logging.info("Checking computation on target = %s, ctx = %s", target, ctx)
+        logging.info("Checking computation on target = %s, device = %s", target, device)
 
         debug_stage = None
 
@@ -453,7 +453,7 @@ def check_function(symbol, forward=None, backward=None, grad_input_vars=None,
             nnvm_res = None
 
             debug_stage = "compiling"
-            main_function = graph_to_function(main_graph, target, ctx)
+            main_function = graph_to_function(main_graph, target, device)
 
             # nnvm_res contains the output and gradients (if they are needed)
             debug_stage = "running"
@@ -465,7 +465,7 @@ def check_function(symbol, forward=None, backward=None, grad_input_vars=None,
                 func, inputs = to_relay(main_graph, shape, dtype, params=inputs)
                 with relay.build_config(opt_level=3):
                     graph, lib, params = relay.build(func, target=target)
-                m = graph_runtime.create(graph, lib, ctx)
+                m = graph_runtime.create(graph, lib, device)
                 m.set_input(**inputs)
                 m.set_input(**params)
                 m.run()
@@ -539,7 +539,7 @@ def check_function(symbol, forward=None, backward=None, grad_input_vars=None,
                 debug_stage = "checking gradients numerically"
                 logging.debug(debug_stage)
 
-                forward_function = graph_to_function(forward_graph, target, ctx)
+                forward_function = graph_to_function(forward_graph, target, device)
 
                 # Since the result may be non-scalar, we have to put another operation on the top,
                 # so we just multiple by the randomly generated head_grads and then sum everything.
@@ -570,4 +570,4 @@ def check_function(symbol, forward=None, backward=None, grad_input_vars=None,
             raise
 
     if nothing_was_done:
-        logging.warning("Nothing was done in check_function. Check ctx_list().")
+        logging.warning("Nothing was done in check_function. Check device_list().")

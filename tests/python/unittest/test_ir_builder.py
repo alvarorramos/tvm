@@ -95,11 +95,11 @@ def test_cpu():
             return
         # build and invoke the kernel.
         fadd = tvm.build(s, [A, B, C], target)
-        ctx = tvm.context(target, 0)
+        device = tvm.context(target, 0)
         # launch the kernel.
-        a = tvm.nd.array(np.random.uniform(size=n).astype(A.dtype), ctx)
-        b = tvm.nd.array(np.random.uniform(size=n).astype(B.dtype), ctx)
-        c = tvm.nd.array(np.zeros(n, dtype=C.dtype), ctx)
+        a = tvm.nd.array(np.random.uniform(size=n).astype(A.dtype), device)
+        b = tvm.nd.array(np.random.uniform(size=n).astype(B.dtype), device)
+        c = tvm.nd.array(np.zeros(n, dtype=C.dtype), device)
         fadd(a, b, c)
         tvm.testing.assert_allclose(c.asnumpy(), a.asnumpy() + b.asnumpy())
     check_target("llvm")
@@ -138,11 +138,11 @@ def test_gpu():
             return
         # build and invoke the kernel.
         fadd = tvm.build(s, [A, B, C], target)
-        ctx = tvm.context(target, 0)
+        device = tvm.context(target, 0)
         # launch the kernel.
-        a = tvm.nd.array(np.random.uniform(size=n).astype(A.dtype), ctx)
-        b = tvm.nd.array(np.random.uniform(size=n).astype(B.dtype), ctx)
-        c = tvm.nd.array(np.zeros(n, dtype=C.dtype), ctx)
+        a = tvm.nd.array(np.random.uniform(size=n).astype(A.dtype), device)
+        b = tvm.nd.array(np.random.uniform(size=n).astype(B.dtype), device)
+        c = tvm.nd.array(np.zeros(n, dtype=C.dtype), device)
         fadd(a, b, c)
         tvm.testing.assert_allclose(c.asnumpy(), a.asnumpy() + b.asnumpy())
     check_target("opencl")

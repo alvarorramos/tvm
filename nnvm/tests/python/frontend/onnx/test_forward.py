@@ -21,12 +21,12 @@ import topi
 import topi.testing
 import tvm
 from tvm.contrib import graph_runtime
-from nnvm.testing.config import ctx_list
+from nnvm.testing.config import device_list
 import onnx
 from model_zoo import super_resolution, squeezenet1_1, lenet, resnet18_1_0
 from onnx import helper, TensorProto
 
-def get_tvm_output(graph_def, input_data, target, ctx, output_shape=None, output_dtype='float32'):
+def get_tvm_output(graph_def, input_data, target, device, output_shape=None, output_dtype='float32'):
     """ Generic function to execute and get tvm output"""
 
     sym, params = nnvm.frontend.from_onnx(graph_def)
@@ -47,9 +47,9 @@ def get_tvm_output(graph_def, input_data, target, ctx, output_shape=None, output
     graph, lib, params = nnvm.compiler.build(sym, target, shape_dict,
                                              dtype=dtype_dict, params=params)
 
-    ctx = tvm.cpu(0)
+    device = tvm.cpu(0)
     from tvm.contrib import graph_runtime
-    m = graph_runtime.create(graph, lib, ctx)
+    m = graph_runtime.create(graph, lib, device)
     # set inputs
     if isinstance(input_data, list):
         for i, e in enumerate(input_names):
@@ -84,8 +84,8 @@ def verify_onnx_forward_impl(graph_file, data_shape, out_shape):
     x = np.random.uniform(size=data_shape)
     model = onnx.load_model(graph_file)
     c2_out = get_caffe2_output(model, x, dtype)
-    for target, ctx in ctx_list():
-        tvm_out = get_tvm_output(model, x, target, ctx, out_shape, dtype)
+    for target, device in device_list():
+        tvm_out = get_tvm_output(model, x, target, device, out_shape, dtype)
         tvm.testing.assert_allclose(c2_out, tvm_out, rtol=1e-5, atol=1e-5)
 
 def verify_super_resolution_example():
@@ -124,9 +124,9 @@ def test_reshape():
 
     model = helper.make_model(graph, producer_name='reshape_test')
 
-    for target, ctx in ctx_list():
+    for target, device in device_list():
         x = np.random.uniform(size=in_shape).astype('int32')
-        tvm_out = get_tvm_output(model, x, target, ctx, ref_shape, 'float32')
+        tvm_out = get_tvm_output(model, x, target, device, ref_shape, 'float32')
 
     tvm.testing.assert_allclose(ref_shape, tvm_out.shape)
 
@@ -154,9 +154,9 @@ def test_reshape_like():
 
     model = helper.make_model(graph, producer_name='reshape_like_test')
 
-    for target, ctx in ctx_list():
+    for target, device in device_list():
         x = np.random.uniform(size=in_shape).astype('float32')
-        tvm_out = get_tvm_output(model, x, target, ctx, ref_shape, 'float32')
+        tvm_out = get_tvm_output(model, x, target, device, ref_shape, 'float32')
 
     tvm.testing.assert_allclose(ref_shape, tvm_out.shape)
 
@@ -182,8 +182,8 @@ def _test_power_iteration(x_shape, y_shape):
 
     model = helper.make_model(graph, producer_name='power_test')
 
-    for target, ctx in ctx_list():
-        tvm_out = get_tvm_output(model, [x, y], target, ctx, np_res.shape)
+    for target, device in device_list():
+        tvm_out = get_tvm_output(model, [x, y], target, device, np_res.shape)
         tvm.testing.assert_allclose(np_res, tvm_out, rtol=1e-5, atol=1e-5)
 
 def test_power():
@@ -205,9 +205,9 @@ def test_squeeze():
 
     model = helper.make_model(graph, producer_name='squeeze_test')
 
-    for target, ctx in ctx_list():
+    for target, device in device_list():
         x = np.random.uniform(size=in_shape).astype('float32')
-        tvm_out = get_tvm_output(model, x, target, ctx, out_shape, 'float32')
+        tvm_out = get_tvm_output(model, x, target, device, out_shape, 'float32')
 
     tvm.testing.assert_allclose(out_shape, tvm_out.shape)
 
@@ -226,9 +226,9 @@ def test_unsqueeze():
 
     model = helper.make_model(graph, producer_name='squeeze_test')
 
-    for target, ctx in ctx_list():
+    for target, device in device_list():
         x = np.random.uniform(size=in_shape).astype('float32')
-        tvm_out = get_tvm_output(model, x, target, ctx, out_shape, 'float32')
+        tvm_out = get_tvm_output(model, x, target, device, out_shape, 'float32')
 
     tvm.testing.assert_allclose(out_shape, tvm_out.shape)
 
@@ -249,8 +249,8 @@ def verify_gather(in_shape, indices, axis, dtype):
                                             TensorProto.FLOAT, list(out_np.shape))])
     model = helper.make_model(graph, producer_name='gather_test')
 
-    for target, ctx in ctx_list():
-        tvm_out = get_tvm_output(model, [x, indices], target, ctx, out_np.shape)
+    for target, device in device_list():
+        tvm_out = get_tvm_output(model, [x, indices], target, device, out_np.shape)
         tvm.testing.assert_allclose(out_np, tvm_out)
 
 def test_gather():
@@ -276,8 +276,8 @@ def _test_slice_iteration(indata, outdata, starts, ends, axes=None):
 
     model = helper.make_model(graph, producer_name='slice_test')
 
-    for target, ctx in ctx_list():
-        tvm_out = get_tvm_output(model, indata, target, ctx, outdata.shape, 'float32')
+    for target, device in device_list():
+        tvm_out = get_tvm_output(model, indata, target, device, outdata.shape, 'float32')
 
     tvm.testing.assert_allclose(outdata, tvm_out)
 
@@ -303,8 +303,8 @@ def _test_onnx_op_elementwise(inshape, outfunc, npargs, dtype, opname, kwargs, r
 
     model = helper.make_model(graph, producer_name=opname+'_test')
 
-    for target, ctx in ctx_list():
-        tvm_out = get_tvm_output(model, indata, target, ctx, outdata.shape, dtype)
+    for target, device in device_list():
+        tvm_out = get_tvm_output(model, indata, target, device, outdata.shape, dtype)
 
     tvm.testing.assert_allclose(outdata, tvm_out, rtol=rtol, atol=atol)
 
@@ -343,8 +343,8 @@ def test_matmul():
 
     model = helper.make_model(graph, producer_name='matmul_test')
 
-    for target, ctx in ctx_list():
-        tvm_out = get_tvm_output(model, [a_array, b_array], target, ctx, out_np.shape)
+    for target, device in device_list():
+        tvm_out = get_tvm_output(model, [a_array, b_array], target, device, out_np.shape)
         tvm.testing.assert_allclose(out_np, tvm_out, rtol=1e-5, atol=1e-5)
 
 def verify_lrn(shape, nsize, dtype, alpha=None, beta=None, bias=None):
@@ -376,7 +376,7 @@ def verify_lrn(shape, nsize, dtype, alpha=None, beta=None, bias=None):
         py_out = in_array / ((bias + (alpha / nsize) * square_sum) ** beta)
         return py_out
 
-    for target, ctx in ctx_list():
+    for target, device in device_list():
         new_sym, params = nnvm.frontend.from_onnx(model)
 
         input_name = model.graph.input[0].name
@@ -384,7 +384,7 @@ def verify_lrn(shape, nsize, dtype, alpha=None, beta=None, bias=None):
         dtype_dict = {input_name: dtype}
         graph, lib, params = nnvm.compiler.build(new_sym, target,
                                                  shape_dict, dtype_dict, params=params)
-        m = graph_runtime.create(graph, lib, ctx)
+        m = graph_runtime.create(graph, lib, device)
         # set inputs
         m.set_input(input_name, tvm.nd.array(in_array.astype(dtype)))
         m.set_input(**params)
@@ -414,8 +414,8 @@ def _test_upsample_nearest():
 
     model = helper.make_model(graph, producer_name='upsample_nearest_test')
 
-    for target, ctx in ctx_list():
-        tvm_out = get_tvm_output(model, in_array, target, ctx, out_shape, 'float32')
+    for target, device in device_list():
+        tvm_out = get_tvm_output(model, in_array, target, device, out_shape, 'float32')
         tvm.testing.assert_allclose(out_array, tvm_out)
 
 def _test_upsample_bilinear():
@@ -434,8 +434,8 @@ def _test_upsample_bilinear():
 
     model = helper.make_model(graph, producer_name='upsample_bilinear_test')
 
-    for target, ctx in ctx_list():
-        tvm_out = get_tvm_output(model, in_array, target, ctx, out_shape, 'float32')
+    for target, device in device_list():
+        tvm_out = get_tvm_output(model, in_array, target, device, out_shape, 'float32')
         tvm.testing.assert_allclose(out_array, tvm_out, rtol=1e-5, atol=1e-5)
 
 def _test_upsample_bilinear_opset9():
@@ -465,8 +465,8 @@ def _test_upsample_bilinear_opset9():
     inputs = []
     inputs.append(in_array)
 
-    for target, ctx in ctx_list():
-        tvm_out = get_tvm_output(model, inputs, target, ctx, out_shape, 'float32')
+    for target, device in device_list():
+        tvm_out = get_tvm_output(model, inputs, target, device, out_shape, 'float32')
         tvm.testing.assert_allclose(out_array, tvm_out, rtol=1e-5, atol=1e-5)
 
 def test_upsample():
@@ -493,8 +493,8 @@ def _test_softmax(inshape, axis):
 
     model = helper.make_model(graph, producer_name=opname+'_test')
 
-    for target, ctx in ctx_list():
-        tvm_out = get_tvm_output(model, indata, target, ctx, outshape, 'float32')
+    for target, device in device_list():
+        tvm_out = get_tvm_output(model, indata, target, device, outshape, 'float32')
         tvm.testing.assert_allclose(outdata, tvm_out, rtol=1e-5, atol=1e-5)
 
 def test_softmax():
@@ -525,8 +525,8 @@ def verify_min(input_dim):
 
     model = helper.make_model(graph, producer_name='Min_test')
 
-    for target, ctx in ctx_list():
-        tvm_out = get_tvm_output(model, [a_np1, a_np2, a_np3], target, ctx, b_np.shape)
+    for target, device in device_list():
+        tvm_out = get_tvm_output(model, [a_np1, a_np2, a_np3], target, device, b_np.shape)
         tvm.testing.assert_allclose(b_np, tvm_out, rtol=1e-5, atol=1e-5)
 
 def test_forward_min():
@@ -557,8 +557,8 @@ def verify_max(input_dim):
 
     model = helper.make_model(graph, producer_name='Max_test')
 
-    for target, ctx in ctx_list():
-        tvm_out = get_tvm_output(model, [a_np1, a_np2, a_np3], target, ctx, b_np.shape)
+    for target, device in device_list():
+        tvm_out = get_tvm_output(model, [a_np1, a_np2, a_np3], target, device, b_np.shape)
         tvm.testing.assert_allclose(b_np, tvm_out, rtol=1e-5, atol=1e-5)
 
 def test_forward_max():
@@ -589,8 +589,8 @@ def verify_mean(input_dim):
 
     model = helper.make_model(graph, producer_name='Mean_test')
 
-    for target, ctx in ctx_list():
-        tvm_out = get_tvm_output(model, [a_np1, a_np2, a_np3], target, ctx, b_np.shape)
+    for target, device in device_list():
+        tvm_out = get_tvm_output(model, [a_np1, a_np2, a_np3], target, device, b_np.shape)
         tvm.testing.assert_allclose(b_np, tvm_out, rtol=1e-5, atol=1e-5)
 
 def test_forward_mean():
@@ -615,8 +615,8 @@ def verify_hardsigmoid(input_dim, alpha, beta):
 
     model = helper.make_model(graph, producer_name='HardSigmoid_test')
 
-    for target, ctx in ctx_list():
-        tvm_out = get_tvm_output(model, [a_np1], target, ctx, b_np.shape)
+    for target, device in device_list():
+        tvm_out = get_tvm_output(model, [a_np1], target, device, b_np.shape)
         tvm.testing.assert_allclose(b_np, tvm_out, rtol=1e-5, atol=1e-5)
 
 def test_forward_hardsigmoid():
@@ -664,8 +664,8 @@ def verify_argmin(input_dim, axis=None, keepdims=None):
 
     model = helper.make_model(graph, producer_name='argmin_test')
 
-    for target, ctx in ctx_list():
-        tvm_out = get_tvm_output(model, [a_np1], target, ctx, b_np.shape, b_np.dtype)
+    for target, device in device_list():
+        tvm_out = get_tvm_output(model, [a_np1], target, device, b_np.shape, b_np.dtype)
         tvm.testing.assert_allclose(b_np, tvm_out, rtol=1e-5, atol=1e-5)
 
 def verify_argmax(input_dim, axis=None, keepdims=None):
@@ -711,8 +711,8 @@ def verify_argmax(input_dim, axis=None, keepdims=None):
 
     model = helper.make_model(graph, producer_name='argmax_test')
 
-    for target, ctx in ctx_list():
-        tvm_out = get_tvm_output(model, [a_np1], target, ctx, b_np.shape, b_np.dtype)
+    for target, device in device_list():
+        tvm_out = get_tvm_output(model, [a_np1], target, device, b_np.shape, b_np.dtype)
         tvm.testing.assert_allclose(b_np, tvm_out, rtol=1e-5, atol=1e-5)
 
 def test_forward_arg_min_max():
@@ -747,11 +747,11 @@ def verify_constantfill(is_shape, input_dim, out_dim, value, dtype, **kwargs):
 
     model = helper.make_model(graph, producer_name='fill_test')
 
-    for target, ctx in ctx_list():
+    for target, device in device_list():
         if is_shape == True:
-            tvm_out = get_tvm_output(model, [], target, ctx, out.shape)
+            tvm_out = get_tvm_output(model, [], target, device, out.shape)
         else:
-            tvm_out = get_tvm_output(model, [input_a], target, ctx, out.shape)
+            tvm_out = get_tvm_output(model, [input_a], target, device, out.shape)
 
         tvm.testing.assert_allclose(out, tvm_out, rtol=1e-5, atol=1e-5)
 
@@ -784,8 +784,8 @@ def verify_pad(indata, pads, value=0.0):
                                             TensorProto.FLOAT, list(outdata.shape))])
     model = helper.make_model(graph, producer_name='pad_test')
     #  tvm result
-    for target, ctx in ctx_list():
-        tvm_out = get_tvm_output(model, indata, target, ctx, outdata.shape, 'float32')
+    for target, device in device_list():
+        tvm_out = get_tvm_output(model, indata, target, device, outdata.shape, 'float32')
     tvm.testing.assert_allclose(outdata, tvm_out, rtol=1e-5, atol=1e-5)
 
 def test_pad():
@@ -823,8 +823,8 @@ def verify_reduce_x(name, indata, axis, keepdims):
                                             TensorProto.FLOAT, list(outdata.shape))])
     model = helper.make_model(graph, producer_name='{}_test'.format(name))
     #  tvm result
-    for target, ctx in ctx_list():
-        tvm_out = get_tvm_output(model, indata, target, ctx, outdata.shape, 'float32')
+    for target, device in device_list():
+        tvm_out = get_tvm_output(model, indata, target, device, outdata.shape, 'float32')
     tvm.testing.assert_allclose(outdata, tvm_out, rtol=1e-5, atol=1e-5)
 
 def test_reduce_max():
@@ -891,10 +891,10 @@ def verify_split(indata, outdatas, split, axis=0):
                                          ])
     model = helper.make_model(graph, producer_name='split_test')
 
-    for target, ctx in ctx_list():
+    for target, device in device_list():
         output_shape = [o.shape for o in outdatas]
         output_type = ['float32', 'float32', 'float32']
-        tvm_out = get_tvm_output(model, indata, target, ctx, output_shape, output_type)
+        tvm_out = get_tvm_output(model, indata, target, device, output_shape, output_type)
     for o, t in zip(outdatas, tvm_out):
         tvm.testing.assert_allclose(o, t)
 
@@ -925,8 +925,8 @@ def test_binary_ops():
                                   outputs = [helper.make_tensor_value_info("out",
                                                 TensorProto.FLOAT, list(out_shape))])
         model = helper.make_model(graph, producer_name='_test')
-        for target, ctx in ctx_list():
-            tvm_out = get_tvm_output(model, [x, y], target, ctx)
+        for target, device in device_list():
+            tvm_out = get_tvm_output(model, [x, y], target, device)
             tvm.testing.assert_allclose(out_np, tvm_out, rtol=rtol, atol=atol)
 
     x = np.random.uniform(size=in_shape).astype(dtype)
@@ -956,8 +956,8 @@ def test_single_ops():
                                   outputs = [helper.make_tensor_value_info("out",
                                                 TensorProto.FLOAT, list(out_shape))])
         model = helper.make_model(graph, producer_name='_test')
-        for target, ctx in ctx_list():
-            tvm_out = get_tvm_output(model, [x], target, ctx)
+        for target, device in device_list():
+            tvm_out = get_tvm_output(model, [x], target, device)
             tvm.testing.assert_allclose(out_np, tvm_out, rtol=rtol, atol=atol)
 
     x = np.random.uniform(size=in_shape).astype(dtype)

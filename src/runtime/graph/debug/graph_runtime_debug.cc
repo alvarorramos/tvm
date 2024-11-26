@@ -74,10 +74,10 @@ class GraphRuntimeDebug : public GraphRuntime {
         for (int k = 0; k < number; k++) {
           for (size_t index = 0; index < op_execs_.size(); ++index) {
             if (op_execs_[index]) {
-              const TVMContext& ctx = data_entry_[entry_id(index, 0)]->ctx;
+              const TVMContext& device = data_entry_[entry_id(index, 0)]->device;
               auto op_tbegin = std::chrono::high_resolution_clock::now();
               op_execs_[index]();
-              TVMSynchronize(ctx.device_type, ctx.device_id, nullptr);
+              TVMSynchronize(device.device_type, device.device_id, nullptr);
               auto op_tend = std::chrono::high_resolution_clock::now();
               double op_duration = std::chrono::duration_cast<
                   std::chrono::duration<double> >(op_tend - op_tbegin).count();
@@ -202,13 +202,13 @@ PackedFunc GraphRuntimeDebug::GetFunction(
  * \brief GraphRuntimeDebugCreate Get the function based on input.
  * \param sym_json The graph symbol in json format.
  * \param m Compiled module which will be loaded.
- * \param ctxs All devices contexts.
+ * \param devices All devices contexts.
  */
 Module GraphRuntimeDebugCreate(const std::string& sym_json,
                                const tvm::runtime::Module& m,
-                               const std::vector<TVMContext>& ctxs) {
+                               const std::vector<TVMContext>& devices) {
   auto exec = make_object<GraphRuntimeDebug>();
-  exec->Init(sym_json, m, ctxs);
+  exec->Init(sym_json, m, devices);
   return Module(exec);
 }
 

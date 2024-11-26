@@ -176,37 +176,37 @@ class OpenCLWorkspace : public DeviceAPI {
     Init("opencl", "gpu");
   }
   // Check whether the context is OpenCL or not.
-  virtual bool IsOpenCLDevice(TVMContext ctx) {
-    return ctx.device_type == kDLOpenCL;
+  virtual bool IsOpenCLDevice(TVMContext device) {
+    return device.device_type == kDLOpenCL;
   }
   // get the queue of the context
-  cl_command_queue GetQueue(TVMContext ctx) {
-    CHECK(IsOpenCLDevice(ctx));
+  cl_command_queue GetQueue(TVMContext device) {
+    CHECK(IsOpenCLDevice(device));
     this->Init();
-    CHECK(ctx.device_id >= 0  && static_cast<size_t>(ctx.device_id) < queues.size())
-        << "Invalid OpenCL device_id=" << ctx.device_id;
-    return queues[ctx.device_id];
+    CHECK(device.device_id >= 0  && static_cast<size_t>(device.device_id) < queues.size())
+        << "Invalid OpenCL device_id=" << device.device_id;
+    return queues[device.device_id];
   }
   // override device API
-  void SetDevice(TVMContext ctx) final;
-  void GetAttr(TVMContext ctx, DeviceAttrKind kind, TVMRetValue* rv) final;
-  void* AllocDataSpace(TVMContext ctx,
+  void SetDevice(TVMContext device) final;
+  void GetAttr(TVMContext device, DeviceAttrKind kind, TVMRetValue* rv) final;
+  void* AllocDataSpace(TVMContext device,
                        size_t size,
                        size_t alignment,
                        TVMType type_hint) final;
-  void FreeDataSpace(TVMContext ctx, void* ptr) final;
+  void FreeDataSpace(TVMContext device, void* ptr) final;
   void CopyDataFromTo(const void* from,
                       size_t from_offset,
                       void* to,
                       size_t to_offset,
                       size_t size,
-                      TVMContext ctx_from,
-                      TVMContext ctx_to,
+                      TVMContext device_from,
+                      TVMContext device_to,
                       TVMType type_hint,
                       TVMStreamHandle stream) final;
-  void StreamSync(TVMContext ctx, TVMStreamHandle stream) final;
-  void* AllocWorkspace(TVMContext ctx, size_t size, TVMType type_hint) final;
-  void FreeWorkspace(TVMContext ctx, void* data) final;
+  void StreamSync(TVMContext device, TVMStreamHandle stream) final;
+  void* AllocWorkspace(TVMContext device, size_t size, TVMType type_hint) final;
+  void FreeWorkspace(TVMContext device, void* data) final;
 
   /*!
    * \brief Get the thread local ThreadEntry

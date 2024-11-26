@@ -39,7 +39,7 @@ from . import densenet
 from . import yolo_detection
 from . import temp_op_attr
 
-from .config import ctx_list
+from .config import device_list
 from .init import create_workload
 from .nat import add_nat_definitions, count, make_nat_value, make_nat_expr
 from .py_converter import to_python, run_as_python
@@ -105,8 +105,8 @@ def check_grad(func, inputs=None, eps=1e-6, atol=1e-5, rtol=1e-3, scale=None, me
         # Generate random inputs on the same scale as epsilon to avoid numerical precision loss.
         inputs = [_np_randn_from_type(x.checked_type, scale=scale, mean=mean) for x in params]
 
-    for target, ctx in ctx_list():
-        intrp = relay.create_executor(ctx=ctx, target=target)
+    for target, device in device_list():
+        intrp = relay.create_executor(device=device, target=target)
 
         # Get analytic gradients.
         _, grads = intrp.evaluate(bwd_func)(*inputs)

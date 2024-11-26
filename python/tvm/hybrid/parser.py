@@ -270,9 +270,9 @@ class HybridParser(ast.NodeVisitor):
         if ty is Symbol.ThreadBind:
             return entry.var
         if ty is Symbol.ConstVar:
-            return entry if isinstance(node.ctx, ast.Load) else None
+            return entry if isinstance(node.device, ast.Load) else None
         if ty is Symbol.BufferVar:
-            if isinstance(node.ctx, ast.Load):
+            if isinstance(node.device, ast.Load):
                 return _make.Call(entry.dtype, entry.name, [_api.const(0, 'int32')], \
                                   _expr.Call.Halide, entry.op, entry.value_index)
             return entry, [_api.const(0, 'int32')]
@@ -392,7 +392,7 @@ class HybridParser(ast.NodeVisitor):
                                      "All indices are supposed to be constants")
                     arr = arr[i.value]
             return arr
-        if isinstance(node.ctx, ast.Load):
+        if isinstance(node.device, ast.Load):
             return _make.Call(arr.dtype, arr.name, args,
                               _expr.Call.Halide, arr.op, arr.value_index)
         return arr, args

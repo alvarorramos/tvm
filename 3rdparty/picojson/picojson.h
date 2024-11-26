@@ -833,27 +833,27 @@ inline bool _parse_string(String& out, input<Iter>& in) {
 
 template <typename Context, typename Iter>
 // NOLINTNEXTLINE(runtime/references)
-inline bool _parse_array(Context& ctx, input<Iter>& in) {
-  if (!ctx.parse_array_start()) {
+inline bool _parse_array(Context& device, input<Iter>& in) {
+  if (!device.parse_array_start()) {
     return false;
   }
   size_t idx = 0;
   if (in.expect(']')) {
-    return ctx.parse_array_stop(idx);
+    return device.parse_array_stop(idx);
   }
   do {
-    if (!ctx.parse_array_item(in, idx)) {
+    if (!device.parse_array_item(in, idx)) {
       return false;
     }
     idx++;
   } while (in.expect(','));
-  return in.expect(']') && ctx.parse_array_stop(idx);
+  return in.expect(']') && device.parse_array_stop(idx);
 }
 
 template <typename Context, typename Iter>
 // NOLINTNEXTLINE(runtime/references)
-inline bool _parse_object(Context& ctx, input<Iter>& in) {
-  if (!ctx.parse_object_start()) {
+inline bool _parse_object(Context& device, input<Iter>& in) {
+  if (!device.parse_object_start()) {
     return false;
   }
   if (in.expect('}')) {
@@ -864,7 +864,7 @@ inline bool _parse_object(Context& ctx, input<Iter>& in) {
     if (!in.expect('"') || !_parse_string(key, in) || !in.expect(':')) {
       return false;
     }
-    if (!ctx.parse_object_item(in, key)) {
+    if (!device.parse_object_item(in, key)) {
       return false;
     }
   } while (in.expect(','));
@@ -895,7 +895,7 @@ inline std::string _parse_number(input<Iter>& in) {
 
 template <typename Context, typename Iter>
 // NOLINTNEXTLINE(runtime/references)
-inline bool _parse(Context& ctx, input<Iter>& in) {
+inline bool _parse(Context& device, input<Iter>& in) {
   in.skip_ws();
   int ch = in.getc();
   switch (ch) {
@@ -906,16 +906,16 @@ inline bool _parse(Context& ctx, input<Iter>& in) {
     } else {                    \
       return false;             \
     }
-    IS('n', "ull", ctx.set_null());
-    IS('f', "alse", ctx.set_bool(false));
-    IS('t', "rue", ctx.set_bool(true));
+    IS('n', "ull", device.set_null());
+    IS('f', "alse", device.set_bool(false));
+    IS('t', "rue", device.set_bool(true));
 #undef IS
     case '"':
-      return ctx.parse_string(in);
+      return device.parse_string(in);
     case '[':
-      return _parse_array(ctx, in);
+      return _parse_array(device, in);
     case '{':
-      return _parse_object(ctx, in);
+      return _parse_object(device, in);
     default:
       if (('0' <= ch && ch <= '9') || ch == '-') {
         double f;
@@ -932,14 +932,14 @@ inline bool _parse(Context& ctx, input<Iter>& in) {
           if (errno == 0 && std::numeric_limits<int64_t>::min() <= ival &&
               ival <= std::numeric_limits<int64_t>::max() &&
               endp == num_str.c_str() + num_str.size()) {
-            ctx.set_int64(ival);
+            device.set_int64(ival);
             return true;
           }
         }
 #endif
         f = strtod(num_str.c_str(), &endp);
         if (endp == num_str.c_str() + num_str.size()) {
-          ctx.set_number(f);
+          device.set_number(f);
           return true;
         }
         return false;
@@ -1015,8 +1015,8 @@ class default_parse_context {
   bool parse_array_item(input<Iter>& in, size_t) {
     array& a = out_->get<array>();
     a.push_back(value());
-    default_parse_context ctx(&a.back());
-    return _parse(ctx, in);
+    default_parse_context device(&a.back());
+    return _parse(device, in);
   }
   bool parse_array_stop(size_t) { return true; }
   bool parse_object_start() {
@@ -1027,8 +1027,8 @@ class default_parse_context {
   // NOLINTNEXTLINE(runtime/references)
   bool parse_object_item(input<Iter>& in, const std::string& key) {
     object& o = out_->get<object>();
-    default_parse_context ctx(&o[key]);
-    return _parse(ctx, in);
+    default_parse_context device(&o[key]);
+    return _parse(device, in);
   }
 
  private:
@@ -1086,9 +1086,9 @@ inline std::string parse(value& out, Iter& pos, const Iter& last) {
 
 template <typename Context, typename Iter>
 // NOLINTNEXTLINE(runtime/references)
-inline Iter _parse(Context& ctx, const Iter& first, const Iter& last, std::string* err) {
+inline Iter _parse(Context& device, const Iter& first, const Iter& last, std::string* err) {
   input<Iter> in(first, last);
-  if (!_parse(ctx, in) && err != NULL) {
+  if (!_parse(device, in) && err != NULL) {
     char buf[64];
     SNPRINTF(buf, sizeof(buf), "syntax error at line %d near: ", in.line());
     *err = buf;
@@ -1107,8 +1107,8 @@ inline Iter _parse(Context& ctx, const Iter& first, const Iter& last, std::strin
 template <typename Iter>
 // NOLINTNEXTLINE(runtime/references)
 inline Iter parse(value& out, const Iter& first, const Iter& last, std::string* err) {
-  default_parse_context ctx(&out);
-  return _parse(ctx, first, last, err);
+  default_parse_context device(&out);
+  return _parse(device, first, last, err);
 }
 
 // NOLINTNEXTLINE(runtime/references)

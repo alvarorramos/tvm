@@ -27,8 +27,8 @@ def test_argsort():
     np_data = np.random.rand(dshape[0], dshape[1]).astype(data.dtype)
     np_result = np.argsort(-np_data)
     def check_device(device):
-        ctx = tvm.context(device, 0)
-        if not ctx.exist:
+        device = tvm.context(device, 0)
+        if not device.exist:
             print("Skip because %s is not enabled" % device)
             return
         print("Running on target: %s" % device)
@@ -36,8 +36,8 @@ def test_argsort():
             out = topi.argsort(data, axis=-1, is_ascend=False)
             s = topi.generic.schedule_argsort(out)
 
-        tvm_data = tvm.nd.array(np_data, ctx)
-        tvm_out = tvm.nd.array(np.zeros(dshape, dtype="float32"), ctx)
+        tvm_data = tvm.nd.array(np_data, device)
+        tvm_out = tvm.nd.array(np.zeros(dshape, dtype="float32"), device)
         f = tvm.build(s, [data, out], device)
         f(tvm_data, tvm_out)
         tvm.testing.assert_allclose(tvm_out.asnumpy(), np_result.astype("float32"), rtol=1e0)
@@ -69,8 +69,8 @@ def verify_topk(k, axis, ret_type, is_ascend, dtype):
     np_indices = np_indices.astype(dtype)
 
     def check_device(device):
-        ctx = tvm.context(device, 0)
-        if not ctx.exist:
+        device = tvm.context(device, 0)
+        if not device.exist:
             print("Skip because %s is not enabled" % device)
             return
         print("Running on target: %s" % device)
@@ -78,10 +78,10 @@ def verify_topk(k, axis, ret_type, is_ascend, dtype):
             outs = topi.topk(data, k, axis, ret_type, is_ascend, dtype)
             outs = outs if isinstance(outs, list) else [outs]
             s = topi.generic.schedule_topk(outs)
-        tvm_data = tvm.nd.array(np_data, ctx)
+        tvm_data = tvm.nd.array(np_data, device)
         tvm_res = []
         for t in outs:
-            tvm_res.append(tvm.nd.empty(t.shape, dtype=t.dtype, ctx=ctx))
+            tvm_res.append(tvm.nd.empty(t.shape, dtype=t.dtype, device=device))
         f = tvm.build(s, [data] + outs, device)
         f(tvm_data, *tvm_res)
         if ret_type == "both":

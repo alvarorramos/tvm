@@ -120,7 +120,7 @@ void ParseArgNodes(const picojson::array& jinput_nodes, DynArray<uint32_t>* inpu
 
 NDArray::~NDArray() {}
 
-NDArray NDArray::Empty(const DynArray<int64_t>& shape, DLDataType dtype, DLDevice ctx) {
+NDArray NDArray::Empty(const DynArray<int64_t>& shape, DLDataType dtype, DLDevice device) {
   NDArray r;
   int64_t nbytes = (dtype.bits * dtype.lanes + 7) / 8;
   for (const auto& s : shape) {
@@ -128,16 +128,16 @@ NDArray NDArray::Empty(const DynArray<int64_t>& shape, DLDataType dtype, DLDevic
   }
 
   r.storage_ = std::shared_ptr<void>(
-      TVMBackendAllocWorkspace(static_cast<int>(ctx.device_type), static_cast<int>(ctx.device_id),
+      TVMBackendAllocWorkspace(static_cast<int>(device.device_type), static_cast<int>(device.device_id),
                                nbytes, dtype.code, dtype.bits),
       [=](void* ptr) {
         if (ptr) {
-          TVMBackendFreeWorkspace(ctx.device_type, ctx.device_id, ptr);
+          TVMBackendFreeWorkspace(device.device_type, device.device_id, ptr);
         }
       });
   r.shape_ = shape;
   r.dtype_ = dtype;
-  r.ctx_ = ctx;
+  r.device_ = device;
   return r;
 }
 
@@ -146,7 +146,7 @@ NDArray NDArray::CreateView(const DynArray<int64_t>& shape, DLDataType dtype) {
   r.storage_ = storage_;
   r.shape_ = shape;
   r.dtype_ = dtype;
-  r.ctx_ = ctx_;
+  r.device_ = device_;
   return r;
 }
 
@@ -154,7 +154,7 @@ DLTensor NDArray::ToDLTensor() {
   DLTensor r;
   r.data = storage_.get();
   assert(r.data != nullptr);
-  r.ctx = ctx_;
+  r.device = device_;
   r.ndim = shape_.size();
   r.dtype = dtype_;
   r.shape = shape_.data();
@@ -277,7 +277,7 @@ void MicroGraphRuntime::SetupStorage() {
   for (size_t i = 0; i < attrs_.shape.size(); ++i) {
     int storage_id = attrs_.storage_id[i];
     // Use the fallback device if no device index is available.
-    int device_type = static_cast<int>(ctx_.device_type);
+    int device_type = static_cast<int>(device_.device_type);
     size_t size = 1;
     for (int64_t sz : attrs_.shape[i]) {
       size *= static_cast<size_t>(sz);
@@ -304,7 +304,7 @@ void MicroGraphRuntime::SetupStorage() {
     const auto& pit = pool_entry[i];
     DynArray<int64_t> shape(1);
     shape[0] = static_cast<int64_t>(pit.size + 3) / 4;
-    storage_pool_[i] = NDArray::Empty(shape, DLDataType{kDLFloat, 32, 1}, ctx_);
+    storage_pool_[i] = NDArray::Empty(shape, DLDataType{kDLFloat, 32, 1}, device_);
   }
 
   // Assign the pooled entries. A unified memory pool is used to simplify

@@ -86,7 +86,7 @@ sym, params = nnvm.frontend.darknet.from_darknet(net, dtype)
 # -------------------------
 # compile the model
 target = 'llvm'
-ctx = tvm.cpu(0)
+device = tvm.cpu(0)
 data = np.empty([batch_size, net.c, net.h, net.w], dtype)
 shape = {'data': data.shape}
 print("Compiling the model...")
@@ -111,7 +111,7 @@ data = tvm.relay.testing.darknet.load_image(img_path, netw, neth)
 # The process is no different from other examples.
 from tvm.contrib import graph_runtime
 
-m = graph_runtime.create(graph, lib, ctx)
+m = graph_runtime.create(graph, lib, device)
 
 # set inputs
 m.set_input('data', tvm.nd.array(data.astype(dtype)))

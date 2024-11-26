@@ -554,8 +554,8 @@ def _alter_conv2d_layout_arm(attrs, inputs, tinfos, F):
 
     if groups == 1:
         target = tvm.target.current_target()
-        dispatch_ctx = autotvm.DispatchContext.current
-        cfg = dispatch_ctx.query(target, workload)
+        dispatch_device = autotvm.DispatchContext.current
+        cfg = dispatch_device.query(target, workload)
 
         if cfg.is_fallback:  # if is fallback, clear query cache and return None
             autotvm.task.clear_fallback_cache(target, workload)
@@ -575,7 +575,7 @@ def _alter_conv2d_layout_arm(attrs, inputs, tinfos, F):
             new_kernel = tvm.placeholder((idxd(CO, VC), CI, KH, KW, VC), dtype=kernel.dtype)
             new_workload = autotvm.task.args_to_workload(
                 [new_data, new_kernel, strides, padding, dilation, 'NCHW', out_dtype], conv2d)
-            dispatch_ctx.update(target, new_workload, cfg)
+            dispatch_device.update(target, new_workload, cfg)
 
             return F.nn.conv2d(*copy_inputs, **new_attrs)
         elif cfg.template_key == "winograd":  # pre-compute weight transformation in winograd
@@ -623,7 +623,7 @@ def _alter_conv2d_layout_arm(attrs, inputs, tinfos, F):
                 [new_data, new_weight, strides, padding, dilation,
                  new_attrs[data_layout_key], out_dtype, tile_size],
                 conv2d_winograd_without_weight_transform)
-            dispatch_ctx.update(target, new_workload, cfg)
+            dispatch_device.update(target, new_workload, cfg)
 
             return F.nn.contrib_conv2d_winograd_without_weight_transform(*copy_inputs, **new_attrs)
         elif cfg.template_key in ["winograd_nnpack_fp16", "winograd_nnpack_fp32"]:
@@ -654,15 +654,15 @@ def _alter_conv2d_layout_arm(attrs, inputs, tinfos, F):
                 [new_data, new_kernel, strides,
                  padding, dilation, new_attrs[data_layout_key], out_dtype],
                 conv2d_winograd_nnpack_without_weight_transform)
-            dispatch_ctx.update(target, new_workload, cfg)
+            dispatch_device.update(target, new_workload, cfg)
             return F.nn.contrib_conv2d_winograd_nnpack_without_weight_transform(
                 *copy_inputs, **new_attrs)
         else:
             raise RuntimeError("Unsupported template_key '%s'" % cfg.template_key)
     else:
         target = tvm.target.current_target()
-        dispatch_ctx = autotvm.DispatchContext.current
-        cfg = dispatch_ctx.query(target, workload)
+        dispatch_device = autotvm.DispatchContext.current
+        cfg = dispatch_device.query(target, workload)
 
         if cfg.is_fallback:  # if is fallback, clear query cache and return None
             autotvm.task.clear_fallback_cache(tvm.target.current_target(), workload)
@@ -688,7 +688,7 @@ def _alter_conv2d_layout_arm(attrs, inputs, tinfos, F):
             new_workload = autotvm.task.args_to_workload(
                 [new_data, new_kernel, strides, padding, dilation, out_dtype],
                 depthwise_conv2d_nchw)
-            dispatch_ctx.update(target, new_workload, cfg)
+            dispatch_device.update(target, new_workload, cfg)
 
             return F.nn.conv2d(*copy_inputs, **new_attrs)
         else:

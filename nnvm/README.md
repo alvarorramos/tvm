@@ -36,7 +36,7 @@ graph, lib, params = nnvm.compiler.build(graph, target, {"data", data_shape}, pa
 module = graph_runtime.create(graph, lib, tvm.gpu(0))
 module.set_input(**params)
 module.run(data=data_array)
-output = tvm.nd.empty(out_shape, ctx=tvm.gpu(0))
+output = tvm.nd.empty(out_shape, device=tvm.gpu(0))
 module.get_output(0, output)
 
 # DEPLOY to REMOTE mobile/rasp/browser with minimum tvm rpc runtime

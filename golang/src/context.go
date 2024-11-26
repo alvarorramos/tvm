@@ -29,8 +29,8 @@ import "C"
 
 // KDLCPU is golang enum correspond to TVM device type kDLCPU.
 var KDLCPU                  = int32(C.kDLCPU)
-// KDLGPU is golang enum correspond to TVM device type kDLGPU.
-var KDLGPU                  = int32(C.kDLGPU)
+// kDLCUDA is golang enum correspond to TVM device type kDLCUDA.
+var kDLCUDA                  = int32(C.kDLCUDA)
 // KDLCPUPinned is golang enum correspond to TVM device type kDLCPUPinned.
 var KDLCPUPinned            = int32(C.kDLCPUPinned)
 // KDLOpenCL is golang enum correspond to TVM device type kDLOpenCL.
@@ -63,7 +63,7 @@ func CPU(index int32) Context {
 
 // GPU returns the Context object for GPU target on given index
 func GPU(index int32) Context {
-    return Context{KDLGPU, index}
+    return Context{kDLCUDA, index}
 }
 
 // CPUPinned returns the Context object for CPUPinned target on given index

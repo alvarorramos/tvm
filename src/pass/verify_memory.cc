@@ -157,7 +157,7 @@ class MemoryAccessVerifier final : protected IRVisitor {
 
   /// Check if a given DLDeviceType/TVMDeviceExtType value denotes GPU device.
   static bool IsGPUDevice(int dev_type) {
-    return kDLGPU == dev_type || kDLOpenCL == dev_type ||
+    return kDLCUDA == dev_type || kDLOpenCL == dev_type ||
            kDLVulkan == dev_type || kDLMetal == dev_type ||
            kDLROCM == dev_type || kOpenGL == dev_type;
   }

@@ -73,7 +73,7 @@ impl From<TVMDeviceType> for ffi::DLDeviceType {
     fn from(device_type: TVMDeviceType) -> Self {
         match device_type.0 {
             1 => ffi::DLDeviceType_kDLCPU,
-            2 => ffi::DLDeviceType_kDLGPU,
+            2 => ffi::DLDeviceType_kDLCUDA,
             3 => ffi::DLDeviceType_kDLCPUPinned,
             4 => ffi::DLDeviceType_kDLOpenCL,
             7 => ffi::DLDeviceType_kDLVulkan,
@@ -90,7 +90,7 @@ impl From<ffi::DLDeviceType> for TVMDeviceType {
     fn from(device_type: ffi::DLDeviceType) -> Self {
         match device_type {
             ffi::DLDeviceType_kDLCPU => TVMDeviceType(1),
-            ffi::DLDeviceType_kDLGPU => TVMDeviceType(2),
+            ffi::DLDeviceType_kDLCUDA => TVMDeviceType(2),
             ffi::DLDeviceType_kDLCPUPinned => TVMDeviceType(3),
             ffi::DLDeviceType_kDLOpenCL => TVMDeviceType(4),
             ffi::DLDeviceType_kDLVulkan => TVMDeviceType(7),

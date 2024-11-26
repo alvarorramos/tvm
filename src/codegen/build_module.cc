@@ -88,7 +88,7 @@ Target CreateTarget(const std::string& target_name,
   if (target_name == "c" || target_name == "llvm") {
     t->keys_array.push_back(ir::StringImm::make("cpu"));
   } else if (target_name == "cuda" || target_name == "nvptx") {
-    t->device_type = kDLGPU;
+    t->device_type = kDLCUDA;
     t->keys_array.push_back(ir::StringImm::make("cuda"));
     t->keys_array.push_back(ir::StringImm::make("gpu"));
     t->max_num_threads = 1024;

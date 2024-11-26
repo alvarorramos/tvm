@@ -1170,7 +1170,7 @@ Stmt RewriteForTensorCore(Stmt stmt,
   }
 
   // Check if current runtime support GPU CUDA
-  TVMContext device{kDLGPU, 0};
+  TVMContext device{kDLCUDA, 0};
   auto api = tvm::runtime::DeviceAPI::Get(device, true);
   if (api == nullptr) {
     return stmt;

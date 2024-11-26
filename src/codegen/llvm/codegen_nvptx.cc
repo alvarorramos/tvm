@@ -173,7 +173,7 @@ class CodeGenNVPTX : public CodeGenLLVM {
 
 inline int DetectCUDAComputeVersion() {
   TVMContext tvm_device;
-  tvm_device.device_type = kDLGPU;
+  tvm_device.device_type = kDLCUDA;
   tvm_device.device_id = 0;
   TVMRetValue val;
   tvm::runtime::DeviceAPI::Get(tvm_device)->GetAttr(

@@ -149,7 +149,7 @@ macro_rules! impl_tvm_context {
 
 impl_tvm_context!(
     DLDeviceType_kDLCPU: [cpu, llvm, stackvm],
-    DLDeviceType_kDLGPU: [gpu, cuda, nvptx],
+    DLDeviceType_kDLCUDA: [gpu, cuda, nvptx],
     DLDeviceType_kDLOpenCL: [cl],
     DLDeviceType_kDLMetal: [metal],
     DLDeviceType_kDLVPI: [vpi],

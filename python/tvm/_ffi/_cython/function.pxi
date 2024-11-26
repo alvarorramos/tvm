@@ -131,7 +131,7 @@ cdef inline int make_arg(object arg,
         tcode[0] = kStr
         temp_args.append(tstr)
     elif isinstance(arg, TVMContext):
-        value[0].v_ctx = (<DLContext*>(
+        value[0].v_ctx = (<DLDevice*>(
             <unsigned long long>ctypes.addressof(arg)))[0]
         tcode[0] = kTVMContext
     elif isinstance(arg, bytearray):

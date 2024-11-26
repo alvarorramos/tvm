@@ -105,7 +105,7 @@ Allocator* MemoryManager::GetAllocator(TVMContext ctx) {
   return allocators_.at(ctx).get();
 }
 
-NDArray Allocator::Empty(std::vector<int64_t> shape, DLDataType dtype, DLContext ctx) {
+NDArray Allocator::Empty(std::vector<int64_t> shape, DLDataType dtype, DLDevice ctx) {
   VerifyDataType(dtype);
   NDArray::Container* container = new NDArray::Container(nullptr, shape, dtype, ctx);
   container->deleter = BufferDeleter;

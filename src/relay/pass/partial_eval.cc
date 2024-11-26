@@ -526,8 +526,8 @@ bool StatefulOp(const Expr& e) {
 
 using FInterpreter = runtime::TypedPackedFunc<Value(Expr)>;
 
-DLContext CPUContext() {
-  DLContext ctx;
+DLDevice CPUContext() {
+  DLDevice ctx;
   ctx.device_type = kDLCPU;
   ctx.device_id = 0;
   return ctx;
@@ -1166,7 +1166,7 @@ class PartialEvaluator : public ExprFunctor<PStatic(const Expr& e, LetList* ll)>
   std::unordered_map<Function, FuncId, NodeHash, NodeEqual> func_map_;
   std::unordered_map<FuncId, Fuel> fuel_map_;
   Store store_;
-  DLContext context_ = CPUContext();
+  DLDevice context_ = CPUContext();
   FInterpreter executor_ = CPUInterpreter();
 };
 

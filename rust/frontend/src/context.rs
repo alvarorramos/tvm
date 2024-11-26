@@ -270,8 +270,8 @@ impl_device_attrs!((max_threads_per_block, 1);
                 (multi_processor_count, 7);
                 (max_thread_dimensions, 8));
 
-impl From<ffi::DLContext> for TVMContext {
-    fn from(ctx: ffi::DLContext) -> Self {
+impl From<ffi::DLDevice> for TVMContext {
+    fn from(ctx: ffi::DLDevice) -> Self {
         TVMContext {
             device_type: TVMDeviceType::from(ctx.device_type),
             device_id: ctx.device_id,
@@ -279,9 +279,9 @@ impl From<ffi::DLContext> for TVMContext {
     }
 }
 
-impl From<TVMContext> for ffi::DLContext {
+impl From<TVMContext> for ffi::DLDevice {
     fn from(ctx: TVMContext) -> Self {
-        ffi::DLContext {
+        ffi::DLDevice {
             device_type: ctx.device_type.into(),
             device_id: ctx.device_id as i32,
         }

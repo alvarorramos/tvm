@@ -223,7 +223,7 @@ class ConstantFolder : public ExprMutator {
     }
 
     // Get the constant shape
-    DLContext ctx;
+    DLDevice ctx;
     ctx.device_type = kDLCPU;
     ctx.device_id = 0;
     runtime::NDArray value;
@@ -263,7 +263,7 @@ class ConstantFolder : public ExprMutator {
 
 
 Expr FoldConstant(const Expr& expr, const Module& mod) {
-  DLContext ctx;
+  DLDevice ctx;
   ctx.device_type = kDLCPU;
   ctx.device_id = 0;
   Target target = Target::Create("llvm");

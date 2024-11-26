@@ -75,7 +75,7 @@ class Allocator {
    */
   NDArray Empty(std::vector<int64_t> shape,
                 DLDataType dtype,
-                DLContext ctx);
+                DLDevice ctx);
   /*! \brief Allocate a buffer given a size, alignment and type.
    *  \param nbytes The size of the buffer.
    *  \param alignment The alignment of the buffer.

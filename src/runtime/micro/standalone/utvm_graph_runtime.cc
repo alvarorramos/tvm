@@ -120,7 +120,7 @@ void ParseArgNodes(const picojson::array& jinput_nodes, DynArray<uint32_t>* inpu
 
 NDArray::~NDArray() {}
 
-NDArray NDArray::Empty(const DynArray<int64_t>& shape, DLDataType dtype, DLContext ctx) {
+NDArray NDArray::Empty(const DynArray<int64_t>& shape, DLDataType dtype, DLDevice ctx) {
   NDArray r;
   int64_t nbytes = (dtype.bits * dtype.lanes + 7) / 8;
   for (const auto& s : shape) {

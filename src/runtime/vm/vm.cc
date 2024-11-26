@@ -612,7 +612,7 @@ std::ostream& operator<<(std::ostream& os, const VMFunction& vm_func) {
   return os;
 }
 
-ObjectRef CopyTo(ObjectRef src, const DLContext& ctx) {
+ObjectRef CopyTo(ObjectRef src, const DLDevice& ctx) {
   if (const TensorObj* obj = src.as<TensorObj>()) {
     auto tensor = obj->data;
     if (tensor->ctx.device_type != ctx.device_type) {
@@ -982,7 +982,7 @@ void VirtualMachine::RunLoop() {
         goto main_loop;
       }
       case Opcode::AllocTensorReg: {
-        DLContext cpu_ctx;
+        DLDevice cpu_ctx;
         cpu_ctx.device_type = kDLCPU;
         cpu_ctx.device_id = 0;
         auto shape_tensor_obj = ReadRegister(instr.alloc_tensor_reg.shape_register);

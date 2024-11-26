@@ -133,7 +133,7 @@ class NDArray {
    * \param ctx The target context.
    * \return The array under another context.
    */
-  inline NDArray CopyTo(const DLContext& ctx) const;
+  inline NDArray CopyTo(const DLDevice& ctx) const;
   /*!
    * \brief Load NDArray from stream
    * \param stream The input data stream
@@ -168,7 +168,7 @@ class NDArray {
    */
   TVM_DLL static NDArray Empty(std::vector<int64_t> shape,
                                DLDataType dtype,
-                               DLContext ctx);
+                               DLDevice ctx);
   /*!
    * \brief Create a NDArray backed by a dlpack tensor.
    *
@@ -305,7 +305,7 @@ class NDArray::Container {
   Container(void* data,
             std::vector<int64_t> shape,
             DLDataType dtype,
-            DLContext ctx) {
+            DLDevice ctx) {
     dl_tensor.data = data;
     shape_ = std::move(shape);
     dl_tensor.ndim = static_cast<int>(shape_.size());
@@ -391,7 +391,7 @@ inline void NDArray::CopyTo(const NDArray& other) const {
   CopyFromTo(&(data_->dl_tensor), &(other.data_->dl_tensor));
 }
 
-inline NDArray NDArray::CopyTo(const DLContext& ctx) const {
+inline NDArray NDArray::CopyTo(const DLDevice& ctx) const {
   CHECK(data_ != nullptr);
   const DLTensor* dptr = operator->();
   NDArray ret = Empty(std::vector<int64_t>(dptr->shape, dptr->shape + dptr->ndim),
@@ -426,7 +426,7 @@ inline bool SaveDLTensor(dmlc::Stream* strm,
   //
   // We can always do array.CopyTo(target_ctx) to get a corresponding
   // array in the target context.
-  DLContext cpu_ctx;
+  DLDevice cpu_ctx;
   cpu_ctx.device_type = kDLCPU;
   cpu_ctx.device_id = 0;
   strm->Write(cpu_ctx);
@@ -473,7 +473,7 @@ inline bool NDArray::Load(dmlc::Stream* strm) {
       << "Invalid DLTensor file format";
   CHECK(header == kTVMNDArrayMagic)
       << "Invalid DLTensor file format";
-  DLContext ctx;
+  DLDevice ctx;
   int ndim;
   DLDataType dtype;
   CHECK(strm->Read(&ctx))

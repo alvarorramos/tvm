@@ -66,7 +66,7 @@ class Value;
  * \return A function that takes in an expression and returns a value.
  */
 runtime::TypedPackedFunc<Value(Expr)>
-CreateInterpreter(Module mod, DLContext context, Target target);
+CreateInterpreter(Module mod, DLDevice context, Target target);
 
 /*! \brief The base container type of Relay values. */
 class ValueNode : public RelayNode {

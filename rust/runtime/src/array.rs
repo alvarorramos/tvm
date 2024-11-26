@@ -24,7 +24,7 @@ use ndarray;
 use tvm_common::{
     array::{DataType, TVMContext},
     ffi::{
-        DLContext, DLDataType, DLDataTypeCode_kDLFloat, DLDataTypeCode_kDLInt,
+        DLDevice, DLDataType, DLDataTypeCode_kDLFloat, DLDataTypeCode_kDLInt,
         DLDataTypeCode_kDLUInt, DLTensor,
     },
 };
@@ -255,7 +255,7 @@ impl<'a> Tensor<'a> {
         assert!(!flatten || self.is_contiguous());
         DLTensor {
             data: unsafe { self.data.as_mut_ptr().offset(self.byte_offset) } as *mut c_void,
-            ctx: DLContext::from(&self.ctx),
+            ctx: DLDevice::from(&self.ctx),
             ndim: if flatten { 1 } else { self.shape.len() } as i32,
             dtype: DLDataType::from(&self.dtype),
             shape: if flatten {

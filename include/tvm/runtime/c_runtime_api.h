@@ -133,7 +133,7 @@ typedef DLDataType TVMType;
 /*!
  * \brief The Device information, abstract away common device types.
  */
-typedef DLContext TVMContext;
+typedef DLDevice TVMContext;
 
 /*!
  * \brief The tensor array stucture to TVM API.

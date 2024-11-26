@@ -247,7 +247,7 @@ class Interpreter :
              PatternFunctor<bool(const Pattern& p, const Value& v)> {
  public:
   Interpreter(Module mod,
-              DLContext context,
+              DLDevice context,
               Target target)
       : mod_(mod), context_(context), target_(target) {
     engine_ = CompileEngine::Global();
@@ -346,7 +346,7 @@ class Interpreter :
     std::vector<NDArray> inputs(cfunc->inputs.size());
     std::vector<NDArray> outputs(cfunc->outputs.size());
 
-    DLContext cpu_ctx;
+    DLDevice cpu_ctx;
     cpu_ctx.device_type = kDLCPU;
     cpu_ctx.device_id = 0;
 
@@ -496,7 +496,7 @@ class Interpreter :
       const TensorValueNode* tv = val.as<TensorValueNode>();
       CHECK(tv != nullptr) << "expect Tensor argument";
       setter(i, tv->data);
-      DLContext arg_ctx = tv->data->ctx;
+      DLDevice arg_ctx = tv->data->ctx;
       CHECK(arg_ctx.device_type ==  context_.device_type &&
             arg_ctx.device_id == context_.device_id)
         << "Interpreter expect context to be "
@@ -669,7 +669,7 @@ class Interpreter :
   Value VisitExpr_(const IfNode* op) final {
     Value v = Eval(op->cond);
     if (const TensorValueNode* bv = v.as<TensorValueNode>()) {
-      DLContext cpu_ctx;
+      DLDevice cpu_ctx;
       cpu_ctx.device_type = kDLCPU;
       cpu_ctx.device_id = 0;
       NDArray cpu_array = bv->data.CopyTo(cpu_ctx);
@@ -775,7 +775,7 @@ class Interpreter :
   Module mod_;
   // For simplicity we only run the interpreter on a single context.
   // Context to run the interpreter on.
-  DLContext context_;
+  DLDevice context_;
   // Target parameter being used by the interpreter.
   Target target_;
   // Value stack.
@@ -788,7 +788,7 @@ class Interpreter :
 TypedPackedFunc<Value(Expr)>
 CreateInterpreter(
     Module mod,
-    DLContext context,
+    DLDevice context,
     Target target) {
   if (mod.defined()) {
     // eta expand to support constructors in argument position
